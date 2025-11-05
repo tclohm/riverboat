@@ -1,38 +1,64 @@
-# sv
+# Steamboat Run
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A marketplace for sharing Magic with others.
 
-## Creating a project
+## Tech Stack
 
-If you're seeing this, you've probably already done this step. Congrats!
+- **SvelteKit** - Full-stack framework
+- **SQLite** - Database (via Drizzle ORM)
+- **Cloudflare Pages** - Deployment (free)
 
-```sh
-# create a new project in the current directory
-npx sv create
+## Setup
 
-# create a new project in my-app
-npx sv create my-app
+### Prerequisites
+- Node.js 18+
+
+### Installation
+
+1. Clone the repo
+```bash
+git clone <your-repo-url>
+cd disney-pass-share
 ```
 
-## Developing
+2. Install dependencies
+```bash
+npm install
+```
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+3. Generate database
+```bash
+npx drizzle-kit generate
+npx drizzle-kit push
+```
 
-```sh
+4. Seed database
+```bash
+npx tsx src/lib/db/seed.ts
+```
+
+5. Run dev server
+```bash
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
 ```
 
-## Building
+Open http://localhost:5173
 
-To create a production version of your app:
+## Deployment
 
-```sh
+Deploy to Cloudflare Pages (free):
+```bash
 npm run build
 ```
 
-You can preview the production build with `npm run preview`.
+Connect your GitHub repo to Cloudflare Pages dashboard.
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+## Database Schema
+
+**passes** table:
+- id (integer, primary key)
+- title (text)
+- owner (text)
+- price (integer)
+- passType (text)
+- availableDates (text)
