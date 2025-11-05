@@ -3,12 +3,12 @@
 </script>
 
 <svelte:head>
-  <title>Disney Pass Share</title>
+  <title>Willie's Keys</title>
 </svelte:head>
 
 <div class="container">
   <header>
-    <h1>DISNEY PASS SHARE</h1>
+    <h1>WILLIE'S KEYS</h1>
     <p>Share the magic</p>
   </header>
 

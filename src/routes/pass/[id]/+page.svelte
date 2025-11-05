@@ -4,7 +4,7 @@
 </script>
 
 <svelte:head>
-  <title>{pass.title} - Disney Pass Share</title>
+  <title>{pass.title} - Willie's Keys</title>
 </svelte:head>
 
 <div class="container">
