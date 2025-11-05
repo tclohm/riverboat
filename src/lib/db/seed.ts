@@ -52,7 +52,7 @@ const generateSQL = process.argv.includes('--sql');
 if (generateSQL) {
   seedData.forEach(pass => {
     console.log(
-      `INSERT INTO passes (title, owner, price, passType, availableDates) VALUES ('${pass.title}', '${pass.owner}', ${pass.price}, '${pass.passType}', '${pass.availableDates}');`
+      `INSERT INTO passes (title, owner, price, pass_type, available_dates) VALUES ('${pass.title}', '${pass.owner}', ${pass.price}, '${pass.passType}', '${pass.availableDates}');`
     );
   });
 } else {
