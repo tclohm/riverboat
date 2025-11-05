@@ -46,6 +46,17 @@ for (let i = 1; i <= 50; i++) {
   });
 }
 
-db.insert(passes).values(seedData).run();
+// Check if we're generating SQL or seeding locally
+const generateSQL = process.argv.includes('--sql');
 
-console.log('✅ Database seeded with 50 passes!');
+if (generateSQL) {
+  seedData.forEach(pass => {
+    console.log(
+      `INSERT INTO passes (title, owner, price, passType, availableDates) VALUES ('${pass.title}', '${pass.owner}', ${pass.price}, '${pass.passType}', '${pass.availableDates}');`
+    );
+  });
+} else {
+  db.insert(passes).values(seedData).run();
+  console.log('Database seeded with 50 passes!');
+}
+

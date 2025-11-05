@@ -1,3 +1,4 @@
+# Dependencies
 node_modules
 
 # Output
@@ -22,5 +23,11 @@ Thumbs.db
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-# Sqlite
+# Local database
 local.db
+local.db-shm
+local.db-wal
+
+# Generated files
+drizzle
+seed.sql

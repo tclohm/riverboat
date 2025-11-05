@@ -1,0 +1,7 @@
+name = "willies-keys"
+compatibility_date = "2024-11-05"
+
+[[d1_databases]]
+binding = "willies_keys_db"
+database_name = "willies-keys-db"
+database_id = "ec2afd5f-6c53-4231-bc17-86473f5b60af"
