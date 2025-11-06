@@ -1,5 +1,6 @@
 name = "willies-keys"
 compatibility_date = "2024-11-05"
+compatibility_flags = ["nodejs_compat"]
 
 [[d1_databases]]
 binding = "willies_keys_db"
