@@ -8,8 +8,11 @@
 
 <div class="container">
   <header>
-    <h1>WILLIE'S KEYS</h1>
-    <p>Share the magic</p>
+    <div class="header-content">
+      <h1>WILLIE'S KEYS</h1>
+      <p>Share the magic</p>
+    </div>
+    <a href="/add" class="share-button">List your Pass</a>
   </header>
 
   <div class="grid">
