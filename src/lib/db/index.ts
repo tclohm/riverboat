@@ -7,13 +7,11 @@ export function getDB(platform?: any) {
     return drizzleD1(platform.env.willies_keys_db);
   }
   
- // Only attempt to load local DB if we're in Node.js environment
-  if (typeof process !== 'undefined' && process.versions && process.versions.node) {
-    const { localDb } = require('./local');
-    return localDb;
-  }
-  
-  throw new Error('Database not available');
+  const requireFunc = eval('require');
+  const { drizzle: drizzleSqlite } = requireFunc('drizzle-orm/better-sqlite3');
+  const Database = requireFunc('better-sqlite3');
+  const sqlite = new Database('local.db');
+  return drizzleSqlite(sqlite);
 }
 
 export { passes };
