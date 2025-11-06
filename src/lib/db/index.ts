@@ -1,10 +1,8 @@
 import { drizzle as drizzleD1 } from 'drizzle-orm/d1';
-import { drizzle as drizzleSqlite } from 'drizzle-orm/better-sqlite3';
-import Database from 'better-sqlite3';
 import { passes } from './schema';
 
 // For local development
-let localDB: ReturnType<typeof drizzleSqlite> | null = null;
+let localDB: any = null;
 
 export function getDB(platform?: any) {
   // Production: Use Cloudflare D1 
@@ -14,9 +12,12 @@ export function getDB(platform?: any) {
 
   // Local dev: Use better-sqlite3
   if (!localDB) {
+    const { drizzle: drizzleSqlite } = require('drizzle-orm/better-sqlite3');
+    const Database = require('better-sqlite3');
     const sqlite = new Database('local.db');
     localDB = drizzleSqlite(sqlite);
   }
+
   return localDB
 }
 
