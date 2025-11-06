@@ -8,8 +8,10 @@
 </svelte:head>
 
 <div class="container">
-  <a href="/" class="back">← Back</a>
-  
+  <div class="top-nav">
+    <a href="/" class="back">← Back</a>
+    <a href="/pass/{pass.id}/edit" class="edit-button">Edit Pass</a> 
+  </div>
   <div class="detail">
     <div class="info">
       <h1>{pass.passType}</h1>
@@ -125,6 +127,27 @@
 
   button:hover {
     background: #1d4ed8;
+  }
+
+  .top-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+  }
+
+  .edit-button {
+    background-color: #2563eb; 
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background-color 0.2s;
+  }
+
+  .edit-button:hover {
+    background-color: #1d4ed8;
   }
 
   @media (max-width: 968px) {
