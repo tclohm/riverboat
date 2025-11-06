@@ -1,6 +1,8 @@
-import { db, passes } from '$lib/db';
+import { passes } from '$lib/db/schema';
+import { getDB } from '$lib/db';
 
-export async function load() {
-  const allPasses = db.select().from(passes).all()
+export async function load({ platform }) {
+  const db = getDB(platform)
+  const allPasses = await db.select().from(passes).all()
   return { passes: allPasses };
 }
