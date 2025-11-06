@@ -10,10 +10,8 @@
 
 <div class="container">
   <a href="/" class="back">← Back to listings</a>
-
   <h1>LIST YOUR PASS</h1>
   <p class="subtitle">Share your Magic Key with others</p>
-
   <form method="POST" use:enhance={() => {
     loading = true;
     return async ({ result, update }) => {
@@ -80,6 +78,7 @@
     <button type="submit" disabled={loading}>
       {loading ? 'Adding...' : 'List Pass'}
     </button>
+  </form>
 </div>
 
 <style>

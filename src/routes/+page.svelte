@@ -116,6 +116,20 @@
     color: #666;
   }
 
+  .share-button {
+    position: absolute;
+    background: #000;
+    color: #fff;
+    margin-top: 0.5rem;
+    padding: 0.1rem 2rem;
+    border-radius: 0.2rem;
+    text-decoration: none;
+  }
+
+  .share-button:hover {
+    background: #2563eb
+  }
+
   @media (max-width: 768px) {
     .container {
       padding: 40px 20px;
