@@ -1,17 +1,29 @@
 import { drizzle as drizzleD1 } from 'drizzle-orm/d1';
 import { passes } from './schema';
 
-export function getDB(platform?: any) {
+let localDb: any = null;
+
+export async function getDb(platform?: any) {
+  const mode = import.meta.env.MODE;
+
   // Production: Use Cloudflare D1
-  if (platform?.env?.willies_keys_db) {
+  if (mode === 'production' && platform?.env?.willies_keys_db) {
     return drizzleD1(platform.env.willies_keys_db);
   }
   
-  const requireFunc = eval('require');
-  const { drizzle: drizzleSqlite } = requireFunc('drizzle-orm/better-sqlite3');
-  const Database = requireFunc('better-sqlite3');
-  const sqlite = new Database('local.db');
-  return drizzleSqlite(sqlite);
+  // Development mode: user better-sqlite3
+  if (mode === 'development') {
+    if (!localDb) {
+      const { drizzle: drizzleSqlite } = await import('drizzle-orm/better-sqlite3');
+      const DatabaseModule = await import('better-sqlite3');
+      const Database = DatabaseModule.default || DatabaseModule;
+      const sqlite = new Database('local.db');
+      localDb = drizzleSqlite(sqlite);
+    }
+    return localDb;
+  }
+  
+  throw new Error(`Database not configured for mode: ${mode}`);
 }
 
 export { passes };
