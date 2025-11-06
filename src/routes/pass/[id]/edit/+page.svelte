@@ -5,6 +5,15 @@
   const { pass } = data;
   
   let loading = false;
+  let showDeleteConfirm = false;
+
+  function toggleConfirm() {
+    showDeleteConfirm = true;
+  }
+
+  function cancelDelete() {
+    showDeleteConfirm = false;
+  }
 </script>
 
 <svelte:head>
@@ -17,7 +26,7 @@
   <h1>EDIT PASS</h1>
   <p class="subtitle">Update your listing details</p>
 
-  <form method="POST" use:enhance={() => {
+  <form method="POST" action="?/update" use:enhance={() => {
     loading = true;
     return async ({ result, update }) => {
       loading = false;
@@ -79,10 +88,29 @@
       />
     </div>
 
-    <button type="submit" disabled={loading}>
+    <button type="submit" class="save-button" disabled={loading}>
       {loading ? 'Saving...' : 'Save Changes'}
     </button>
   </form>
+
+  <div class="danger-zone">
+    <h2>Danger Zone</h2>
+    {#if !showDeleteConfirm}
+      <button type="button" class="delete-button" on:click={toggleConfirm}>
+        Delete Pass 
+      </button>
+    {:else}
+      <p class="confirm-text">Are you sure? This cannot be undone.</p>
+      <div class="confirm-buttons">
+        <form method="POST" action="?/delete" use:enhance>
+          <button type="submit" class="confirm-delete">Yes, Delete</button>
+        </form>
+        <button type="button" class="cancel-delete" on:click={cancelDelete}>
+          Cancel 
+        </button>
+      </div>
+    {/if}
+  </div>
 </div>
 
 <style>
@@ -152,7 +180,7 @@
     border-color: #2563eb;
   }
 
-  button {
+  .save-button {
     width: 100%;
     background: #2563eb;
     color: white;
@@ -164,15 +192,94 @@
     transition: background 0.2s;
   }
 
-  button:hover:not(:disabled) {
+  .save-button:hover:not(:disabled) {
     background: #1d4ed8;
   }
 
-  button:disabled {
+  .save-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
 
+  .danger-zone {
+    margin-top: 60px;
+    padding: 32px;
+    border: 2px solid #e0e0e0;
+    background: white;
+  }
+
+  .danger-zone h2 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #666;
+    margin: 0 0 16px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .delete-button {
+    background: white;
+    color: #ef4444;
+    border: 2px solid #ef4444;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .delete-button:hover {
+    background: #ef4444;
+    color: white;
+  }
+
+  .confirm-text {
+    color: #666;
+    font-weight: 600;
+    font-size: 14px;
+    margin: 0 0 20px 0;
+  }
+
+  .confirm-buttons {
+    display: flex;
+    gap: 12px;
+  }
+
+  .confirm-buttons form {
+    padding: 0;
+    border: none;
+    background: none;
+  }
+
+  .confirm-delete {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .confirm-delete:hover {
+    background: #dc2626;
+  }
+
+  .cancel-delete {
+    background: white;
+    color: #1a1a1a;
+    border: 2px solid #e0e0e0;
+    padding: 10px 22px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .cancel-delete:hover {
+    border-color: #1a1a1a;
+  }
   @media (max-width: 768px) {
     .container {
       padding: 40px 20px;
@@ -182,7 +289,7 @@
       font-size: 36px;
     }
 
-    form {
+    form, .danger-zone {
       padding: 24px;
     }
   }

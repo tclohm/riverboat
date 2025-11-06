@@ -15,7 +15,7 @@ export async function load({ params, platform }) {
 }
 
 export const actions = {
-  default: async ({ request, params, platform }) => {
+  update: async ({ request, params, platform }) => {
     const data = await request.formData();
     
     const title = data.get('title')?.toString();
@@ -44,5 +44,15 @@ export const actions = {
 
     // Redirect back to detail page
     throw redirect(303, `/pass/${params.id}`);
+  },
+  // Delete
+  delete: async ({ params, platform }) => {
+    const db = await getDb(platform);
+
+    await db.delete(passes)
+      .where(eq(passes.id, parseInt(params.id)))
+      .run();
+
+    throw redirect(303, '/');
   }
 };
