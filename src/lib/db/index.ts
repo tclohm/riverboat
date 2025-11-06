@@ -7,10 +7,13 @@ export function getDB(platform?: any) {
     return drizzleD1(platform.env.willies_keys_db);
   }
   
-  // Local dev: Dynamically import the local db file
-  // This prevents bundling in production
-  const { localDb } = require('./local');
-  return localDb;
+ // Only attempt to load local DB if we're in Node.js environment
+  if (typeof process !== 'undefined' && process.versions && process.versions.node) {
+    const { localDb } = require('./local');
+    return localDb;
+  }
+  
+  throw new Error('Database not available');
 }
 
 export { passes };
