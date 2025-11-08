@@ -1,6 +1,6 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
-
+  
   let loading = false;
 </script>
 
@@ -10,8 +10,9 @@
 
 <div class="container">
   <a href="/" class="back">← Back to listings</a>
-  <h1>LIST YOUR PASS</h1>
-  <p class="subtitle">Share your Magic Key with others</p>
+  
+  <h1>List Your Pass</h1>
+
   <form method="POST" use:enhance={() => {
     loading = true;
     return async ({ result, update }) => {
@@ -21,23 +22,23 @@
   }}>
     <div class="form-group">
       <label for="title">Pass Title</label>
-      <input
-        type="text"
-        id="title"
-        name="title"
+      <input 
+        type="text" 
+        id="title" 
+        name="title" 
         placeholder="Magic Key - Dream Pass"
         required
       />
     </div>
-    
+
     <div class="form-group">
-      <label for="owner">Your name</label>
+      <label for="owner">Your Name</label>
       <input 
-        type="text"
-        id="owner"
-        name="owner"
-        placeholder="Oswald the Lucky Rabbit"
-        required 
+        type="text" 
+        id="owner" 
+        name="owner" 
+        placeholder="Sarah M."
+        required
       />
     </div>
 
@@ -82,18 +83,22 @@
 </div>
 
 <style>
+  :global(body) {
+    background-color: #f5f5f5;
+  }
+
   .container {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 60px 40px;
+    max-width: 500px;
+    margin: 80px auto;
+    padding: 0 24px;
   }
 
   .back {
     display: inline-block;
     color: #666;
     text-decoration: none;
-    font-size: 16px;
-    margin-bottom: 40px;
+    font-size: 14px;
+    margin-bottom: 32px;
     transition: color 0.2s;
   }
 
@@ -102,45 +107,41 @@
   }
 
   h1 {
-    font-size: 48px;
-    font-weight: 900;
-    margin: 0 0 8px 0;
+    font-size: 32px;
+    font-weight: 700;
+    margin: 0 0 40px 0;
     color: #1a1a1a;
   }
 
-  .subtitle {
-    font-size: 18px;
-    color: #666;
-    margin: 0 0 40px 0;
-  }
-
   form {
-    background: white;
-    border: 2px solid #e0e0e0;
-    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
   }
 
   .form-group {
-    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
   }
 
   label {
     display: block;
-    font-weight: 600;
     font-size: 14px;
+    font-weight: 500;
+    color: #999;
     margin-bottom: 8px;
-    color: #1a1a1a;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
   }
 
   input, select {
     width: 100%;
-    padding: 12px;
-    border: 2px solid #e0e0e0;
+    padding: 16px;
+    border: 1px solid #d0d0d0;
+    border-radius: 8px;
     font-size: 16px;
     font-family: inherit;
+    background: white;
     transition: border-color 0.2s;
+    box-sizing: border-box;
   }
 
   input:focus, select:focus {
@@ -154,10 +155,12 @@
     color: white;
     border: none;
     padding: 16px;
+    border-radius: 8px;
     font-size: 18px;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
     transition: background 0.2s;
+    margin-top: 8px;
   }
 
   button:hover:not(:disabled) {
@@ -165,21 +168,17 @@
   }
 
   button:disabled {
-    opacity: 0.5;
+    opacity: 0.6;
     cursor: not-allowed;
   }
 
   @media (max-width: 768px) {
     .container {
-      padding: 40px 20px;
+      margin: 40px auto;
     }
 
     h1 {
-      font-size: 36px;
-    }
-
-    form {
-      padding: 24px;
+      font-size: 28px;
     }
   }
 </style>

@@ -23,8 +23,7 @@
 <div class="container">
   <a href="/pass/{pass.id}" class="back">← Back to pass</a>
   
-  <h1>EDIT PASS</h1>
-  <p class="subtitle">Update your listing details</p>
+  <h1>Edit Pass</h1>
 
   <form method="POST" action="?/update" use:enhance={() => {
     loading = true;
@@ -88,16 +87,16 @@
       />
     </div>
 
-    <button type="submit" class="save-button" disabled={loading}>
+    <button type="submit" disabled={loading} class="save-button">
       {loading ? 'Saving...' : 'Save Changes'}
     </button>
   </form>
 
   <div class="danger-zone">
-    <h2>Danger Zone</h2>
+    <h2>Delete Pass</h2>
     {#if !showDeleteConfirm}
       <button type="button" class="delete-button" on:click={toggleConfirm}>
-        Delete Pass 
+        Delete Pass
       </button>
     {:else}
       <p class="confirm-text">Are you sure? This cannot be undone.</p>
@@ -106,7 +105,7 @@
           <button type="submit" class="confirm-delete">Yes, Delete</button>
         </form>
         <button type="button" class="cancel-delete" on:click={cancelDelete}>
-          Cancel 
+          Cancel
         </button>
       </div>
     {/if}
@@ -114,18 +113,22 @@
 </div>
 
 <style>
+  :global(body) {
+    background-color: #f5f5f5;
+  }
+
   .container {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 60px 40px;
+    max-width: 500px;
+    margin: 80px auto;
+    padding: 0 24px;
   }
 
   .back {
     display: inline-block;
     color: #666;
     text-decoration: none;
-    font-size: 16px;
-    margin-bottom: 40px;
+    font-size: 14px;
+    margin-bottom: 32px;
     transition: color 0.2s;
   }
 
@@ -134,45 +137,41 @@
   }
 
   h1 {
-    font-size: 48px;
-    font-weight: 900;
-    margin: 0 0 8px 0;
+    font-size: 32px;
+    font-weight: 700;
+    margin: 0 0 40px 0;
     color: #1a1a1a;
   }
 
-  .subtitle {
-    font-size: 18px;
-    color: #666;
-    margin: 0 0 40px 0;
-  }
-
   form {
-    background: white;
-    border: 2px solid #e0e0e0;
-    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
   }
 
   .form-group {
-    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
   }
 
   label {
     display: block;
-    font-weight: 600;
     font-size: 14px;
+    font-weight: 500;
+    color: #999;
     margin-bottom: 8px;
-    color: #1a1a1a;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
   }
 
   input, select {
     width: 100%;
-    padding: 12px;
-    border: 2px solid #e0e0e0;
+    padding: 16px;
+    border: 1px solid #d0d0d0;
+    border-radius: 8px;
     font-size: 16px;
     font-family: inherit;
+    background: white;
     transition: border-color 0.2s;
+    box-sizing: border-box;
   }
 
   input:focus, select:focus {
@@ -186,10 +185,12 @@
     color: white;
     border: none;
     padding: 16px;
+    border-radius: 8px;
     font-size: 18px;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
     transition: background 0.2s;
+    margin-top: 8px;
   }
 
   .save-button:hover:not(:disabled) {
@@ -197,33 +198,33 @@
   }
 
   .save-button:disabled {
-    opacity: 0.5;
+    opacity: 0.6;
     cursor: not-allowed;
   }
 
   .danger-zone {
-    margin-top: 60px;
-    padding: 32px;
-    border: 2px solid #e0e0e0;
+    margin-top: 48px;
+    padding: 24px;
+    border: 1px solid #d0d0d0;
+    border-radius: 8px;
     background: white;
   }
 
   .danger-zone h2 {
-    font-size: 14px;
-    font-weight: 700;
+    font-size: 16px;
+    font-weight: 600;
     color: #666;
     margin: 0 0 16px 0;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
   }
 
   .delete-button {
     background: white;
     color: #ef4444;
-    border: 2px solid #ef4444;
+    border: 1px solid #ef4444;
     padding: 12px 24px;
+    border-radius: 8px;
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
   }
@@ -235,9 +236,9 @@
 
   .confirm-text {
     color: #666;
-    font-weight: 600;
+    font-weight: 500;
     font-size: 14px;
-    margin: 0 0 20px 0;
+    margin: 0 0 16px 0;
   }
 
   .confirm-buttons {
@@ -249,6 +250,7 @@
     padding: 0;
     border: none;
     background: none;
+    margin: 0;
   }
 
   .confirm-delete {
@@ -256,8 +258,9 @@
     color: white;
     border: none;
     padding: 12px 24px;
+    border-radius: 8px;
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
     transition: background 0.2s;
   }
@@ -268,29 +271,28 @@
 
   .cancel-delete {
     background: white;
-    color: #1a1a1a;
-    border: 2px solid #e0e0e0;
-    padding: 10px 22px;
+    color: #666;
+    border: 1px solid #d0d0d0;
+    padding: 12px 24px;
+    border-radius: 8px;
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
   }
 
   .cancel-delete:hover {
     border-color: #1a1a1a;
+    color: #1a1a1a;
   }
+
   @media (max-width: 768px) {
     .container {
-      padding: 40px 20px;
+      margin: 40px auto;
     }
 
     h1 {
-      font-size: 36px;
-    }
-
-    form, .danger-zone {
-      padding: 24px;
+      font-size: 28px;
     }
   }
 </style>
