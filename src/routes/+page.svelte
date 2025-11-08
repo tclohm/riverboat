@@ -13,8 +13,15 @@
       <p>Share the magic</p>
     </div>
     <div class="header-actions">
-      <a href="/login" class="login-link">Login</a>
-      <a href="/add" class="share-button">List your Pass</a>
+      {#if data.user}
+        <span class="user-name">Hi, {data.user.name}</span>
+        <form method="POST" action="/logout">
+          <button type="submit" class="logout-button">Logout</button>
+        </form>
+      {:else}
+        <a href="/login" class="login-link">Login</a>
+        <a href="/add" class="share-button">List your Pass</a>
+      {/if}
     </div>
   </header>
 
@@ -71,6 +78,27 @@
 
   .login-link:hover {
     color: #2563eb;
+  }
+
+  .user-name {
+    color: #666;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .logout-button {
+    background: none;
+    border: none;
+    color: #666;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.2s;
+    padding: 0;
+  }
+
+  .logout-button:hover {
+    color: #ef4444;
   }
 
   h1 {
