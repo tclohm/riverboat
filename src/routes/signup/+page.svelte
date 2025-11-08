@@ -6,14 +6,11 @@
 </script>
 
 <svelte:head>
-  <title>Sign Up - Willie's Keys</title>
+  <title>Create Account - Willie's Keys</title>
 </svelte:head>
 
 <div class="container">
-  <a href="/" class="back">← Back to home</a>
-  
-  <h1>SIGN UP</h1>
-  <p class="subtitle">Create an account to list your passes</p>
+  <h1>Create Account</h1>
 
   {#if error}
     <div class="error">{error}</div>
@@ -30,15 +27,26 @@
       await update();
     };
   }}>
-    <div class="form-group">
-      <label for="name">Name</label>
-      <input 
-        type="text" 
-        id="name" 
-        name="name" 
-        placeholder="Sarah M."
-        required
-      />
+    <div class="name-row">
+      <div class="form-group">
+        <label for="firstName">First Name</label>
+        <input 
+          type="text" 
+          id="firstName" 
+          name="firstName" 
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="lastName">Last Name</label>
+        <input 
+          type="text" 
+          id="lastName" 
+          name="lastName" 
+          required
+        />
+      </div>
     </div>
 
     <div class="form-group">
@@ -47,7 +55,6 @@
         type="email" 
         id="email" 
         name="email" 
-        placeholder="you@example.com"
         required
       />
     </div>
@@ -58,91 +65,86 @@
         type="password" 
         id="password" 
         name="password" 
-        placeholder="••••••••"
         minlength="8"
         required
       />
     </div>
 
     <button type="submit" disabled={loading}>
-      {loading ? 'Creating account...' : 'Sign Up'}
+      {loading ? 'Creating Account...' : 'Create Account'}
     </button>
   </form>
 
   <p class="footer-text">
-    Already have an account? <a href="/login">Log in</a>
+    Already have an account? <a href="/login">Login.</a>
   </p>
 </div>
 
 <style>
+  :global(body) {
+    background-color: #f5f5f5;
+  }
+
   .container {
-    max-width: 450px;
-    margin: 0 auto;
-    padding: 60px 40px;
-  }
-
-  .back {
-    display: inline-block;
-    color: #666;
-    text-decoration: none;
-    font-size: 16px;
-    margin-bottom: 40px;
-    transition: color 0.2s;
-  }
-
-  .back:hover {
-    color: #2563eb;
+    max-width: 500px;
+    margin: 80px auto;
+    padding: 0 24px;
   }
 
   h1 {
-    font-size: 48px;
-    font-weight: 900;
-    margin: 0 0 8px 0;
-    color: #1a1a1a;
-  }
-
-  .subtitle {
-    font-size: 18px;
-    color: #666;
+    font-size: 32px;
+    font-weight: 700;
     margin: 0 0 40px 0;
+    color: #1a1a1a;
   }
 
   .error {
     background: #fef2f2;
-    border: 2px solid #ef4444;
+    border: 1px solid #ef4444;
     color: #991b1b;
     padding: 12px;
     margin-bottom: 24px;
-    font-weight: 600;
+    border-radius: 8px;
+    font-size: 14px;
   }
 
   form {
-    background: white;
-    border: 2px solid #e0e0e0;
-    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .name-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
   }
 
   .form-group {
-    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
   }
 
   label {
     display: block;
-    font-weight: 600;
     font-size: 14px;
+    font-weight: 500;
+    color: #999;
     margin-bottom: 8px;
-    color: #1a1a1a;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    position: relative;
+    pointer-events: none;
   }
 
   input {
     width: 100%;
-    padding: 12px;
-    border: 2px solid #e0e0e0;
+    padding: 16px;
+    border: 1px solid #d0d0d0;
+    border-radius: 8px;
     font-size: 16px;
     font-family: inherit;
+    background: white;
     transition: border-color 0.2s;
+    box-sizing: border-box;
   }
 
   input:focus {
@@ -156,10 +158,12 @@
     color: white;
     border: none;
     padding: 16px;
+    border-radius: 8px;
     font-size: 18px;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
     transition: background 0.2s;
+    margin-top: 8px;
   }
 
   button:hover:not(:disabled) {
@@ -167,14 +171,15 @@
   }
 
   button:disabled {
-    opacity: 0.5;
+    opacity: 0.6;
     cursor: not-allowed;
   }
 
   .footer-text {
     text-align: center;
     margin-top: 24px;
-    color: #666;
+    color: #999;
+    font-size: 14px;
   }
 
   .footer-text a {
@@ -189,15 +194,15 @@
 
   @media (max-width: 768px) {
     .container {
-      padding: 40px 20px;
+      margin: 40px auto;
+    }
+
+    .name-row {
+      grid-template-columns: 1fr;
     }
 
     h1 {
-      font-size: 36px;
-    }
-
-    form {
-      padding: 24px;
+      font-size: 28px;
     }
   }
 </style>
