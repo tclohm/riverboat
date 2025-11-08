@@ -12,7 +12,10 @@
       <h1>WILLIE'S KEYS</h1>
       <p>Share the magic</p>
     </div>
-    <a href="/add" class="share-button">List your Pass</a>
+    <div class="header-actions">
+      <a href="/login" class="login-link">Login</a>
+      <a href="/add" class="share-button">List your Pass</a>
+    </div>
   </header>
 
   <div class="grid">
@@ -44,7 +47,30 @@
   }
 
   header {
-    margin-bottom: 80px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .login-link {
+    color: #666;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 600;
+    transition: color 0.2s;
+  }
+
+  .login-link:hover {
+    color: #2563eb;
   }
 
   h1 {
