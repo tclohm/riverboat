@@ -3,7 +3,7 @@ import { fail, redirect } from '@sveltejs/kit';
 
 export const actions = {
   default: async ({ request }) => {
-    const data = request.formData();
+    const data = await request.formData();
 
     const email = data.get('email')?.toString();
     const password = data.get('password')?.toString();

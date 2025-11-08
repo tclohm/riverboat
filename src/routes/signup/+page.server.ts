@@ -5,13 +5,16 @@ export const actions = {
   default: async ({ request }) => {
     const data = await request.formData();
 
-    const name = data.get('name')?.toString();
+    const firstName = data.get('firstName')?.toString();
+    const lastName = data.get('lastName')?.toString();
     const email = data.get('email')?.toString();
     const password = data.get('password')?.toString();
 
-    if (!name || !email || !password) {
+    if (!firstName || !lastName || !email || !password) {
       return fail(400, { error: 'All fields are required' });
     }
+
+    const name = `${firstName} ${lastName}`
 
     try {
       await auth.api.signUpEmail({
