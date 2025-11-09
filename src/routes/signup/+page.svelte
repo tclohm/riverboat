@@ -1,8 +1,6 @@
 <script lang="ts">
-  import { enhance } from '$app/forms';
-  
-  let loading = false;
-  let error = '';
+  import { enhance } from '$app/forms'; 
+  export let form;
 </script>
 
 <svelte:head>
@@ -12,21 +10,11 @@
 <div class="container">
   <h1>Create Account</h1>
 
-  {#if error}
-    <div class="error">{error}</div>
+  {#if form?.error}
+    <div class="error">{form.error}</div>
   {/if}
 
-  <form method="POST" use:enhance={() => {
-    loading = true;
-    error = '';
-    return async ({ result, update }) => {
-      loading = false;
-      if (result.type === 'failure') {
-        error = result.data?.error || 'Signup failed';
-      }
-      await update();
-    };
-  }}>
+  <form method="POST" use:enhance>
     <div class="name-row">
       <div class="form-group">
         <label for="firstName">First Name</label>

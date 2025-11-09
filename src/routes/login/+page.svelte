@@ -1,9 +1,6 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
-  import { goto } from '$app/navigation'; 
-
-  let loading = false;
-  let error = '';
+  export let form;
 </script>
 
 <svelte:head>
@@ -13,26 +10,11 @@
 <div class="container">
   <h1>Login</h1>
 
-  {#if error}
-    <div class="error">{error}</div>
+  {#if form?.error}
+    <div class="error">{form.error}</div>
   {/if}
 
-  <form method="POST" use:enhance={() => {
-    loading = true;
-    error = '';
-    return async ({ result, update }) => {
-      if (result.type == 'redirect') {
-        goto(result.location);
-      } else if (result.type === 'failure') {
-        loading = false;
-        error = result.data?.error || 'Login failed';
-        await update();
-      } else {
-        loading = false;
-        await update();
-      }
-    };
-  }}>
+  <form method="POST" use:enhance>
     <div class="form-group">
       <label for="email">Email</label>
       <input 
