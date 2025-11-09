@@ -13,7 +13,7 @@
   
   <h1>List Your Pass</h1>
 
-  <form method="POST" use:enhance={() => {
+  <form method="POST" action="?/create" use:enhance={() => {
     loading = true;
     return async ({ result, update }) => {
       loading = false;

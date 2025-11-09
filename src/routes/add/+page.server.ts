@@ -5,6 +5,7 @@ import { fail, redirect } from '@sveltejs/kit';
 
 export const actions = {
   create: async ({ request, platform }) => {
+    console.log("Create action called!");
     const formData = await request.formData();
     const title = formData.get('title')?.toString();
     const owner = formData.get('owner')?.toString();
@@ -29,9 +30,6 @@ export const actions = {
         passType,
         availableDates
       });
-
-      // Redirect to home page
-      throw redirect(303, '/');
     } catch (error) {
       console.error('Failed to create pass:', error);
       return fail(500, { 
@@ -39,6 +37,8 @@ export const actions = {
         values: { title, owner, price, passType, availableDates }
       });
     }
+
+    throw redirect(303, '/');
   },
   
   delete: async ({ request, platform }) => {

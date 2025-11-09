@@ -6,11 +6,15 @@ let clientInitialized = false;
 // For async contexts
 export async function getDb(platform?: any) {
   const mode = import.meta.env.MODE;
+  console.log(`Getting DB in mode: ${mode}`);
+
   const client = DatabaseClient.getInstance();
   
   if (!clientInitialized) {
+    console.log("Initializing DB client...");
     await client.initialize(mode, platform);
     clientInitialized = true;
+    console.log("DB client initialized successfully");
   }
   
   return client.getDb();

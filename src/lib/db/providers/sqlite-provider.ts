@@ -16,6 +16,7 @@ export class SQLiteProvider implements DbProvider {
     try {
       const sqlite = new Database(this.dbPath);
       this.db = drizzle(sqlite);
+      return this.db;
     } catch (error) {
       console.error('Failed to connect to SQLite database:', error);
       throw new Error(`SQLite connection error: ${error instanceof Error ? error.message : String(error)};
@@ -36,8 +37,7 @@ export class SQLiteProvider implements DbProvider {
 
   async disconnect(): Promise<void> {
     if (this.db?.driver) {
-      await this.db.driver.close();
-      this.db = null;
+      await this.db.driver.close()
     }
   }
 }

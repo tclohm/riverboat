@@ -1,7 +1,7 @@
 export interface DbProvider {
   connect(): Promise<any>;
   getDb(): any;
-  isConnected: boolean;
+  isConnected(): boolean;
   disconnect(); Promise<void>;
 }
 
