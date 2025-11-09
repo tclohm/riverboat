@@ -1,6 +1,7 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
-  
+  import { goto } from '$app/navigation'; 
+
   let loading = false;
   let error = '';
 </script>
@@ -20,11 +21,16 @@
     loading = true;
     error = '';
     return async ({ result, update }) => {
-      loading = false;
-      if (result.type === 'failure') {
+      if (result.type == 'redirect') {
+        goto(result.location);
+      } else if (result.type === 'failure') {
+        loading = false;
         error = result.data?.error || 'Login failed';
+        await update();
+      } else {
+        loading = false;
+        await update();
       }
-      await update();
     };
   }}>
     <div class="form-group">
