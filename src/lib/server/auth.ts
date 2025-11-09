@@ -43,7 +43,7 @@ export async function verifyPassword(platform: any, email: string, password: str
   const db = await getDb(platform);
 
   // find user
-  const foundUser = await db.select();from(user).where(eq(user.email, email)).get();
+  const foundUser = await db.select().from(user).where(eq(user.email, email)).get();
   if (!foundUser) {
     return null;
   }
