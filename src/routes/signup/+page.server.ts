@@ -4,7 +4,7 @@ import { fail, redirect } from '@sveltejs/kit';
 export const actions = {
   default: async ({ request }) => {
     const data = await request.formData();
-
+    
     const firstName = data.get('firstName')?.toString();
     const lastName = data.get('lastName')?.toString();
     const email = data.get('email')?.toString();
@@ -14,7 +14,7 @@ export const actions = {
       return fail(400, { error: 'All fields are required' });
     }
 
-    const name = `${firstName} ${lastName}`
+    const name = `${firstName} ${lastName}`;
 
     try {
       await auth.api.signUpEmail({
