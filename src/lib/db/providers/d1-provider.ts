@@ -21,7 +21,7 @@ export class D1Provider implements DbProvider {
     }
   }
 
-  getDb: any {
+  getDb(): any {
     if (!this.db) {
       throw new Error('Database not connected. Call connect() first.');
     }
