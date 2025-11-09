@@ -58,8 +58,8 @@
       />
     </div>
 
-    <button type="submit" disabled={loading}>
-      {loading ? 'Creating Account...' : 'Create Account'}
+    <button type="submit">
+      Create Account
     </button>
   </form>
 
