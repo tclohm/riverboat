@@ -1,16 +1,13 @@
-import { auth } from "$lib/auth";
+import { getSessionUser } from "$lib/server/auth";
 import type { Handle } from "@sveltejs/kit";
 
 export const handle: Handle = async ({ event, resolve }) => {
-  try {
-    const session = await auth.api.getSession({
-      headers: event.request.headers
-    });
-
-    event.locals.session = session;
-    event.locals.user = session?.user;
-  } catch (e) {
-    event.locals.session = null;
+  const token = event.cookies.get('session');
+  
+  if (token) {
+    const user = await getSessionUser(event.platform, token);
+    event.locals.user = user;
+  } else {
     event.locals.user = null;
   }
 

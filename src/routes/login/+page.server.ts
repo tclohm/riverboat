@@ -1,10 +1,10 @@
-import { auth } from '$lib/auth';
+import { verifyPassword, createSession } from '$lib/server/auth';
 import { fail, redirect } from '@sveltejs/kit';
 
 export const actions = {
-  default: async ({ request }) => {
+  default: async ({ request, platform, cookies }) => {
     const data = await request.formData();
-
+    
     const email = data.get('email')?.toString();
     const password = data.get('password')?.toString();
 
@@ -13,16 +13,24 @@ export const actions = {
     }
 
     try {
-      await auth.api.signInEmail({
-        body: {
-          email,
-          password
-        }
+      const user = await verifyPassword(platform, email, password);
+      
+      if (!user) {
+        return fail(400, { error: 'Invalid email or password' });
+      }
+      
+      const token = await createSession(platform, user.id);
+      
+      cookies.set('session', token, {
+        path: '/',
+        httpOnly: true,
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 30 // 30 days
       });
 
       throw redirect(303, '/');
     } catch (error: any) {
-      return fail(400, { error: 'Invalid email or password' });
+      return fail(400, { error: error.message || 'Login failed' });
     }
   }
 };
