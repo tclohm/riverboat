@@ -4,12 +4,12 @@ A marketplace for sharing Disney Magic Key passes, inspired by Steamboat Willie 
 
 ## Features
 
--  Browse available Disney Magic Key passes
--  List your own pass for others to use
--  Edit your pass details
--  Delete passes with confirmation
--  Responsive design (mobile & desktop)
--  Clean, minimal Steamboat Willie aesthetic
+- Browse available Disney Magic Key passes
+- List your own pass for others to use
+- Edit your pass details
+- Delete passes with confirmation
+- Responsive design (mobile & desktop)
+- Clean, minimal Steamboat Willie aesthetic
 
 ## Tech Stack
 
@@ -18,6 +18,18 @@ A marketplace for sharing Disney Magic Key passes, inspired by Steamboat Willie 
 - **Cloudflare D1** - Production database
 - **Drizzle ORM** - Type-safe database queries
 - **Cloudflare Pages** - Free hosting with auto-deploy
+
+## Database Architecture
+
+This project uses a robust database connection pattern with:
+
+- **Singleton Pattern** - Maintains a single database connection throughout the application
+- **Provider Pattern** - Abstracts database implementations (SQLite for development, D1 for production)
+- **Factory Pattern** - Creates the appropriate database provider based on environment
+
+The database connections are managed automatically based on the environment:
+- **Development** (`npm run dev`): Uses local SQLite database (`local.db`)
+- **Production** (`npm run build`): Uses Cloudflare D1 database
 
 ## Local Development
 
@@ -46,7 +58,7 @@ npx drizzle-kit push
 
 4. Seed local database with sample passes
 ```bash
-npx tsx src/lib/db/seed.ts
+npm run seed
 ```
 
 5. Run development server
@@ -60,14 +72,19 @@ Open http://localhost:5173
 
 ### Seed Data
 
-**Generate 50 fake passes locally:**
+**Generate sample passes for local development:**
 ```bash
-npx tsx src/lib/db/seed.ts
+npm run seed
 ```
 
-**Generate SQL for production:**
+**Generate SQL for production seeding:**
 ```bash
-npx tsx src/lib/db/seed.ts --sql > seed.sql
+npm run seed:sql
+```
+
+This will output SQL that can be applied to your production database:
+```bash
+npm run seed:sql > seed.sql
 npx wrangler d1 execute willies-keys-db --remote --file=seed.sql
 ```
 
@@ -83,6 +100,36 @@ npx drizzle-kit push
 ```bash
 npx drizzle-kit generate
 npx wrangler d1 execute willies-keys-db --remote --file=./drizzle/[migration-file].sql
+```
+
+## Project Structure
+```
+willies-keys/
+├── src/
+│   ├── lib/
+│   │   ├── db/
+│   │   │   ├── client.ts          # Database client (singleton)
+│   │   │   ├── factory.ts         # Database factory
+│   │   │   ├── index.ts           # Main database API
+│   │   │   ├── schema.ts          # Database schema
+│   │   │   ├── seed.ts            # Seeding script
+│   │   │   └── providers/         # Database providers
+│   │   │       ├── types.ts       # Provider interfaces
+│   │   │       ├── sqlite-provider.ts  # SQLite implementation
+│   │   │       └── d1-provider.ts # Cloudflare D1 implementation
+│   │   └── server/
+│   │       └── auth.ts            # Authentication logic
+│   └── routes/                    # SvelteKit routes
+│       ├── +page.svelte           # Homepage (browse passes)
+│       ├── +page.server.ts        # Load passes from DB
+│       ├── add/                   # Add pass route
+│       ├── pass/[id]/             # Pass detail routes
+│       └── login/, signup/, etc.  # Auth routes
+├── static/                        # Static assets
+├── drizzle/                       # Generated migrations
+├── wrangler.toml                  # Cloudflare configuration
+├── drizzle.config.ts             # Drizzle ORM configuration
+└── package.json                  # Project dependencies
 ```
 
 ## Production Deployment
@@ -120,7 +167,7 @@ npx wrangler d1 execute willies-keys-db --remote --file=./drizzle/[migration-fil
 
 6. Seed production database
 ```bash
-npx tsx src/lib/db/seed.ts --sql > seed.sql
+npm run seed:sql > seed.sql
 npx wrangler d1 execute willies-keys-db --remote --file=seed.sql
 ```
 
@@ -143,62 +190,17 @@ git push
    - Variable name: `willies_keys_db`
    - D1 database: Select `willies-keys-db`
 
-4. Every push to `main` auto-deploys! 🎉
-
-## Project Structure
-```
-willies-keys/
-├── src/
-│   ├── lib/
-│   │   └── db/
-│   │       ├── schema.ts       # Database schema
-│   │       ├── index.ts        # Database connection (dev/prod)
-│   │       ├── local.ts        # Local SQLite connection
-│   │       └── seed.ts         # Seed script
-│   └── routes/
-│       ├── +page.svelte        # Homepage (browse passes)
-│       ├── +page.server.ts     # Load passes from DB
-│       ├── add/
-│       │   ├── +page.svelte    # Add new pass form
-│       │   └── +page.server.ts # Create pass action
-│       └── pass/[id]/
-│           ├── +page.svelte    # Pass detail page
-│           ├── +page.server.ts # Load single pass
-│           └── edit/
-│               ├── +page.svelte    # Edit pass form
-│               └── +page.server.ts # Update/delete actions
-├── wrangler.toml               # Cloudflare configuration
-├── drizzle.config.ts           # Drizzle ORM configuration
-└── package.json
-```
-
-## Environment Detection
-
-The app automatically detects whether it's running in development or production:
-
-- **Development mode** (`npm run dev`): Uses local SQLite database (`local.db`)
-- **Production mode** (`npm run build`): Uses Cloudflare D1 database
-
-This is controlled by `import.meta.env.MODE` in the database connection logic.
-
-## Database Schema
-
-### passes
-- `id` - integer (primary key)
-- `title` - text (e.g., "Magic Key - Dream Pass")
-- `owner` - text (pass holder's name)
-- `price` - integer (price per day in dollars)
-- `pass_type` - text (Dream Key, Inspire Key, etc.)
-- `available_dates` - text (when the pass is available)
-- `user_id` - text (optional, for future auth)
+4. Every push to `main` auto-deploys!
 
 ## Scripts
 
-- `npm run dev` - Start development server (uses local SQLite)
-- `npm run build` - Build for production (uses Cloudflare D1)
+- `npm run dev` - Start development server (uses SQLite)
+- `npm run dev:prod` - Start development server simulating production (uses SQLite with production settings)
+- `npm run build` - Build for production (targets Cloudflare D1)
+- `npm run build:dev` - Build development version (uses SQLite)
 - `npm run preview` - Preview production build locally
-- `npx tsx src/lib/db/seed.ts` - Seed local database
-- `npx tsx src/lib/db/seed.ts --sql` - Generate SQL for production seeding
+- `npm run seed` - Seed local database with sample data
+- `npm run seed:sql` - Generate SQL for production seeding
 
 ## License
 
