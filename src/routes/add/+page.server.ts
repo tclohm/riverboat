@@ -4,7 +4,12 @@ import { eq } from 'drizzle-orm';
 import { fail, redirect } from '@sveltejs/kit';
 
 export const actions = {
-  create: async ({ request, platform }) => {
+  create: async ({ request, platform, locals }) => {
+
+    if (!locals.user) {
+      throw redirect(303, '/login?redirect=/add');
+    }
+    
     console.log("Create action called!");
     const formData = await request.formData();
     const title = formData.get('title')?.toString();
@@ -28,7 +33,8 @@ export const actions = {
         owner,
         price,
         passType,
-        availableDates
+        availableDates,
+        userId: locals.user.id
       });
     } catch (error) {
       console.error('Failed to create pass:', error);
