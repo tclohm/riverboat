@@ -1,11 +1,22 @@
-import { getDb } from '$lib/db';
+import { DatabaseClient } from '$lib/db/client';
 import { user, session, account } from '$lib/db/schema';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
 
+async function getDbFromClient(platform: any) {
+  const mode = import.meta.env.MODE;
+  const client = DatabaseClient.getInstance();
+
+  if (!client.isInitialized) {
+    await client.initialize(mode, platform);
+  }
+
+  return client.getDb();
+}
+
 export async function createUser(platform: any, email: string, password: string, name: string) {
-  const db = await getDb(platform);
+  const db = await getDbFromClient(platform);
 
   // check if user exists
   const existing = await db.select().from(user).where(eq(user.email, email)).get();
