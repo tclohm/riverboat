@@ -5,7 +5,7 @@ import * as scheam from './schema';
 export class DatabaseClient {
   private static instance: DatabaseClient | null = null;
   private provider: DbProvider | null = null;
-  private isInitialized = false;
+  private _isInitialized = false;
 
   private constructor() {}
 
@@ -17,12 +17,12 @@ export class DatabaseClient {
   }
 
   async initialize(mode: string, platform?: any): Promise<void> {
-    if (this.isInitialized) return;
+    if (this._isInitialized) return;
 
     try {
       this.provider = DatabaseFactory.createProvider(mode, platform);
       await this.provider.connect();
-      this.isInitialized = true;
+      this._isInitialized = true;
       console.log(`Database initialized in ${mode} mode`);
     } catch (error) {
       console.error('Failed to initialize database client:', error);
@@ -31,7 +31,7 @@ export class DatabaseClient {
   }
 
   getDb(): any {
-    if (!this.isInitialized || !this.provider) {
+    if (!this._isInitialized || !this.provider) {
       throw new Error('Database client not initialized. Call initialize() first.');
     }
     return this.provider.getDb();
@@ -40,7 +40,7 @@ export class DatabaseClient {
   async disconnect(): Promise<void> {
     if (this.provider) {
       await this.provider.disconnect();
-      this.isInitialized = false;
+      this._isInitialized = false;
       console.log('Database disconnected');
     }
   }
@@ -48,8 +48,8 @@ export class DatabaseClient {
   get schema() {
     return schema;
   }
-
+    
   get isInitialized(): boolean {
-    return this.isInitialized;
+    return this._isInitialized;
   }
 }

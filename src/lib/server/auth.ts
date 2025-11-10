@@ -51,7 +51,7 @@ export async function createUser(platform: any, email: string, password: string,
 }
 
 export async function verifyPassword(platform: any, email: string, password: string) {
-  const db = await getDb(platform);
+  const db = await getDbFromClient(platform);
 
   // find user
   const foundUser = await db.select().from(user).where(eq(user.email, email)).get();
@@ -78,7 +78,7 @@ export async function verifyPassword(platform: any, email: string, password: str
 }
 
 export async function createSession(platform: any, userId: string) {
-  const db = await getDb(platform);
+  const db = await getDbFromClient(platform);
 
   const token = randomBytes(32).toString('hex');
   const sessionId = randomBytes(16).toString('hex');
@@ -99,7 +99,7 @@ export async function createSession(platform: any, userId: string) {
 export async function getSessionUser(platform: any, token: string) {
   if (!token) return null;
 
-  const db = await getDb(platform);
+  const db = await getDbFromClient(platform);
 
   const foundSession = await db.select().from(session)
     .where(eq(session.token, token))
@@ -115,6 +115,6 @@ export async function getSessionUser(platform: any, token: string) {
 }
 
 export async function deleteSession(platform: any, token: string) {
-  const db = await getDb(platform);
+  const db = await getDbFromClient(platform);
   await db.delete(session).where(eq(session.token, token)).run();
 }
