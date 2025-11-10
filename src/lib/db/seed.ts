@@ -1,7 +1,7 @@
 import { getDb, initializeDb } from './index';
 import { passes } from './schema';
 
-//  sample data
+// Define sample data
 const owners = [
   'Sarah M.', 'Mike R.', 'Emily T.', 'David K.', 'Jessica L.', 'Robert H.',
   'Amanda P.', 'Chris W.', 'Nicole B.', 'Ryan S.', 'Lauren F.', 'James D.',
@@ -18,6 +18,7 @@ const dateOptions = [
   'Nov 8-28', 'December available', 'January 2025', 'Spring 2025'
 ];
 
+// Generate seed data
 function generateSeedData() {
   const seedData = [];
 
@@ -61,16 +62,32 @@ if (generateSQL) {
   process.exit(0);
 }
 
+// Export the seeding function
 export async function seedDatabase() {
   try {
+    console.log('Starting database seeding process...');
+    console.log(`Environment mode: ${import.meta.env.MODE}`);
+    // Initialize the database
+    console.log('Initializing database...');
     await initializeDb();
-    
+    console.log('Database initialized successfully');
+
+    console.log('Getting database client...');
     const db = await getDb();
+    console.log('Database client obtained successfully');
     
+    // generate seed data
+    const seedData = generateSeedData();
+    console.log(`Generated ${seedData.length} seed records`);
+
+    // insert seed data 
     console.log('Inserting seed data...');
-    await db.insert(passes).values(seedData);
-    
-    console.log('Database seeded with 50 passes!');
+    const result = await db.insert(passes).values(seedData);
+    console.log('Insert operation completed', result); 
+
+
+    console.log('Database seeded successfully with 50 passes!');
+    reutrn true
   } catch (error) {
     console.error('Error seeding database:', error);
     throw error;
@@ -78,9 +95,15 @@ export async function seedDatabase() {
 }
 
 // Auto-run if this is the main script
-if (import.meta.url === import.meta.main) {
-  seedDatabase().catch(err => {
-    console.error('Seeding failed:', err);
+if (import.meta.main) {
+  console.log('Running seed script as main module');
+  seedDatabase()
+  .then(success => {
+    console.log('Seed operation completed:', success ? 'SUCCESS' : 'FAILED');
+    process.exit(success ? 0 : 1);
+;  })
+  .catch(err => {
+    console.error('Seeding failed with an unhandled exception:', err);
     process.exit(1);
   });
 }
