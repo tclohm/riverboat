@@ -5,6 +5,7 @@ A marketplace for sharing Disney Magic Key passes, inspired by Steamboat Willie 
 ## Features
 
 - Browse available Disney Magic Key passes
+- User authentication with secure login/registration
 - List your own pass for others to use
 - Edit your pass details
 - Delete passes with confirmation
@@ -67,6 +68,26 @@ npm run dev
 ```
 
 Open http://localhost:5173
+
+### Setup Authentication
+
+1. Generate database with authentication tables
+```bash
+npx drizzle-kit generate
+npx drizzle-kit push
+```
+
+2. Create a test user account
+```bash
+# You can register through the UI or run:
+npm run seed:users
+```
+
+3. Update your D1 database with auth tables
+```bash
+npx wrangler d1 execute willies-keys-db --remote --file=./drizzle/[migration-file].sql
+```
+
 
 ## Database Management
 
@@ -201,6 +222,45 @@ git push
 - `npm run preview` - Preview production build locally
 - `npm run seed` - Seed local database with sample data
 - `npm run seed:sql` - Generate SQL for production seeding
+
+
+## Authentication System
+
+Willie's Keys now includes a complete authentication system with the following features:
+
+- User registration with secure password hashing
+- Login/logout functionality
+- Session management with secure cookies
+- Protected routes for pass management
+
+The authentication system uses:
+- Bcrypt for secure password hashing
+- Cryptographically secure session tokens
+- HttpOnly cookies for enhanced security
+- Database tables for users, accounts, and sessions
+
+## Database Architecture Update
+
+The database schema has been extended to include authentication-related tables:
+
+- **user** - Stores user profiles with name, email, and verification status
+- **account** - Manages authentication providers and credentials
+- **session** - Handles active user sessions
+- **verification** - Supports email verification and password reset
+
+All database interactions now use our robust provider pattern with:
+- Type-safe schema definitions
+- Singleton database client for efficient connection management
+- Separate providers for SQLite (development) and D1 (production)
+- Factory pattern to instantiate the appropriate database provider
+
+## User Interface Updates
+
+The application now features:
+- Dynamic header that shows user information when logged in
+- Login and registration forms with validation
+- Secure authentication flows
+- User-specific content views
 
 ## License
 
