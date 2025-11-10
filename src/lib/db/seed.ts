@@ -87,7 +87,7 @@ export async function seedDatabase() {
 
 
     console.log('Database seeded successfully with 50 passes!');
-    reutrn true
+    return true
   } catch (error) {
     console.error('Error seeding database:', error);
     throw error;
@@ -95,15 +95,23 @@ export async function seedDatabase() {
 }
 
 // Auto-run if this is the main script
-if (import.meta.main) {
-  console.log('Running seed script as main module');
-  seedDatabase()
-  .then(success => {
-    console.log('Seed operation completed:', success ? 'SUCCESS' : 'FAILED');
-    process.exit(success ? 0 : 1);
-;  })
-  .catch(err => {
-    console.error('Seeding failed with an unhandled exception:', err);
-    process.exit(1);
+if (process.argv.includes('--sql')) {
+  const seedData = generateSeedData();
+  seedData.forEach(pass => {
+    console.log(
+      `INSERT INTO passes (title, owner, price, pass_type, available_dates) VALUES ('${pass.title}', '${pass.owner}', ${pass.price}, '${pass.passType}', '${pass.availableDates}');`
+    );
   });
+} else {
+  // Always run the seeding function
+  console.log('Running seed script...');
+  seedDatabase()
+    .then(success => {
+      console.log('Seed operation completed:', success ? 'SUCCESS' : 'FAILED');
+      process.exit(success ? 0 : 1);
+    })
+    .catch(err => {
+      console.error('Seeding failed with an unhandled exception:', err);
+      process.exit(1);
+    });
 }
