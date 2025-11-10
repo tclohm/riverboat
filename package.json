@@ -12,8 +12,8 @@
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"seed": "vite-node --mode development src/lib/db/seed.ts",
-		"seed:sql": "vite-node --mode development src/lib/db/seed.ts --sql > seed.sql"
+		"seed": "NODE_ENV=development vite-node src/lib/db/seed.ts",
+		"seed:sql": "NODE_ENV=development vite-node src/lib/db/seed.ts --sql > seed.sql"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^7.0.0",
