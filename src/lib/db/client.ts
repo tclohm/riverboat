@@ -48,4 +48,8 @@ export class DatabaseClient {
   get schema() {
     return schema;
   }
+
+  get isInitialized(): boolean {
+    return this.isInitialized;
+  }
 }
