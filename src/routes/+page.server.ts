@@ -5,6 +5,7 @@ export async function load({ platform, locals }) {
   const db = await getDb(platform)
   const allPasses = await db.select().from(passes).all()
   return { 
-    passes: allPasses
+    passes: allPasses,
+    user: locals.user
   };
 }

@@ -27,10 +27,10 @@ export const actions = {
         sameSite: 'lax',
         maxAge: 60 * 60 * 24 * 30 // 30 days
       });
-
-      throw redirect(303, '/');
     } catch (error: any) {
       return fail(400, { error: error.message || 'Login failed' });
     }
+
+    throw redirect(303, '/');
   }
 };

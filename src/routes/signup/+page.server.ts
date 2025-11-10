@@ -27,9 +27,10 @@ export const actions = {
         maxAge: 60 * 60 * 24 * 30 // 30 days 
       });
       
-      throw redirect(303, '/login');
     } catch (error: any) {
       return fail(400, { error: error.message || 'Signup failed' });
     }
+
+    throw redirect(303, '/login');
   }
 };
