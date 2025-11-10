@@ -14,6 +14,7 @@
     </div>
     <div class="header-actions">
       {#if data.user}
+        <a href="/admin" class="admin-link">Manage Passes</a>
         <span class="user-name">Hi, {data.user.name}</span>
         <form method="POST" action="/logout">
           <button type="submit" class="logout-button">Logout</button>

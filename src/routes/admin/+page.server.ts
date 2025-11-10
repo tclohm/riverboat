@@ -15,6 +15,7 @@ export async function load({ platform, locals }) {
     .all();
 
   return {
-    passes: userPasses
+    passes: userPasses,
+    user: locals.user
   };
 }
