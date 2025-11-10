@@ -7,7 +7,7 @@ export const passes = sqliteTable('passes', {
   price: integer('price').notNull(),
   passType: text('pass_type').notNull(),
   availableDates: text('available_dates').notNull(),
-  userId: text('user_id').notNull().references(() => user.id)
+  userId: text('user_id').references(() => user.id)
 });
 
 export const user = sqliteTable('user', {
