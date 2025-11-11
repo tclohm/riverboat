@@ -15,6 +15,27 @@
       "when": 1762473805985,
       "tag": "0001_glorious_khan",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1762804070335,
+      "tag": "0002_lowly_lyja",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1762804298830,
+      "tag": "0003_lyrical_sprite",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1762811665852,
+      "tag": "0004_slow_lady_deathstrike",
+      "breakpoints": true
     }
   ]
 }
