@@ -6,7 +6,7 @@
   let filter = { type: '' }; 
   let sortOption = 'price-asc'; 
 
-  $: filteredPasses = data.passes 
+  $: filteredPasses  = data.passes 
      .filter(pass => !filter.type || pass.passType === filter.type)
      .sort((a, b) => {
       if (sortOption === 'price-asc') return a.price - b.price; 
@@ -16,6 +16,29 @@
   });
 
   let showDeleteConfirm: any = null;
+
+  const ITEMS_PER_PAGE = 6;
+  let currentPage = 1;
+
+  $: totalPages = Math.ceil(filteredPasses.length / ITEMS_PER_PAGE);
+  $: paginatedPasses = filteredPasses.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  function nextPage() {
+    if (currentPage < totalPages) currentPage++;
+  }
+
+  function prevPage() {
+    if (currentPage > 1) currentPage--;
+  }
+
+  function goToPage(page) {
+    currentPage = page;
+  }
+  
+  $: filter, sortOption, currentPage = 1
 </script>
 
 <svelte:head>
@@ -116,8 +139,36 @@
         </div>
       {/each}
     </div>
+
+    {#if totalPages > 1}
+      <div class="pagination">
+        <button 
+          on:click={prevPage} 
+          disabled={currentPage === 1} 
+          class="page-btn prev-btn">
+          &larr; Prev
+        </button>
+        
+        <div class="page-numbers">
+          {#each Array(totalPages) as _, i}
+            <button 
+              class="page-num {currentPage === i+1 ? 'active' : ''}" 
+              on:click={() => goToPage(i+1)}>
+              {i+1}
+            </button>
+          {/each}
+        </div>
+        
+        <button 
+          on:click={nextPage} 
+          disabled={currentPage === totalPages} 
+          class="page-btn next-btn">
+          Next &rarr;
+        </button>
+      </div>
+    {/if}
   {/if}
-    {#if showDeleteConfirm}
+  {#if showDeleteConfirm}
     <div class="modal-backdrop" on:click={() => showDeleteConfirm = null}>
       <div class="modal-content" on:click|stopPropagation>
         <h2>Delete Pass?</h2>
@@ -504,6 +555,65 @@
   
   .nav-item.active {
     background: #e6f0fd;
+    color: #2563eb;
+  }
+
+  .pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 32px;
+  }
+  
+  .page-btn {
+    background: white;
+    border: 1px solid #ddd;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #666;
+  }
+  
+  .page-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .page-btn:hover:not(:disabled) {
+    background: #f3f4f6;
+    color: #2563eb;
+  }
+  
+  .page-numbers {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .page-num {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 14px;
+    font-weight: 600;
+    background: white;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    color: #666;
+  }
+  
+  .page-num.active {
+    background: #2563eb;
+    color: white;
+    border-color: #2563eb;
+  }
+  
+  .page-num:hover:not(.active) {
+    background: #f3f4f6;
     color: #2563eb;
   }
   
