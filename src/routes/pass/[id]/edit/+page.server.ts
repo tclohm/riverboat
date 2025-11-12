@@ -78,7 +78,7 @@ export const actions = {
 
     // verify pass exists and belongs to user
     const db = await getDb(platform);
-    const pass = await db.select().from(passes).where(eq(passes.id, parseIng(params.id))).get();
+    const pass = await db.select().from(passes).where(eq(passes.id, parseInt(params.id))).get();
 
     if (!pass) {
       throw error(404, 'Pass not found');
@@ -93,6 +93,6 @@ export const actions = {
       .where(eq(passes.id, parseInt(params.id)))
       .run();
 
-    throw redirect(303, '/');
+    throw redirect(303, '/admin');
   }
 };
