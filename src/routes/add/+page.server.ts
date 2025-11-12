@@ -3,7 +3,7 @@ import { passes } from '$lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { fail, redirect } from '@sveltejs/kit';
 
-export async function load({ locals }) => {
+export async function load({ locals }) {
   if (!locals.user) {
     throw redirect(303, '/login?returnTo=/add');
   }
