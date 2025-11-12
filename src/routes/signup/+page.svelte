@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { enhance } from '$app/forms'; 
+  import { enhance } from '$app/forms';
+  export let data;
   export let form;
 </script>
 
@@ -15,6 +16,7 @@
   {/if}
 
   <form method="POST" use:enhance>
+    <input type="hidden" name="returnTo" value={form?.returnTo || data.returnTo || '/'} />
     <div class="name-row">
       <div class="form-group">
         <label for="firstName">First Name</label>
@@ -64,7 +66,7 @@
   </form>
 
   <p class="footer-text">
-    Already have an account? <a href="/login">Login.</a>
+    Already have an account? <a href="/login?returnTo={data.returnTo}">Login.</a>
   </p>
 </div>
 
