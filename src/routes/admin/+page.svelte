@@ -169,19 +169,28 @@
     {/if}
   {/if}
   {#if showDeleteConfirm}
-    <div class="modal-backdrop" on:click={() => showDeleteConfirm = null}>
-      <div class="modal-content" on:click|stopPropagation>
-        <h2>Delete Pass?</h2>
-        <p>Are you sure you want to delete this pass? This action cannot be undone.</p>
+  <div 
+    class="modal-backdrop" 
+    on:click={() => showDeleteConfirm = null}
+    on:keydown={(e) => e.key === 'Escape' && (showDeleteConfirm = null)}
+    tabindex="0"
+    role="button"
+    aria-label="Close modal"
+  >
+    <div class="modal-content" on:click|stopPropagation
+    role="main"
+    aria-label="modal content">
+      <h2>Delete Pass?</h2>
+      <p>Are you sure you want to delete this pass? This action cannot be undone.</p>
         
-        <div class="modal-actions">
-          <button on:click={() => showDeleteConfirm = null} class="cancel-btn">Cancel</button>
-          <form method="POST" action="/pass/{showDeleteConfirm}/edit?/delete" use:enhance>
+      <div class="modal-actions">
+        <button on:click={() => showDeleteConfirm = null} class="cancel-btn">Cancel</button>
+        <form method="POST" action="/pass/{showDeleteConfirm}/edit?/delete" use:enhance>
             <button type="submit" class="confirm-delete-btn">Yes, Delete</button>
-          </form>
-        </div>
+        </form>
       </div>
     </div>
+  </div>
   {/if}
 </div>
 

@@ -1,6 +1,7 @@
 <script lang="ts">
   export let data;
   const { pass } = data;
+  const isOwner = data.user && data.pass.userId == data.user.id;
 </script>
 
 <svelte:head>
@@ -10,7 +11,9 @@
 <div class="container">
   <div class="top-nav">
     <a href="/" class="back">← Back</a>
+    {#if isOwner}
     <a href="/pass/{pass.id}/edit" class="edit-button">Edit Pass</a> 
+    {/if}
   </div>
   <div class="detail">
     <div class="info">
@@ -26,7 +29,11 @@
     <div class="booking">
       <div class="price-box">
         <div class="price">${pass.price}<span>/day</span></div>
-        <button>Request Booking</button>
+        {#if data.user && !isOwner}
+          <button>Request Booking</button>
+        {:else}
+          <a href="/login?returnTo=/pass/{data.pass.id}" class="login-button">Login to Book</a>
+        {/if}
       </div>
     </div>
   </div>

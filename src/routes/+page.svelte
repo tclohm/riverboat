@@ -21,7 +21,7 @@
         </form>
       {:else}
         <a href="/login" class="login-link">Login</a>
-        <a href="/add" class="share-button">List your Pass</a>
+        <a href="/login?returnTo=/add" class="share-button">List your Pass</a>
       {/if}
     </div>
   </header>

@@ -3,6 +3,17 @@ import { passes } from '$lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { fail, redirect } from '@sveltejs/kit';
 
+export async function load({ locals }) {
+  if (!locals.user) {
+    throw redirect(303, '/login?returnTo=/add');
+  }
+
+
+  return {
+    user: locals.user
+  }
+}
+
 export const actions = {
   create: async ({ request, platform, locals }) => {
 
@@ -44,10 +55,16 @@ export const actions = {
       });
     }
 
-    throw redirect(303, '/');
+    throw redirect(303, '/admin');
   },
   
   delete: async ({ request, platform }) => {
+
+    if (!locals.user) {
+      throw redirect(303, '/');
+    }
+
+
     const formData = await request.formData();
     const id = parseInt(formData.get('id')?.toString() || '0');
 
@@ -67,5 +84,8 @@ export const actions = {
       console.error('Failed to delete pass:', error);
       return fail(500, { error: 'Failed to delete pass. Please try again.' });
     }
+
+    throw redirect(303, '/')
   }
+
 };

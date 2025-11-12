@@ -1,9 +1,18 @@
 import { createUser, createSession } from '$lib/server/auth';
 import { fail, redirect } from '@sveltejs/kit';
 
+export function load({ url }) {
+  const returnTo = url.searchParams.get('returnTo') || '/';
+  return {
+    returnTo
+  };
+}
+
 export const actions = {
   default: async ({ request, platform, cookies }) => {
     const data = await request.formData();
+
+    const returnTo = data.get('returnTo')?.toString() || '/';
     
     const firstName = data.get('firstName')?.toString();
     const lastName = data.get('lastName')?.toString();
@@ -11,7 +20,10 @@ export const actions = {
     const password = data.get('password')?.toString();
 
     if (!firstName || !lastName || !email || !password) {
-      return fail(400, { error: 'All fields are required' });
+      return fail(400, { 
+        error: 'All fields are required',
+        returnTo
+      });
     }
 
     const name = `${firstName} ${lastName}`;
@@ -28,9 +40,13 @@ export const actions = {
       });
       
     } catch (error: any) {
-      return fail(400, { error: error.message || 'Signup failed' });
+      return fail(400, { 
+        error: error.message || 'Signup failed',
+        returnTo
+      });
     }
 
-    throw redirect(303, '/login');
+    throw redirect(303, returnTo);
+
   }
 };

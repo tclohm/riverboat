@@ -1,5 +1,6 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
+  export let data;
   export let form;
 </script>
 
@@ -15,6 +16,7 @@
   {/if}
 
   <form method="POST" use:enhance>
+    <input type="hidden" name="returnTo" value={form?.returnTo || data.returnTo || '/'} />
     <div class="form-group">
       <label for="email">Email</label>
       <input 
