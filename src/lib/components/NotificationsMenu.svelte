@@ -12,13 +12,13 @@
     isOpen = !isOpen;  
   }
 
-  function handleKeyDown(event) {
+  function handleKeyDown(event: any) {
     if (event.key === 'Escape' && isOpen) {
       isOpen = false;
     }
   }
 
-  function markAsRead(notificationId) {
+  function markAsRead(notificationId: any) {
     dispatch('markAsRead', { id: notificationId });
   }
 
@@ -43,8 +43,9 @@
   
   {#if isOpen}
     <div 
-      aria-label="notification menu"
-      aria-roledescription="menu for notification"
+      role="menu"
+      tabindex="0"
+      aria-label="notifications menu"
       class="notifications-menu"
       on:click|stopPropagation
       on:keydown|stopPropagation

@@ -60,12 +60,12 @@
     on:click={() => showInquiryForm = false}
     on:keydown={(e) => e.key === 'Escape' && (showInquiryForm = false)}
     tabindex="0"
-    role="dialog"
-    aria-modal="true"
+    role="button"
   >
     <div 
       class="modal-content" 
       on:click|stopPropagation
+      role="presentation"
     >
       <h2>Request {data.pass.title}</h2>
       

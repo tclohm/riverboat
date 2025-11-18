@@ -51,7 +51,6 @@
       <h1>Manage Your Passes</h1>
       <p>Here you can view, edit, and manage all your listed passes</p>
     </div>
-    <a href="/add" class="add-button">+ Add New Pass</a>
   </header>
   <div class="admin-nav">
     <a href="/admin" class="nav-item active">Dashboard</a>

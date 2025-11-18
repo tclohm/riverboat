@@ -3,7 +3,7 @@
 
   import NotificationsMenu from '$lib/components/NotificationsMenu.svelte';
 
-  async function markNoticationRead(event) {
+  async function markNotificationRead(event) {
     const { id } = event.detail;
 
     try {
@@ -71,7 +71,7 @@
             on:viewAll={navigateToNotifications}
           />
           <a href="/admin" class="admin-link">Manage Passes</a>
-          <a href="/add-link">Add Pass</a>
+          <a href="/add">Add Pass</a>
           <span class="user-name">Hi, {data.user.name}</span>
           <form method="POST" action="/logout">
             <button type="submit" class="logout-button">Logout</button>

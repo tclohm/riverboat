@@ -7,10 +7,10 @@
   // Define navigation items
   const navItems = [
     { href: '/admin', label: 'Dashboard', icon: '📊' },
-    { href: '/admin/passes', label: 'My Passes', icon: '🎫' },
-    { href: '/admin/bookings', label: 'Bookings', icon: '📅' },
+    { href: '/passes', label: 'My Passes', icon: '🎫' },
+    { href: '/bookings', label: 'Bookings', icon: '📅' },
     { href: '/add', label: 'Add Pass', icon: '➕' },
-    { href: '/admin/profile', label: 'Profile', icon: '👤' },
+    { href: '/profile', label: 'Profile', icon: '👤' },
   ];
 </script>
 
@@ -64,7 +64,7 @@
   <!-- Mobile menu overlay (only shown on small screens) -->
   {#if showMobileMenu}
   <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions because of popup -->
-    <div class="mobile-menu-overlay" on:click={() => showMobileMenu = false} on:keydown={(e) => e.key === 'Escape' && (showMobileMenu = false)} tabindex="0">
+    <div class="mobile-menu-overlay" on:click={() => showMobileMenu = false} on:keydown={(e) => e.key === 'Escape' && (showMobileMenu = false)} role="presentation">
       <div class="mobile-menu" on:click|stopPropagation>
         <!-- Mobile nav items (same as sidebar) -->
         <nav class="mobile-nav">
