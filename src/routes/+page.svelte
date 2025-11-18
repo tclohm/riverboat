@@ -1,5 +1,53 @@
 <script lang="ts">
   export let data;
+
+  import NotificationsMenu from '$lib/components/NotificationsMenu.svelte';
+
+  async function markNoticationRead(event) {
+    const { id } = event.detail;
+
+    try {
+      const response = await fetch(`/api/notifications/${id}/read`, { 
+        method: 'POST'
+      });
+      
+      if (response.ok) {
+        data.notifications = data.notifications.map(notifcation => {
+          if (notifcation.id === id) {
+            return { ...notifcation, read: true };
+          }
+          return notifcation;
+        });
+
+        data.unreadCount = data.notifcation.filter(n => !n.read).length;
+      }
+    } catch (error) {
+      console.error('Failed to mark notification as read', error);
+    }
+  }
+
+  async function markAllNotificationsRead() {
+    try {
+      const response = await fetch('/api/notifications/read-all', { 
+        method: 'POST'
+      })
+
+      if (response.ok) {
+        data.notifications = data.notifications.map(notification => { 
+          return { ...notification, read: true };
+        });
+
+        data.unreadCount = 0;
+      }
+    } catch (error) { 
+      console.error('Failed to mark all notifications as read:', error);
+    }
+  }
+
+  function navigateToNotifications() {
+    window.location.href = '/notifications';
+  }
+
 </script>
 
 <svelte:head>
@@ -14,11 +62,21 @@
     </div>
     <div class="header-actions">
       {#if data.user}
-        <a href="/admin" class="admin-link">Manage Passes</a>
-        <span class="user-name">Hi, {data.user.name}</span>
-        <form method="POST" action="/logout">
-          <button type="submit" class="logout-button">Logout</button>
-        </form>
+        <div class="user-actions">
+          <NotificationsMenu 
+            notifications={data.notifications || []} 
+            unreadCount={data.unreadCount || 0}
+            on:markRead={markNotificationRead}
+            on:markAllRead={markAllNotificationsRead}
+            on:viewAll={navigateToNotifications}
+          />
+          <a href="/admin" class="admin-link">Manage Passes</a>
+          <a href="/add-link">Add Pass</a>
+          <span class="user-name">Hi, {data.user.name}</span>
+          <form method="POST" action="/logout">
+            <button type="submit" class="logout-button">Logout</button>
+          </form>
+        </div>
       {:else}
         <a href="/login" class="login-link">Login</a>
         <a href="/login?returnTo=/add" class="share-button">List your Pass</a>
@@ -67,6 +125,12 @@
     display: flex;
     gap: 16px;
     align-items: center;
+  } 
+
+  .user-actions {
+    display: flex;
+    align-items: center;
+    gap 16px;
   }
 
   .login-link {
