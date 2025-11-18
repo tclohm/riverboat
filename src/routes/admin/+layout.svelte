@@ -1,6 +1,8 @@
 <script>
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   export let data;
+
+  let showMobileMenu = false;
   
   // Define navigation items
   const navItems = [
@@ -24,7 +26,7 @@
       {#each navItems as item}
         <a 
           href={item.href} 
-          class="nav-item {$page.url.pathname === item.href ? 'active' : ''}"
+          class="nav-item {page.url.pathname === item.href ? 'active' : ''}"
         >
           <span class="nav-icon">{item.icon}</span>
           <span class="nav-label">{item.label}</span>
@@ -61,6 +63,7 @@
   
   <!-- Mobile menu overlay (only shown on small screens) -->
   {#if showMobileMenu}
+  <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions because of popup -->
     <div class="mobile-menu-overlay" on:click={() => showMobileMenu = false} on:keydown={(e) => e.key === 'Escape' && (showMobileMenu = false)} tabindex="0">
       <div class="mobile-menu" on:click|stopPropagation>
         <!-- Mobile nav items (same as sidebar) -->
@@ -68,7 +71,7 @@
           {#each navItems as item}
             <a 
               href={item.href} 
-              class="nav-item {$page.url.pathname === item.href ? 'active' : ''}"
+              class="nav-item {page.url.pathname === item.href ? 'active' : ''}"
               on:click={() => showMobileMenu = false}
             >
               <span class="nav-icon">{item.icon}</span>

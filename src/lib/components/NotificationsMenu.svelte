@@ -1,6 +1,6 @@
 <script lang="ts">
   export let notifications = [];
-  export let unreadCoun = 0;
+  export let unreadCount = 0;
 
   import { createEventDispatcher } from "svelte";
 

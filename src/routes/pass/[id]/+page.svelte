@@ -51,6 +51,8 @@
     </div>
   </div>
 </div>
+</div>
+
 
 {#if showInquiryForm && data.user && !isOwner}
   <div 
