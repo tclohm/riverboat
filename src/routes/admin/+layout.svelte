@@ -7,10 +7,10 @@
   // Define navigation items
   const navItems = [
     { href: '/admin', label: 'Dashboard', icon: '📊' },
-    { href: '/admin/passes', label: 'My Passes', icon: '🎫' },
-    { href: '/admin/bookings', label: 'Bookings', icon: '📅' },
+    { href: '/passes', label: 'My Passes', icon: '🎫' },
+    { href: '/bookings', label: 'Bookings', icon: '📅' },
     { href: '/add', label: 'Add Pass', icon: '➕' },
-    { href: '/admin/profile', label: 'Profile', icon: '👤' },
+    { href: '/profile', label: 'Profile', icon: '👤' },
   ];
 </script>
 
