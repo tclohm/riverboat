@@ -2,6 +2,10 @@
   export let data;
   const { pass } = data;
   const isOwner = data.user && data.pass.userId == data.user.id;
+
+  let showInquiryForm = false;
+  let formSubmitting = false;
+  let formSuccess = false;
 </script>
 
 <svelte:head>
