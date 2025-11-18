@@ -1,7 +1,7 @@
 <script lang="ts">
   export let data;
   import { enhance } from '$app/forms';
-  import { writable } from 'svelte/store';
+  import { writable } from 'svelte';
 
   let filter = { type: '' }; 
   let sortOption = 'price-asc'; 
@@ -51,7 +51,6 @@
       <h1>Manage Your Passes</h1>
       <p>Here you can view, edit, and manage all your listed passes</p>
     </div>
-    <a href="/add" class="add-button">+ Add New Pass</a>
   </header>
   <div class="admin-nav">
     <a href="/admin" class="nav-item active">Dashboard</a>

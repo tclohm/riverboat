@@ -64,7 +64,7 @@
   <!-- Mobile menu overlay (only shown on small screens) -->
   {#if showMobileMenu}
   <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions because of popup -->
-    <div class="mobile-menu-overlay" on:click={() => showMobileMenu = false} on:keydown={(e) => e.key === 'Escape' && (showMobileMenu = false)} tabindex="0">
+    <div class="mobile-menu-overlay" on:click={() => showMobileMenu = false} on:keydown={(e) => e.key === 'Escape' && (showMobileMenu = false)} role="presentation">
       <div class="mobile-menu" on:click|stopPropagation>
         <!-- Mobile nav items (same as sidebar) -->
         <nav class="mobile-nav">
