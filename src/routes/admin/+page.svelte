@@ -1,7 +1,7 @@
 <script lang="ts">
   export let data;
   import { enhance } from '$app/forms';
-  import { writable } from 'svelte';
+  import { writable } from 'svelte/store';
 
   let filter = { type: '' }; 
   let sortOption = 'price-asc'; 
