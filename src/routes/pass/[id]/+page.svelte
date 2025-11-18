@@ -33,8 +33,17 @@
     <div class="booking">
       <div class="price-box">
         <div class="price">${pass.price}<span>/day</span></div>
-        {#if data.user && !isOwner}
-          <button>Request Booking</button>
+        <div class="pass-actions">
+          {#if !isOwner}
+            <a href="/pass/{data.pass.id}/edit" class="edit-button">Edit Pass</a>
+          {:else if data.user}
+            <button 
+              class="contact-button" 
+              on:click={() => showInquiryForm = true}
+              on:keydown={(e) => e.key === 'Enter' && (showInquiryForm = true)}
+            >
+              Request This Pass
+            </button>
         {:else}
           <a href="/login?returnTo=/pass/{data.pass.id}" class="login-button">Login to Book</a>
         {/if}
@@ -42,6 +51,114 @@
     </div>
   </div>
 </div>
+
+{#if showInquiryForm && data.user && !isOwner}
+  <div 
+    class="modal-backdrop"
+    on:click={() => showInquiryForm = false}
+    on:keydown={(e) => e.key === 'Escape' && (showInquiryForm = false)}
+    tabindex="0"
+    role="dialog"
+    aria-modal="true"
+  >
+    <div 
+      class="modal-content" 
+      on:click|stopPropagation
+    >
+      <h2>Request {data.pass.title}</h2>
+      
+      {#if formSuccess}
+        <div class="success-message">
+          <p>Your request has been sent to the owner. They will be notified and can contact you about using this pass.</p>
+          <button 
+            type="button" 
+            class="close-button"
+            on:click={() => showInquiryForm = false}
+          >
+            Close
+          </button>
+        </div>
+      {:else}
+        <form 
+          method="POST" 
+          action="?/createInquiry"
+          use:enhance={() => {
+            formSubmitting = true;
+            return async ({ result, update }) => {
+              formSubmitting = false;
+              if (result.type === 'success') {
+                formSuccess = true;
+              }
+              await update();
+            };
+          }}
+        >
+          <div class="form-group">
+            <label for="requestedDates">When would you like to use this pass?</label>
+            <input 
+              type="text" 
+              id="requestedDates" 
+              name="requestedDates" 
+              placeholder="e.g. Dec 15-17, 2025" 
+              required
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="contactInfo">Preferred Contact Method</label>
+            <input 
+              type="text" 
+              id="contactInfo" 
+              name="contactInfo" 
+              placeholder="e.g. Phone: 555-123-4567 or Email: name@example.com" 
+              required
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="message">Message to the Owner</label>
+            <textarea 
+              id="message" 
+              name="message" 
+              rows="4" 
+              placeholder="Introduce yourself and provide any additional details about your request." 
+              required
+            ></textarea>
+          </div>
+          
+          <input type="hidden" name="passId" value={data.pass.id} />
+          <input type="hidden" name="receiverUserId" value={data.pass.userId} />
+          
+          <div class="form-actions">
+            <button 
+              type="button" 
+              class="cancel-button"
+              on:click={() => showInquiryForm = false}
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit" 
+              class="submit-button"
+              disabled={formSubmitting}
+            >
+              {formSubmitting ? 'Sending...' : 'Send Request'}
+            </button>
+          </div>
+        </form>
+      {/if}
+      
+      <button 
+        type="button" 
+        class="close-modal-btn"
+        on:click={() => showInquiryForm = false}
+        aria-label="Close modal"
+      >
+        &times;
+      </button>
+    </div>
+  </div>
+{/if}
 
 <style>
   .container {
@@ -159,6 +276,130 @@
 
   .edit-button:hover {
     background-color: #1d4ed8;
+  }
+
+  .modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  .modal-content h2 {
+    margin-top: 0;
+    margin-bottom: 24px;
+    font-size: 24px;
+    color: #1a1a1a;
+  }
+  
+  .close-modal-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+  }
+  
+  .form-group {
+    margin-bottom: 20px;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .form-group input,
+  .form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 16px;
+    font-family: inherit;
+  }
+  
+  .form-group textarea {
+    resize: vertical;
+  }
+  
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+  }
+  
+  .cancel-button,
+  .close-button {
+    padding: 10px 16px;
+    background: #f3f4f6;
+    color: #4b5563;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  
+  .cancel-button:hover,
+  .close-button:hover {
+    background: #e5e7eb;
+  }
+  
+  .submit-button {
+    padding: 10px 20px;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  
+  .submit-button:hover:not(:disabled) {
+    background: #1d4ed8;
+  }
+  
+  .submit-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+  
+  .success-message {
+    background: #d1fae5;
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+  
+  .success-message p {
+    color: #047857;
+    margin: 0 0 16px 0;
   }
 
   @media (max-width: 968px) {
