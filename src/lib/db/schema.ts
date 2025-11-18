@@ -1,4 +1,5 @@
 import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sql } from 'drizzle-orm';
 
 export const passes = sqliteTable('passes', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -54,4 +55,29 @@ export const verification = sqliteTable('verification', {
   expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' }),
   updatedAt: integer('updated_at', { mode: 'timestamp' })
+});
+
+export const notifications = sqliteTable('notifications', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: text('user_id').notNull().references(() => user.id),
+  passId: integer('pass_id').references(() => passes.id),
+  type: text('type').notNull(),
+  title: text('title').notNull(),
+  message: text('message').notNull(),
+  read: integer('read', { mode: 'boolean' }).notNull().default(false),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
+  metadata: text('metadata')
+});
+
+export const inquiries = sqliteTable('inquiries', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  passId: integer('pass_id').notNull().references(() => passes.id),
+  senderUserId: text('sender_user_id').notNull().references(() => user.id),
+  receiverUserId: text('receiver_user_id').notNull().references(() => user.id),
+  message: text('message').notNull(),
+  contactInfo: text('contact_info'),
+  requestedDates: text('requested_dates'),
+  status: text('status').notNull().default('pending'), // 'pending', 'approved', 'rejected'
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`)
 });
