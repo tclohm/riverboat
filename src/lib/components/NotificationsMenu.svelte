@@ -43,8 +43,11 @@
   
   {#if isOpen}
     <div 
+      aria-label="notification menu"
+      aria-roledescription="menu for notification"
       class="notifications-menu"
       on:click|stopPropagation
+      on:keydown|stopPropagation
     >
       <div class="menu-header">
         <h3>Notifications</h3>
