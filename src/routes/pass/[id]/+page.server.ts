@@ -30,6 +30,8 @@ export const actions = {
     const contactInfo = formData.get('contactInfo')?.toString() || '';
     const requestedDates = formData.get('requestedDates')?.toString() || '';
 
+    console.log('Form data:', { passId, receiverUserId, message, contactInfo, requestedDates });
+
     if (!passId || !receiverUserId || !message || !contactInfo || !requestedDates) {
       return fail(400, { error: 'All fields are required' });
     }
@@ -64,6 +66,7 @@ export const actions = {
         title: 'New Pass Request',
         message: `Someone is interested in your "${pass.title}" pass for ${requestedDates}`,
         read: false,
+        archived: false,
         createdAt: new Date(),
         metadata: JSON.stringify({
           inquiryId: inquiryResult[0].id,
