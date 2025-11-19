@@ -1,4 +1,6 @@
 <script>
+  import { invalidateAll } from '$app/navigation';
+  import { enhance } from '$app/forms';
   import { page } from '$app/state';
   import { Key, Binoculars, Tickets, CalendarDays, LogOut, Menu, Plus, UserRoundPen, LogIn } from '@lucide/svelte';
   export let data;
@@ -118,7 +120,17 @@
           </div>
         </div>
         
-        <form method="POST" action="/logout" class="logout-form">
+        <form method="POST" 
+          action="/logout" 
+          class="logout-form"
+          use:enhance={() => { 
+            return async ({ result }) => {
+              if (result.type === 'redirect') {
+                await invalidateAll();
+              }
+            };
+          }}
+        >
           <button type="submit" class="logout-button" title="Logout">
             <svelte:component this={LogOut} size={20} />
             <span class="logout-label">Logout</span>
