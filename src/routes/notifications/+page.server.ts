@@ -3,6 +3,36 @@ import { notifications, inquiries, passes } from '$lib/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { redirect } from '@sveltejs/kit';
 
+// archive notification immediately (for declined requests)
+export async function POST({ params, platform, locals }) {
+  if (!locals.user) {
+    return new Response('Unauthorized', { status: 401 });
+  }
+
+  const notificationId = parseInt(params.id);
+
+  if (!notificationId) {
+    return json({ error: 'Invalid notification ID', { status: 400 }});
+  }
+
+  try {
+    const db = await getDb(platform);
+
+    await db.update(notification)
+      .set({
+        archived: true,
+        archivedAt: new Date()
+      })
+      .where(eq(notification.id, notificationId))
+      .run()
+
+    return json({ success: true });
+  } catch (error) {
+    console.error('Failed to archive notifications:', error);
+    return json({ error: 'Failed to archive notification' }, { status: 500 });
+  }
+}
+
 export async function load({ platform, locals }) {
   // Check if user is logged in
   if (!locals.user) {
