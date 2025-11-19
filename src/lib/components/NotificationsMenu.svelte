@@ -2,6 +2,7 @@
   export let notifications = [];
   export let unreadCount = 0;
 
+  import { Bell, MessageCircleMore, CalendarCheck, CircleAlert } from "@lucide/svelte";
   import { createEventDispatcher } from "svelte";
 
   const dispatch = createEventDispatcher();
@@ -35,7 +36,7 @@
     on:click={toggleMenu}
     aria-label="Notifications"
   >
-    <span class="icon">🔔</span>
+    <span class="icon"><Bell size={20} color="#FFD700" fill="#FFD700" /></span>
     {#if unreadCount > 0}
       <span class="notification-badge">{unreadCount}</span>
     {/if}
@@ -79,11 +80,11 @@
             >
               <div class="notification-icon">
                 {#if notification.type === 'inquiry'}
-                  <span>💬</span>
+                  <span><MessageCircleMore /></span>
                 {:else if notification.type === 'booking'}
-                  <span>📅</span>
+                  <span><CalendarCheck /></span>
                 {:else}
-                  <span>📣</span>
+                  <span><CircleAlert /></span>
                 {/if}
               </div>
               <div class="notification-content">
