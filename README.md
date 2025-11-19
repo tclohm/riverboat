@@ -4,31 +4,63 @@ A marketplace for sharing Disney Magic Key passes, inspired by Steamboat Willie 
 
 ## Features
 
-- Browse available Disney Magic Key passes
-- User authentication with secure login/registration
-- List your own pass for others to use
-- Edit your pass details
-- Delete passes with confirmation
-- Responsive design (mobile & desktop)
-- Clean, minimal Steamboat Willie aesthetic
+- **Browse passes** - View all available Magic Key passes from other users
+- **Request passes** - Submit requests to use passes with a date range picker and contact info
+- **Manage passes** - Create, edit, and delete your own pass listings
+- **Notifications** - Receive notifications when others request your passes
+- **Inquiries** - Review and approve/decline pass requests from other users
+- **User authentication** - Secure login/registration with session management
+- **Responsive design** - Mobile-friendly interface
+- **Clean aesthetic** - Minimal, Steamboat Willie-inspired design
+
+## New Features
+
+### Date Range Picker
+- Users can select pass dates using HTML5 calendar inputs
+- Automatic date formatting (e.g., "Dec 15-17, 2025" or "Dec 15 - Jan 5, 2025")
+- Works across different months and years
+
+### Pass Request System
+- Users can submit requests to use other users' passes
+- Include requested dates, contact info, and a personal message
+- Pass owners receive notifications about new requests
+- Approve or decline requests with one click
+
+### Notification System
+- Real-time notifications for pass requests
+- Auto-archive notifications after requested dates pass (4AM following end date)
+- Mark notifications as read
+- Track notification status (pending, approved, declined)
 
 ## Tech Stack
 
-- **SvelteKit** - Full-stack framework
+- **SvelteKit** - Full-stack framework with server-side rendering
 - **SQLite** - Local development database
-- **Cloudflare D1** - Production database
-- **Drizzle ORM** - Type-safe database queries
-- **Cloudflare Pages** - Free hosting with auto-deploy
+- **Cloudflare D1** - Production database (serverless)
+- **Drizzle ORM** - Type-safe database queries with migrations
+- **Cloudflare Pages** - Free hosting with auto-deploy on git push
+- **Lucide Icons** - Beautiful SVG icons
+- **HTML5 Date Input** - Native calendar date picker
 
 ## Database Architecture
 
-This project uses a robust database connection pattern with:
+This project uses a robust database connection pattern:
 
 - **Singleton Pattern** - Maintains a single database connection throughout the application
 - **Provider Pattern** - Abstracts database implementations (SQLite for development, D1 for production)
 - **Factory Pattern** - Creates the appropriate database provider based on environment
 
-The database connections are managed automatically based on the environment:
+### Database Schema
+
+- **passes** - Magic Key pass listings (title, type, price, available dates)
+- **user** - User profiles with authentication info
+- **account** - User account and authentication provider data
+- **session** - Active user sessions with secure tokens
+- **inquiries** - Pass requests with dates, contact info, and status
+- **notifications** - System notifications for pass activity
+- **verification** - Email verification and password reset tokens
+
+Connections are managed automatically:
 - **Development** (`npm run dev`): Uses local SQLite database (`local.db`)
 - **Production** (`npm run build`): Uses Cloudflare D1 database
 
@@ -51,63 +83,31 @@ cd willies-keys
 npm install
 ```
 
-3. Generate local database
+3. Generate and initialize database
 ```bash
 npx drizzle-kit generate
 npx drizzle-kit push
 ```
 
-4. Seed local database with sample passes
+4. Seed with sample data
 ```bash
 npm run seed
 ```
 
-5. Run development server
+5. Start development server
 ```bash
 npm run dev
 ```
 
 Open http://localhost:5173
 
-### Setup Authentication
+### Testing Authentication
 
-1. Generate database with authentication tables
-```bash
-npx drizzle-kit generate
-npx drizzle-kit push
-```
-
-2. Create a test user account
-```bash
-# You can register through the UI or run:
-npm run seed:users
-```
-
-3. Update your D1 database with auth tables
-```bash
-npx wrangler d1 execute willies-keys-db --remote --file=./drizzle/[migration-file].sql
-```
-
+1. Register a new account through the UI
+2. Create passes and test the full flow
+3. Use multiple browsers/tabs to simulate different users
 
 ## Database Management
-
-### Seed Data
-
-**Generate sample passes for local development:**
-```bash
-npm run seed
-```
-
-**Generate SQL for production seeding:**
-```bash
-npm run seed:sql
-```
-
-This will output SQL that can be applied to your production database:
-```bash
-npm run seed:sql > seed.sql
-npx wrangler d1 execute willies-keys-db --remote --file=seed.sql
-```
 
 ### Migrations
 
@@ -123,34 +123,53 @@ npx drizzle-kit generate
 npx wrangler d1 execute willies-keys-db --remote --file=./drizzle/[migration-file].sql
 ```
 
+### Seeding
+
+**Seed local database:**
+```bash
+npm run seed
+```
+
+**Generate SQL for production:**
+```bash
+npm run seed:sql > seed.sql
+npx wrangler d1 execute willies-keys-db --remote --file=seed.sql
+```
+
 ## Project Structure
+
 ```
 willies-keys/
 ├── src/
 │   ├── lib/
 │   │   ├── db/
-│   │   │   ├── client.ts          # Database client (singleton)
-│   │   │   ├── factory.ts         # Database factory
-│   │   │   ├── index.ts           # Main database API
-│   │   │   ├── schema.ts          # Database schema
-│   │   │   ├── seed.ts            # Seeding script
-│   │   │   └── providers/         # Database providers
-│   │   │       ├── types.ts       # Provider interfaces
-│   │   │       ├── sqlite-provider.ts  # SQLite implementation
-│   │   │       └── d1-provider.ts # Cloudflare D1 implementation
+│   │   │   ├── client.ts               # Database client (singleton)
+│   │   │   ├── factory.ts              # Database factory
+│   │   │   ├── index.ts                # Main database API
+│   │   │   ├── schema.ts               # Database schema
+│   │   │   ├── seed.ts                 # Seeding script
+│   │   │   └── providers/              # Database providers
+│   │   │       ├── types.ts            # Provider interfaces
+│   │   │       ├── sqlite-provider.ts  # SQLite (dev)
+│   │   │       └── d1-provider.ts      # Cloudflare D1 (prod)
+│   │   ├── components/
+│   │   │   └── DateRangePicker.svelte  # Date range selector component
 │   │   └── server/
-│   │       └── auth.ts            # Authentication logic
-│   └── routes/                    # SvelteKit routes
-│       ├── +page.svelte           # Homepage (browse passes)
-│       ├── +page.server.ts        # Load passes from DB
-│       ├── add/                   # Add pass route
-│       ├── pass/[id]/             # Pass detail routes
-│       └── login/, signup/, etc.  # Auth routes
-├── static/                        # Static assets
-├── drizzle/                       # Generated migrations
-├── wrangler.toml                  # Cloudflare configuration
-├── drizzle.config.ts             # Drizzle ORM configuration
-└── package.json                  # Project dependencies
+│   │       └── auth.ts                 # Authentication logic
+│   └── routes/
+│       ├── +page.svelte                # Homepage (browse passes)
+│       ├── +page.server.ts             # Load passes from DB
+│       ├── add/                        # Create new pass
+│       ├── pass/[id]/                  # Pass details & inquiries
+│       ├── admin/                      # User dashboard
+│       ├── notifications/              # View notifications & manage requests
+│       ├── login/, signup/             # Auth routes
+│       └── ...
+├── static/                             # Static assets
+├── drizzle/                            # Migrations
+├── wrangler.toml                       # Cloudflare config
+├── drizzle.config.ts                   # Drizzle config
+└── package.json
 ```
 
 ## Production Deployment
@@ -172,7 +191,7 @@ npx wrangler login
 npx wrangler d1 create willies-keys-db
 ```
 
-4. Copy the database ID to `wrangler.toml`:
+4. Copy database ID to `wrangler.toml`:
 ```toml
 [[d1_databases]]
 binding = "willies_keys_db"
@@ -183,13 +202,7 @@ database_id = "your-database-id-here"
 5. Run migrations on D1
 ```bash
 npx drizzle-kit generate
-npx wrangler d1 execute willies-keys-db --remote --file=./drizzle/[migration-file].sql
-```
-
-6. Seed production database
-```bash
-npm run seed:sql > seed.sql
-npx wrangler d1 execute willies-keys-db --remote --file=seed.sql
+npx wrangler d1 execute willies-keys-db --remote --file=./drizzle/[latest-migration].sql
 ```
 
 ### Deploy to Cloudflare Pages
@@ -199,68 +212,66 @@ npx wrangler d1 execute willies-keys-db --remote --file=seed.sql
 git push
 ```
 
-2. Connect repository at https://dash.cloudflare.com
-   - Go to **Workers & Pages** → **Create application** → **Pages**
+2. Connect at https://dash.cloudflare.com
+   - **Workers & Pages** → **Create application** → **Pages**
    - Import your GitHub repository
-   - Framework preset: **SvelteKit**
+   - Framework: **SvelteKit**
    - Build command: `npm run build`
-   - Build output directory: `.svelte-kit/cloudflare`
+   - Output directory: `.svelte-kit/cloudflare`
 
-3. Add D1 binding in Cloudflare Pages settings:
-   - Go to **Settings** → **Functions** → **D1 database bindings**
-   - Variable name: `willies_keys_db`
-   - D1 database: Select `willies-keys-db`
+3. Add D1 binding in Cloudflare Pages settings
+   - **Settings** → **Functions** → **D1 database bindings**
+   - Variable: `willies_keys_db`
+   - Database: Select `willies-keys-db`
 
 4. Every push to `main` auto-deploys!
 
 ## Scripts
 
-- `npm run dev` - Start development server (uses SQLite)
-- `npm run dev:prod` - Start development server simulating production (uses SQLite with production settings)
-- `npm run build` - Build for production (targets Cloudflare D1)
-- `npm run build:dev` - Build development version (uses SQLite)
-- `npm run preview` - Preview production build locally
-- `npm run seed` - Seed local database with sample data
-- `npm run seed:sql` - Generate SQL for production seeding
-
+```bash
+npm run dev              # Start dev server (SQLite)
+npm run dev:prod        # Dev server with prod settings
+npm run build           # Build for production (D1)
+npm run build:dev       # Build for dev (SQLite)
+npm run preview         # Preview production build
+npm run seed            # Seed local DB with sample data
+npm run seed:sql        # Generate SQL for production seeding
+```
 
 ## Authentication System
 
-Willie's Keys now includes a complete authentication system with the following features:
+Secure user authentication with:
 
-- User registration with secure password hashing
-- Login/logout functionality
-- Session management with secure cookies
-- Protected routes for pass management
+- Password hashing (Bcrypt)
+- Session management with secure HttpOnly cookies
+- Protected routes for authenticated users only
+- User registration and login flows
+- Email verification support (framework in place)
 
-The authentication system uses:
-- Bcrypt for secure password hashing
-- Cryptographically secure session tokens
-- HttpOnly cookies for enhanced security
-- Database tables for users, accounts, and sessions
+## How It Works
 
-## Database Architecture Update
+### Creating a Pass
 
-The database schema has been extended to include authentication-related tables:
+1. Login or create an account
+2. Go to "List Your Pass"
+3. Fill in pass details (type, price, available dates)
+4. Pass appears on homepage for others to request
 
-- **user** - Stores user profiles with name, email, and verification status
-- **account** - Manages authentication providers and credentials
-- **session** - Handles active user sessions
-- **verification** - Supports email verification and password reset
+### Requesting a Pass
 
-All database interactions now use our robust provider pattern with:
-- Type-safe schema definitions
-- Singleton database client for efficient connection management
-- Separate providers for SQLite (development) and D1 (production)
-- Factory pattern to instantiate the appropriate database provider
+1. Browse available passes
+2. Click "Request This Pass"
+3. Use the date picker to select your requested dates
+4. Enter contact info and message
+5. Submit request
+6. Pass owner receives notification
 
-## User Interface Updates
+### Managing Requests
 
-The application now features:
-- Dynamic header that shows user information when logged in
-- Login and registration forms with validation
-- Secure authentication flows
-- User-specific content views
+1. Go to Notifications page
+2. View pending pass requests
+3. Approve or decline each request
+4. Approved notifications auto-archive after dates pass
 
 ## License
 
