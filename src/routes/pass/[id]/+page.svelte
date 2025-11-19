@@ -35,9 +35,9 @@
       <div class="price-box">
         <div class="price">${pass.price}<span>/day</span></div>
         <div class="pass-actions">
-          {#if !isOwner}
+          {#if data.user && isOwner}
             <a href="/pass/{data.pass.id}/edit" class="edit-button">Edit Pass</a>
-          {:else if data.user}
+          {:else if data.user && !isOwner}
             <button 
               class="contact-button" 
               on:click={() => showInquiryForm = true}
@@ -309,7 +309,7 @@
   .modal-content {
     background: white;
     border-radius: 12px;
-    padding: 24px;
+    padding: 40px 60px;
     width: 90%;
     max-width: 500px;
     position: relative;
@@ -334,6 +334,11 @@
     font-size: 24px;
     cursor: pointer;
     color: #666;
+  }
+
+  .close-modal-btn:hover {
+    background: #fff;
+    color: #333;
   }
   
   .form-group {

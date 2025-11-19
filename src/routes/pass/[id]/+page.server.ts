@@ -25,7 +25,7 @@ export const actions = {
 
     const formData = await request.formData();
     const passId = parseInt(formData.get('passId')?.toString() || 0);
-    const receiverUserId = formData.get('receiverUserId')?.toString || '';
+    const receiverUserId = formData.get('receiverUserId')?.toString() || '';
     const message = formData.get('message')?.toString() || '';
     const contactInfo = formData.get('contactInfo')?.toString() || '';
     const requestedDates = formData.get('requestedDates')?.toString() || '';
