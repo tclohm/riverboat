@@ -1,4 +1,5 @@
 <script lang="ts">
+  import DateRangePicker from '$lib/components/DateRangePicker.svelte';
   import { X } from '@lucide/svelte';
   export let data;
   const { pass } = data;
@@ -75,11 +76,12 @@
           <p>Your request has been sent to the owner. They will be notified and can contact you about using this pass.</p>
           <button 
             type="button" 
-            class="close-button"
+            class="modal-close-btn"
             on:click={() => {
               showInquiryForm = false;
               formSuccess = false;
             }}
+            aria-label="Close modal"
           >
             Close
           </button>
@@ -107,14 +109,9 @@
           }}>
             <div class="form-group">
               <label for="requestedDates">When would you like to use this pass?</label>
-              <input 
-                type="text" 
-                id="requestedDates" 
-                name="requestedDates" 
-                placeholder="e.g. Dec 15-17, 2025" 
-                required
-              />
+              <DateRangePicker />
             </div>
+
           
             <div class="form-group">
               <label for="contactInfo">Preferred Contact Method</label>
@@ -256,6 +253,7 @@
     color: #666;
   }
 
+
   button {
     width: 100%;
     background: #2563eb;
@@ -270,6 +268,29 @@
 
   button:hover {
     background: #1d4ed8;
+  }
+
+  .modal-close-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 32px;
+    color: #666;  
+    cursor: pointer;
+    padding: 0;
+    width: 40px;  
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+    z-index: 10;  
+  }
+
+  .modal-close-btn:hover {
+    color: #1a1a1a;
   }
 
   .top-nav {
@@ -334,11 +355,6 @@
     font-size: 24px;
     cursor: pointer;
     color: #666;
-  }
-
-  .close-modal-btn:hover {
-    background: #fff;
-    color: #333;
   }
   
   .form-group {
@@ -420,6 +436,12 @@
   .success-message p {
     color: #047857;
     margin: 0 0 16px 0;
+  }
+
+  .contact-button:hover,
+  .login-button:hover {
+    background: #1d4ed8;
+    color: white !important;
   }
 
   @media (max-width: 968px) {
