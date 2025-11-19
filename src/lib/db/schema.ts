@@ -65,7 +65,7 @@ export const notifications = sqliteTable('notifications', {
   title: text('title').notNull(),
   message: text('message').notNull(),
   read: integer('read', { mode: 'boolean' }).notNull().default(false),
-  archived: integer('archived', { mode: 'boolean' }).notNull().default(false),
+  archived: integer('archived', { mode: 'boolean' }).default(false),
   archivedAt: integer('archived_at', { mode: 'timestamp' }),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
   metadata: text('metadata')

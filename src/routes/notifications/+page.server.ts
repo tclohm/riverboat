@@ -1,6 +1,6 @@
 import { getDb } from '$lib/db';
 import { notifications, inquiries, passes } from '$lib/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and } from 'drizzle-orm';
 import { redirect } from '@sveltejs/kit';
 
 
@@ -219,10 +219,10 @@ export const actions = {
               inquiryId: inquiryId,
               status,
               requestedDates: inquiry.requestedDates,
-              scheduledArchiveTime: archiveDate.getTime();
+              scheduledArchiveTime: archiveDate.getTime()
             })
           })
-          .where(eq(notifications.id, notificationResult[0].id));
+          .where(eq(notifications.id, notificationResult[0].id))
           .run();
       }
       
@@ -256,7 +256,7 @@ export const actions = {
         .where(eq(notifications.id, notificationId))
         .run();
 
-      return { success: true ;}
+      return { success: true }
     } catch (error) {
       console.error('Failed to archive notification:', error);
       return { error: 'Failed to archive notification' };
