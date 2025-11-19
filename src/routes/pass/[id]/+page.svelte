@@ -76,7 +76,7 @@
           <p>Your request has been sent to the owner. They will be notified and can contact you about using this pass.</p>
           <button 
             type="button" 
-            class="modal-close-btn"
+            class="close-button"
             on:click={() => {
               showInquiryForm = false;
               formSuccess = false;
@@ -157,17 +157,6 @@
           </form>
         {/if}
 
-        <button 
-        type="button" 
-        class="close-modal-btn"
-        on:click={() => {
-          showInquiryForm = false;
-          formSuccess = false;
-        }}
-        aria-label="Close modal"
-      >
-        <X />
-      </button>
     </div>
   </div>
 {/if}
@@ -270,27 +259,21 @@
     background: #1d4ed8;
   }
 
-  .modal-close-btn {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    background: none;
+  .cancel-button {
+    width: 100%;
+    background: #fee2e2;
+    color: #7f1d1d;
     border: none;
-    font-size: 32px;
-    color: #666;  
+    padding: 16px;
+    font-size: 18px;
+    font-weight: 700;
     cursor: pointer;
-    padding: 0;
-    width: 40px;  
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: color 0.2s;
-    z-index: 10;  
+    transition: background 0.2s;  
+    border-radius: 0.5rem;
   }
 
-  .modal-close-btn:hover {
-    color: #1a1a1a;
+  .cancel-button:hover {
+    background: #fecaca;
   }
 
   .top-nav {
@@ -346,17 +329,6 @@
     color: #1a1a1a;
   }
   
-  .close-modal-btn {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: #666;
-  }
-  
   .form-group {
     margin-bottom: 20px;
   }
@@ -389,23 +361,6 @@
     margin-top: 24px;
   }
   
-  .cancel-button,
-  .close-button {
-    padding: 10px 16px;
-    background: #f3f4f6;
-    color: #4b5563;
-    border: none;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-  
-  .cancel-button:hover,
-  .close-button:hover {
-    background: #e5e7eb;
-  }
-  
   .submit-button {
     padding: 10px 20px;
     background: #2563eb;
@@ -427,15 +382,36 @@
   }
   
   .success-message {
+    text-align: center;
+    padding: 40px;
     background: #d1fae5;
-    padding: 16px;
     border-radius: 8px;
-    margin-bottom: 20px;
+    margin: 24px 0;
   }
-  
+
   .success-message p {
-    color: #047857;
-    margin: 0 0 16px 0;
+    color: #065f46;
+    margin: 0 0 24px 0;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  .close-button {
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 12px 32px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    width: auto;
+    display: inline-block;
+  }
+
+  .close-button:hover {
+    background: #059669;
   }
 
   .contact-button:hover,
