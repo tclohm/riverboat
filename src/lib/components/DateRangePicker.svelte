@@ -2,36 +2,48 @@
   let startDate: string = '';
   let endDate: string = '';
   let displayText: string = '';
-
-  $: {
-    if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      const startStr = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      const endStr = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-      displayText = `${startStr} - ${endStr}`;
-    }
-  }
+  let formattedValue: string = '';
 
   function formatDateRange(): string {
     if (!startDate || !endDate) return '';
     
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    // Parse as local date to avoid timezone issues
+    const [startYear, startMonth, startDay] = startDate.split('-');
+    const [endYear, endMonth, endDay] = endDate.split('-');
     
-    const startMonth = start.toLocaleDateString('en-US', { month: 'short' });
-    const startDay = start.getDate();
-    const endDay = end.getDate();
-    const year = end.getFullYear();
+    const start = new Date(parseInt(startYear), parseInt(startMonth) - 1, parseInt(startDay));
+    const end = new Date(parseInt(endYear), parseInt(endMonth) - 1, parseInt(endDay));
+    
+    const startMonthStr = start.toLocaleDateString('en-US', { month: 'short' });
+    const startDayNum = start.getDate();
+    const endDayNum = end.getDate();
+    const yearNum = end.getFullYear();
     
     // If same month, use format "Dec 15-17, 2025"
     if (start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear()) {
-      return `${startMonth} ${startDay}-${endDay}, ${year}`;
+      return `${startMonthStr} ${startDayNum}-${endDayNum}, ${yearNum}`;
     }
     
     // If different months, use format "Dec 15 - Jan 5, 2025"
-    const endMonth = end.toLocaleDateString('en-US', { month: 'short' });
-    return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
+    const endMonthStr = end.toLocaleDateString('en-US', { month: 'short' });
+    return `${startMonthStr} ${startDayNum} - ${endMonthStr} ${endDayNum}, ${yearNum}`;
+  }
+
+  $: {
+    formattedValue = formatDateRange();
+    
+    if (startDate && endDate) {
+      // Parse as local date to avoid timezone issues
+      const [startYear, startMonth, startDay] = startDate.split('-');
+      const [endYear, endMonth, endDay] = endDate.split('-');
+      
+      const start = new Date(parseInt(startYear), parseInt(startMonth) - 1, parseInt(startDay));
+      const end = new Date(parseInt(endYear), parseInt(endMonth) - 1, parseInt(endDay));
+      
+      const startStr = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const endStr = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      displayText = `${startStr} - ${endStr}`;
+    }
   }
 </script>
 
@@ -67,10 +79,12 @@
     </div>
   {/if}
   
+  <!-- Hidden input for form submission -->
   <input 
     type="hidden" 
     name="requestedDates" 
-    value={formatDateRange()}
+    value={formattedValue}
+    required
   />
 </div>
 
