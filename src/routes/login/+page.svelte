@@ -19,6 +19,7 @@
   <form method="POST" 
     use:enhance={() => {
       return async ({ result }) => {
+        console.log("login:", result)
         if (result.type === 'redirect') {
           await invalidateAll();
         }

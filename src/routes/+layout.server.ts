@@ -5,14 +5,15 @@ import { getSessionUser } from '$lib/server/auth';
 
 export async function load({ platform, cookies, locals }) {
   // If user is already loaded in locals, use it
-  let user = locals.user;
-  
-  // Otherwise, try to get user from session
-  if (!user) {
-    const token = cookies.get('session');
-    if (token) {
-      user = await getSessionUser(platform, token);
-    }
+  let user = null;
+  // always check the session cookie
+  const token = cookies.get('session');
+  if (token) {
+    user = await getSessionUser(platform, token);
+  }
+
+  if (!user && locals.user) {
+    user = locals.user
   }
   
   // If user is authenticated, get their notifications

@@ -125,6 +125,7 @@
           class="logout-form"
           use:enhance={() => { 
             return async ({ result }) => {
+              console.log("logout:", result)
               if (result.type === 'redirect') {
                 await invalidateAll();
               }
