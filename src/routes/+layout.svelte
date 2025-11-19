@@ -1,22 +1,23 @@
 <script>
   import { page } from '$app/state';
+  import { Key, Binoculars, Tickets, CalendarDays, LogOut, Menu, Plus, UserRoundPen } from '@lucide/svelte';
   export let data;
 
   let showMobileMenu = false;
   
   // Define navigation items with icons
   const mainNavItems = [
-    { href: '/', label: 'Browse', icon: '👀' },
-    { href: '/admin', label: 'My Passes', icon: '🎫' },
-    { href: '/bookings', label: 'Bookings', icon: '📅' },
+    { href: '/', label: 'Browse', icon: Binoculars },
+    { href: '/admin', label: 'My Passes', icon: Tickets },
+    { href: '/bookings', label: 'Bookings', icon: CalendarDays },
   ];
 
   const actionNavItems = [
-    { href: '/add', label: 'Add Pass', icon: '➕' },
+    { href: '/add', label: 'Add Pass', icon: Plus },
   ];
 
   const settingsNavItems = [
-    { href: '/profile', label: 'Profile', icon: '👤' },
+    { href: '/profile', label: 'Profile', icon: UserRoundPen },
   ];
 </script>
 
@@ -25,7 +26,7 @@
   <aside class="sidebar">
     <!-- Logo -->
     <div class="sidebar-logo">
-      <div class="logo-icon">🔑</div>
+      <div class="logo-icon"><Key size={30} /></div>
       <div class="logo-text">
         <h1>Willie's Keys</h1>
       </div>
@@ -39,41 +40,41 @@
           class="nav-item {page.url.pathname === item.href ? 'active' : ''}"
           title={item.label}
         >
-          <span class="nav-icon">{item.icon}</span>
-          <span class="nav-label">{item.label}</span>
-        </a>
-      {/each}
-    </nav>
+        <svelte:component this={item.icon} size={20} />
+        <span class="nav-label">{item.label}</span>
+      </a>
+    {/each}
+  </nav>
 
-    <!-- Divider -->
-    <div class="nav-divider"></div>
+  <!-- Divider -->
+  <div class="nav-divider"></div>
 
-    <!-- Action Navigation -->
-    <nav class="sidebar-nav action-nav">
-      {#each actionNavItems as item}
-        <a 
-          href={item.href} 
-          class="nav-item action-item {page.url.pathname === item.href ? 'active' : ''}"
-          title={item.label}
-        >
-          <span class="nav-icon">{item.icon}</span>
-          <span class="nav-label">{item.label}</span>
-        </a>
-      {/each}
-    </nav>
+  <!-- Action Navigation -->
+  <nav class="sidebar-nav action-nav">
+    {#each actionNavItems as item}
+      <a 
+        href={item.href} 
+        class="nav-item action-item {page.url.pathname === item.href ? 'active' : ''}"
+        title={item.label}
+      >
+        <svelte:component this={item.icon} size={20} />
+        <span class="nav-label">{item.label}</span>
+      </a>
+    {/each}
+  </nav>
 
-    <!-- Divider -->
-    <div class="nav-divider"></div>
+  <!-- Divider -->
+  <div class="nav-divider"></div>
 
-    <!-- Settings Navigation -->
-    <nav class="sidebar-nav settings-nav">
+  <!-- Settings Navigation -->
+  <nav class="sidebar-nav settings-nav">
       {#each settingsNavItems as item}
         <a 
           href={item.href} 
           class="nav-item {page.url.pathname === item.href ? 'active' : ''}"
           title={item.label}
         >
-          <span class="nav-icon">{item.icon}</span>
+          <svelte:component this={item.icon} size={20} />
           <span class="nav-label">{item.label}</span>
         </a>
       {/each}
@@ -94,7 +95,7 @@
       
       <form method="POST" action="/logout" class="logout-form">
         <button type="submit" class="logout-button" title="Logout">
-          <span class="logout-icon">🚪</span>
+          <svelte:component this={LogOut} size={20} />
           <span class="logout-label">Logout</span>
         </button>
       </form>
@@ -110,7 +111,7 @@
         on:click={() => showMobileMenu = !showMobileMenu}
         aria-label="Toggle navigation menu"
       >
-        ☰
+        <Menu size={128} />
       </button>
       <h2>Willie's Keys</h2>
     </div>
@@ -139,7 +140,7 @@
               class="nav-item {page.url.pathname === item.href ? 'active' : ''}"
               on:click={() => showMobileMenu = false}
             >
-              <span class="nav-icon">{item.icon}</span>
+            <svelte:component this={item.icon} size={20} />
               <span class="nav-label">{item.label}</span>
             </a>
           {/each}
@@ -147,7 +148,7 @@
 
         <form method="POST" action="/logout" class="mobile-logout">
           <button type="submit" class="logout-button">
-            <span class="logout-icon">🚪</span>
+            <svelte:component this={LogOut} size={20} />
             <span class="logout-label">Logout</span>
           </button>
         </form>

@@ -69,13 +69,8 @@
             on:markRead={markNotificationRead}
             on:markAllRead={markAllNotificationsRead}
             on:viewAll={navigateToNotifications}
-          />
-          <a href="/admin" class="admin-link">Manage Passes</a>
-          <a href="/add">Add Pass</a>
+          /> 
           <span class="user-name">Hi, {data.user.name}</span>
-          <form method="POST" action="/logout">
-            <button type="submit" class="logout-button">Logout</button>
-          </form>
         </div>
       {:else}
         <a href="/login" class="login-link">Login</a>
