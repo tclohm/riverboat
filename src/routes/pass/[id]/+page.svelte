@@ -1,4 +1,5 @@
 <script lang="ts">
+  import DateRangePicker from '$lib/components/DateRangePicker.svelte';
   import { X } from '@lucide/svelte';
   export let data;
   const { pass } = data;
@@ -107,14 +108,9 @@
           }}>
             <div class="form-group">
               <label for="requestedDates">When would you like to use this pass?</label>
-              <input 
-                type="text" 
-                id="requestedDates" 
-                name="requestedDates" 
-                placeholder="e.g. Dec 15-17, 2025" 
-                required
-              />
+              <DateRangePicker />
             </div>
+
           
             <div class="form-group">
               <label for="contactInfo">Preferred Contact Method</label>
