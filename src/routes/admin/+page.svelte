@@ -2,7 +2,8 @@
   export let data;
   import { enhance } from '$app/forms';
   import { writable } from 'svelte/store';
-
+  import { Eye, Pencil, Trash } from '@lucide/svelte';
+  
   let filter = { type: '' }; 
   let sortOption = 'price-asc'; 
 
@@ -124,15 +125,15 @@
           </div>
           <div class="pass-actions">
             <a href="/pass/{pass.id}" class="action-btn view-btn">
-              <span class="icon">👁️</span> View
+              <span class="icon"><Eye /></span> View
             </a>
             <a href="/pass/{pass.id}/edit" class="action-btn edit-btn">
-              <span class="icon">✏️</span> Edit
+              <span class="icon"><Pencil /></span> Edit
             </a>
             <button 
               on:click={() => showDeleteConfirm = pass.id} 
               class="action-btn delete-btn">
-              <span class="icon">🗑️</span> Delete
+              <span class="icon"><Trash /></span> Delete
             </button>
           </div>
         </div>

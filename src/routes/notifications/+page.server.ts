@@ -65,13 +65,45 @@ export const actions = {
       const db = await getDb(platform);
       
       // Update the inquiry status
+      const inquiry = await db.select()
+        .from(inquiries)
+        .where(eq(inquiries.id, inquiryId))
+        .get();
+
+      if (!inquiry) {
+        return { error : 'Inquiry not found' };
+      }
+
+      const pass = await db.select()
+        .from(passes)
+        .where(eq(passes.id, inquiry.passId))
+        .get();
+      // send status
       await db.update(inquiries)
-        .set({ 
+        .set({
           status,
           updatedAt: new Date()
         })
         .where(eq(inquiries.id, inquiryId))
         .run();
+
+      // send notification to the requester
+      const statusMessage = status === 'approved' ? 'approved' : 'declined';
+      const notificationTitle = status === 'approved' ? 'Request Approved!' : 'Request Declined';
+      const notificationMessage = `Your request for "${pass?.title || 'a pass'}" has been ${statusMessage}.`;
+      await db.insert(notifications).values({
+        userId: inquiry.senderUserId,
+        passId: inquiry.passId,
+        type: 'inquiry',
+        title: notificationTitle,
+        message: notificationMessage,
+        read: false,
+        createdAt: new Date(),
+        metadata: JSON.stringify({
+          inquiryId: inquiryId,
+          status
+        })
+      });
       
       return { success: true };
     } catch (error) {

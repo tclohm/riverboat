@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { X } from '@lucide/svelte';
   export let data;
   const { pass } = data;
   const isOwner = data.user && data.pass.userId == data.user.id;
@@ -34,9 +35,9 @@
       <div class="price-box">
         <div class="price">${pass.price}<span>/day</span></div>
         <div class="pass-actions">
-          {#if !isOwner}
+          {#if data.user && isOwner}
             <a href="/pass/{data.pass.id}/edit" class="edit-button">Edit Pass</a>
-          {:else if data.user}
+          {:else if data.user && !isOwner}
             <button 
               class="contact-button" 
               on:click={() => showInquiryForm = true}
@@ -45,7 +46,7 @@
               Request This Pass
             </button>
         {:else}
-          <a href="/login?returnTo=/pass/{data.pass.id}" class="login-button">Login to Book</a>
+          <a href="/login?returnTo=/pass/{data.pass.id}" class="login-button">Login to Request</a>
         {/if}
       </div>
     </div>
@@ -75,7 +76,10 @@
           <button 
             type="button" 
             class="close-button"
-            on:click={() => showInquiryForm = false}
+            on:click={() => {
+              showInquiryForm = false;
+              formSuccess = false;
+            }}
           >
             Close
           </button>
@@ -84,79 +88,88 @@
         <form 
           method="POST" 
           action="?/createInquiry"
-          use:enhance={() => {
+          on:submit|preventDefault={async (e) => {
             formSubmitting = true;
-            return async ({ result, update }) => {
-              formSubmitting = false;
-              if (result.type === 'success') {
+            const formData = new FormData(e.target);
+            try {
+              const response = await fetch('?/createInquiry', {
+                method: 'POST', 
+                body: formData
+              });
+              if (response.ok) {
                 formSuccess = true;
               }
-              await update();
-            };
-          }}
-        >
-          <div class="form-group">
-            <label for="requestedDates">When would you like to use this pass?</label>
-            <input 
-              type="text" 
-              id="requestedDates" 
-              name="requestedDates" 
-              placeholder="e.g. Dec 15-17, 2025" 
-              required
-            />
-          </div>
+            } catch (error) { 
+              console.error('Failed to submut request:', error);
+            } finally { 
+              formSubmitting = false;
+            }
+          }}>
+            <div class="form-group">
+              <label for="requestedDates">When would you like to use this pass?</label>
+              <input 
+                type="text" 
+                id="requestedDates" 
+                name="requestedDates" 
+                placeholder="e.g. Dec 15-17, 2025" 
+                required
+              />
+            </div>
           
-          <div class="form-group">
-            <label for="contactInfo">Preferred Contact Method</label>
-            <input 
-              type="text" 
-              id="contactInfo" 
-              name="contactInfo" 
-              placeholder="e.g. Phone: 555-123-4567 or Email: name@example.com" 
-              required
-            />
-          </div>
+            <div class="form-group">
+              <label for="contactInfo">Preferred Contact Method</label>
+              <input 
+                type="text" 
+                id="contactInfo" 
+                name="contactInfo" 
+                placeholder="e.g. Phone: 555-123-4567 or Email: name@example.com" 
+                required
+              />
+            </div>
           
-          <div class="form-group">
-            <label for="message">Message to the Owner</label>
-            <textarea 
-              id="message" 
-              name="message" 
-              rows="4" 
-              placeholder="Introduce yourself and provide any additional details about your request." 
-              required
-            ></textarea>
-          </div>
+            <div class="form-group">
+              <label for="message">Message to the Owner</label>
+              <textarea 
+                id="message" 
+                name="message" 
+                rows="4" 
+                placeholder="Introduce yourself and provide any additional details about your request." 
+                required
+              ></textarea>
+            </div>
           
-          <input type="hidden" name="passId" value={data.pass.id} />
-          <input type="hidden" name="receiverUserId" value={data.pass.userId} />
+            <input type="hidden" name="passId" value={data.pass.id} />
+            <input type="hidden" name="receiverUserId" value={data.pass.userId} />
           
-          <div class="form-actions">
-            <button 
-              type="button" 
-              class="cancel-button"
-              on:click={() => showInquiryForm = false}
-            >
-              Cancel
-            </button>
-            <button 
-              type="submit" 
-              class="submit-button"
-              disabled={formSubmitting}
-            >
-              {formSubmitting ? 'Sending...' : 'Send Request'}
-            </button>
-          </div>
-        </form>
-      {/if}
-      
-      <button 
+            <div class="form-actions">
+              <button 
+                type="button" 
+                class="cancel-button"
+                on:click={() => showInquiryForm = false}
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                class="submit-button"
+                disabled={formSubmitting}
+              >
+                {formSubmitting ? 'Sending...' : 'Send Request'}
+              </button>
+            </div>
+          </form>
+        {/if}
+
+        <button 
         type="button" 
         class="close-modal-btn"
-        on:click={() => showInquiryForm = false}
+        on:click={() => {
+          showInquiryForm = false;
+          formSuccess = false;
+        }}
         aria-label="Close modal"
       >
-        &times;
+        <X />
       </button>
     </div>
   </div>
@@ -296,7 +309,7 @@
   .modal-content {
     background: white;
     border-radius: 12px;
-    padding: 24px;
+    padding: 40px 60px;
     width: 90%;
     max-width: 500px;
     position: relative;
@@ -321,6 +334,11 @@
     font-size: 24px;
     cursor: pointer;
     color: #666;
+  }
+
+  .close-modal-btn:hover {
+    background: #fff;
+    color: #333;
   }
   
   .form-group {
