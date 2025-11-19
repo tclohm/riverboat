@@ -262,7 +262,7 @@
   .cancel-button {
     width: 100%;
     background: #fee2e2;
-    color: #991b1b;
+    color: #7f1d1d;
     border: none;
     padding: 16px;
     font-size: 18px;
@@ -273,7 +273,7 @@
   }
 
   .cancel-button:hover {
-    background: #fee2e2;
+    background: #fecaca;
   }
 
   .top-nav {
@@ -382,24 +382,26 @@
   }
   
   .success-message {
+    text-align: center;
+    padding: 40px;
     background: #d1fae5;
-    padding: 20px 0;
     border-radius: 8px;
-    margin-bottom: 20px;
-    text-align center;
+    margin: 24px 0;
   }
-  
+
   .success-message p {
-    color: #047857;
-    margin: 0 0 16px 0;
+    color: #065f46;
+    margin: 0 0 24px 0;
+    font-size: 16px;
+    line-height: 1.6;
   }
 
   .close-button {
-    background: #2563eb;
+    background: #10b981;
     color: white;
     border: none;
-    padding: 12px 24px;
-    border-radius: 8px;
+    padding: 12px 32px;
+    border-radius: 6px;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
@@ -409,7 +411,7 @@
   }
 
   .close-button:hover {
-    background: #1d4ed8;
+    background: #059669;
   }
 
   .contact-button:hover,
