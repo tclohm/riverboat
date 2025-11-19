@@ -111,7 +111,7 @@
         on:click={() => showMobileMenu = !showMobileMenu}
         aria-label="Toggle navigation menu"
       >
-        <Menu size={128} />
+        <Menu size={20} />
       </button>
       <h2>Willie's Keys</h2>
     </div>
