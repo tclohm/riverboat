@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { invalidateAll } from '$app/navigation';
-  import { enhance } from '$app/forms';
   export let data;
   export let form;
 </script>
@@ -16,14 +14,7 @@
     <div class="error">{form.error}</div>
   {/if}
 
-  <form method="POST" 
-    use:enhance={() => {
-      return async ({ result }) => {
-        if (result.type === 'redirect') {
-          await invalidateAll();
-        }
-      };
-    }}>
+  <form method="POST">
     <input type="hidden" name="returnTo" value={form?.returnTo || data.returnTo || '/'} />
     <div class="form-group">
       <label for="email">Email</label>
