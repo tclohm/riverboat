@@ -24,13 +24,14 @@ function getMonthIndex(monthStr: string): number | undefined {
 }
 
 function parseRequestedDates(dateString: string): { startDate: Date, endDate: Date } | null {
+  if (!dateString) return null;
   // Format: "Dec 15-17, 2025" (same month)
   let match = dateString.match(/(\w+)\s+(\d+)-(\d),?\s+(\d+)/);
   if (match) {
     const monthStr = match[1];
     const startDay = parseInt(match[2]);
     const endDay = parseInt(match[3]);
-    const year = parseIng(match[4]);
+    const year = parseInt(match[4]);
 
     const month = getMonthIndex(monthStr);
     if (month === undefined) return null;
@@ -106,38 +107,38 @@ export async function load({ platform, locals }) {
   try {
     const db = await getDb(platform);
     
-    // Get all non-archived notifications for the user
+    // Get all notifications for the user (read and unread, but not auto-archived)
     const userNotifications = await db.select()
       .from(notifications)
-      .where(
-        and(
-          eq(notifications.userId, locals.user.id),
-          eq(notifications.archived, false)
-        )
-      )
+      .where(eq(notifications.userId, locals.user.id))
       .orderBy(desc(notifications.createdAt))
       .all();
-    
-    // Mark all as read when viewing notifications page
-    await db.update(notifications)
-      .set({ read: true })
-      .where(eq(notifications.userId, locals.user.id))
-      .run();
-    
-    // Get all inquiries for the user's passes
-    const userInquiries = await db.select({
+
+    // Get all pending inquiries for the user's passes 
+    const userPendingInquiries = await db.select({
       inquiry: inquiries,
       pass: passes
     })
-      .from(inquiries)
-      .leftJoin(passes, eq(inquiries.passId, passes.id))
-      .where(eq(inquiries.receiverUserId, locals.user.id))
-      .orderBy(desc(inquiries.createdAt))
-      .all();
+    .from(inquiries)
+    .leftJoin(passes, eq(inquiries.passId, passes.id))
+    .where(
+      and(
+        eq(inquiries.receiverUserId, locals.user.id),
+        eq(inquiries.status, 'pending')
+      )
+    )
+    .orderBy(desc(inquiries.createdAt))
+    .all()
+
+    // Transform the data for the component
+    const inquiriesData = userPendingInquiries.map(item => ({
+      ...item.inquiry,
+      pass: item.pass
+    }));
     
     return {
       notifications: userNotifications,
-      inquiries: userInquiries
+      inquiries: inquiriesData
     };
   } catch (error) {
     console.error('Failed to load notifications page:', error);
@@ -163,7 +164,7 @@ export const actions = {
     try {
       const db = await getDb(platform);
       
-      // Update the inquiry status
+      // get the inquiry
       const inquiry = await db.select()
         .from(inquiries)
         .where(eq(inquiries.id, inquiryId))
@@ -199,7 +200,8 @@ export const actions = {
         title: notificationTitle,
         message: notificationMessage,
         read: false,
-        archived: false,
+        archived: status === 'rejected',
+        archivedAt: status === 'rejected' ? new Date() : null,
         createdAt: new Date(),
         metadata: JSON.stringify({
           inquiryId: inquiryId,
@@ -238,7 +240,7 @@ export const actions = {
       throw redirect(303, '/login');
     }
 
-    const formData = await request.formDate();
+    const formData = await request.formData();
     const notificationId = parseInt(formData.get('notificationId')?.toString() || '0');
 
     if (!notificationId) {
