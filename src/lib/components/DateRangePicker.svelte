@@ -3,6 +3,16 @@
   let endDate: string = '';
   let displayText: string = '';
   let formattedValue: string = '';
+  let error: string = '';
+
+  // Get today's date in YYYY-MM-DD format
+  function getTodayString(): string {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
 
   function formatDateRange(): string {
     if (!startDate || !endDate) return '';
@@ -29,7 +39,49 @@
     return `${startMonthStr} ${startDayNum} - ${endMonthStr} ${endDayNum}, ${yearNum}`;
   }
 
+  function validateDates() {
+    error = '';
+    
+    if (!startDate || !endDate) return;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Parse as local date to avoid timezone issues
+    const [startYear, startMonth, startDay] = startDate.split('-');
+    const [endYear, endMonth, endDay] = endDate.split('-');
+    
+    const start = new Date(parseInt(startYear), parseInt(startMonth) - 1, parseInt(startDay));
+    const end = new Date(parseInt(endYear), parseInt(endMonth) - 1, parseInt(endDay));
+    
+    // Check if start date is before today
+    if (start < today) {
+      error = 'Start date must be today or in the future';
+      startDate = '';
+      endDate = '';
+      return;
+    }
+    
+    // Check if end date is before today
+    if (end < today) {
+      error = 'End date must be today or in the future';
+      endDate = '';
+      return;
+    }
+    
+    // Check if end date is before start date
+    if (end < start) {
+      error = 'End date must be after start date';
+      endDate = '';
+      return;
+    }
+  }
+
   $: {
+    if (startDate || endDate) {
+      validateDates();
+    }
+    
     formattedValue = formatDateRange();
     
     if (startDate && endDate) {
@@ -43,8 +95,12 @@
       const startStr = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       const endStr = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
       displayText = `${startStr} - ${endStr}`;
+    } else {
+      displayText = '';
     }
   }
+
+  const minDate = getTodayString();
 </script>
 
 <div class="date-range-picker">
@@ -55,6 +111,7 @@
         type="date" 
         id="startDate" 
         bind:value={startDate}
+        min={minDate}
         required
       />
     </div>
@@ -67,11 +124,17 @@
         type="date" 
         id="endDate" 
         bind:value={endDate}
-        min={startDate}
+        min={startDate || minDate}
         required
       />
     </div>
   </div>
+  
+  {#if error}
+    <div class="error-message">
+      <p>{error}</p>
+    </div>
+  {/if}
   
   {#if displayText}
     <div class="date-display">
@@ -136,6 +199,20 @@
     text-align: center;
     color: #999;
     font-size: 12px;
+    font-weight: 500;
+  }
+
+  .error-message {
+    background: #fee2e2;
+    border: 1px solid #fca5a5;
+    border-radius: 6px;
+    padding: 12px;
+  }
+
+  .error-message p {
+    margin: 0;
+    font-size: 14px;
+    color: #b91c1c;
     font-weight: 500;
   }
 
