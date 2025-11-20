@@ -4,11 +4,8 @@ import { eq } from 'drizzle-orm';
 
 export async function load({ platform, cookies, locals }) {
   // If user is already loaded in locals, use it
-  console.log('Layout load called');
-  console.log('locals.user:', locals.user?.email);
   let user = locals.user || null;
 
-  console.log('Layout load - user:', user?.email);
   
   // If user is authenticated, get their notifications
   if (user) {
