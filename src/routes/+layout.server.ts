@@ -21,7 +21,7 @@ export async function load({ platform, cookies, locals }) {
         .all();
       
       // Count unread notifications
-      const unreadCount = userNotifications.filter(n => !n.read).length;
+      const unreadCount = userNotifications.filter(n => !n.read && n.archived).length;
       
       return {
         user,
