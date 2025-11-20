@@ -2,7 +2,7 @@
   import { invalidateAll } from '$app/navigation';
   import { enhance } from '$app/forms';
   import { page } from '$app/state';
-  import { Key, Binoculars, Tickets, CalendarDays, LogOut, Menu, Plus, UserRoundPen, LogIn } from '@lucide/svelte';
+  import { Key, Binoculars, Tickets, CalendarDays, LogOut, Menu, Plus, UserRoundPen, LogIn, Bell } from '@lucide/svelte';
   export let data;
 
   let showMobileMenu = false;
@@ -12,10 +12,15 @@
     { href: '/', label: 'Browse', icon: Binoculars },
   ];
 
-  const userNavItems = [
-    { href: '/admin', label: 'My Passes', icon: Tickets },
-    { href: '/bookings', label: 'Bookings', icon: CalendarDays },
-  ];
+  let userNavItems = [];
+
+  $: {
+    userNavItems = [
+      { href: '/admin', label: 'My Passes', icon: Tickets },
+      { href: '/bookings', label: 'Bookings', icon: CalendarDays },
+      { href: '/notifications', label: 'Notifications', icon: Bell },
+    ];
+  } 
 
   const actionNavItems = [
     { href: '/add', label: 'Add Pass', icon: Plus },
@@ -69,6 +74,9 @@
           >
             <svelte:component this={item.icon} size={20} />
             <span class="nav-label">{item.label}</span>
+            {#if item.href === '/notifications' && data.unreadCount > 0}
+              <span class="notification-badge">{data.unreadCount}</span>
+            {/if}
           </a>
         {/each}
       </nav>
@@ -333,6 +341,21 @@
   .nav-item.active {
     background: #eff6ff;
     color: #2563eb;
+  }
+  
+  .notification-badge {
+    background: #ef4444;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+    margin-left: auto;
   }
   
   .nav-label {
