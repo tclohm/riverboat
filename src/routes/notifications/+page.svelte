@@ -341,7 +341,7 @@
                   use:enhance={() => {
                     return async ({ result }) => {
                       if (result.type === 'success') {
-                        window.location.reload();
+                        await invalidateAll();
                       }
                     };
                   }}
@@ -357,7 +357,7 @@
                   use:enhance={() => {
                     return async ({ result }) => {
                       if (result.type === 'success') {
-                        window.location.reload();
+                        await invalidateAll();
                       }
                     };
                   }}

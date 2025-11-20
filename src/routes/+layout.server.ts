@@ -1,6 +1,6 @@
 import { getDb } from '$lib/db';
 import { notifications } from '$lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 export async function load({ platform, cookies, locals }) {
   // If user is already loaded in locals, use it
@@ -12,16 +12,22 @@ export async function load({ platform, cookies, locals }) {
     try {
       const db = await getDb(platform);
       
-      // Get recent notifications
+      // Get recent unread, non-archived notifications
       const userNotifications = await db.select()
         .from(notifications)
-        .where(eq(notifications.userId, user.id))
+        .where(
+          and(
+            eq(notifications.userId, user.id),
+            eq(notifications.read, false),
+            eq(notifications.archived, false)
+          )
+        )
         .orderBy(notifications.createdAt, 'desc')
         .limit(10)
         .all();
       
       // Count unread notifications
-      const unreadCount = userNotifications.filter(n => !n.read && n.archived).length;
+      const unreadCount = userNotifications.length;
       
       return {
         user,
