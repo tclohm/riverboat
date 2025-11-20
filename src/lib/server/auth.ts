@@ -83,7 +83,9 @@ export async function createSession(platform: any, userId: string) {
   const token = randomBytes(32).toString('hex');
   const sessionId = randomBytes(16).toString('hex');
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days 
-  
+ 
+  console.log('Creating session:', { sessionId, token: token.substring(0, 8) + '...', userId });
+
   await db.insert(session).values({
     id: sessionId,
     userId,
@@ -93,11 +95,14 @@ export async function createSession(platform: any, userId: string) {
     updatedAt: new Date()
   }).run();
 
+  console.log('Session created');
   return token;
 }
 
 export async function getSessionUser(platform: any, token: string) {
   if (!token) return null;
+
+  console.log('Looking up session for token:', token.substring(0,8) + '...');
 
   const db = await getDbFromClient(platform);
 
@@ -105,12 +110,15 @@ export async function getSessionUser(platform: any, token: string) {
     .where(eq(session.token, token))
     .get();
 
+  console.log('Found session:', !!foundSession);
+
   if (!foundSession) return null;
 
   const foundUser = await db.select().from(user)
     .where(eq(user.id, foundSession.userId))
     .get();
 
+  console.log('Found user:', foundUser?.email);
   return foundUser;
 }
 
