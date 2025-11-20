@@ -2,11 +2,8 @@ import { verifyPassword, createSession } from '$lib/server/auth';
 import { fail, redirect } from '@sveltejs/kit';
 
 export function load({ url }) {
-  const returnTo = url.searchParams.get('returnTo') || '/';
-
-  return {
-    returnTo
-  };
+  const returnTo = url.searchParams.get('returnTo') || '/admin';
+  return { returnTo };
 }
 
 export const actions = {
@@ -50,6 +47,7 @@ export const actions = {
       });
     }
 
-    throw redirect(303, '/');
+    throw redirect(303, returnTo);
+
   }
 };

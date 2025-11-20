@@ -1,19 +1,11 @@
 import { getDb } from '$lib/db';
 import { notifications } from '$lib/db/schema';
 import { eq } from 'drizzle-orm';
-import { getSessionUser } from '$lib/server/auth';
 
 export async function load({ platform, cookies, locals }) {
   // If user is already loaded in locals, use it
-  let user = locals.user;
-  
-  // Otherwise, try to get user from session
-  if (!user) {
-    const token = cookies.get('session');
-    if (token) {
-      user = await getSessionUser(platform, token);
-    }
-  }
+  let user = locals.user || null;
+
   
   // If user is authenticated, get their notifications
   if (user) {

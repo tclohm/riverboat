@@ -1,6 +1,8 @@
 <script>
+  import { invalidateAll } from '$app/navigation';
+  import { enhance } from '$app/forms';
   import { page } from '$app/state';
-  import { Key, Binoculars, Tickets, CalendarDays, LogOut, Menu, Plus, UserRoundPen } from '@lucide/svelte';
+  import { Key, Binoculars, Tickets, CalendarDays, LogOut, Menu, Plus, UserRoundPen, LogIn } from '@lucide/svelte';
   export let data;
 
   let showMobileMenu = false;
@@ -8,6 +10,9 @@
   // Define navigation items with icons
   const mainNavItems = [
     { href: '/', label: 'Browse', icon: Binoculars },
+  ];
+
+  const userNavItems = [
     { href: '/admin', label: 'My Passes', icon: Tickets },
     { href: '/bookings', label: 'Bookings', icon: CalendarDays },
   ];
@@ -19,6 +24,8 @@
   const settingsNavItems = [
     { href: '/profile', label: 'Profile', icon: UserRoundPen },
   ];
+
+  $: isLoggedIn = !!data.user;
 </script>
 
 <div class="admin-layout">
@@ -32,74 +39,141 @@
       </div>
     </div>
     
-    <!-- Main Navigation -->
-    <nav class="sidebar-nav main-nav">
-      {#each mainNavItems as item}
-        <a 
-          href={item.href} 
-          class="nav-item {page.url.pathname === item.href ? 'active' : ''}"
-          title={item.label}
-        >
-        <svelte:component this={item.icon} size={20} />
-        <span class="nav-label">{item.label}</span>
-      </a>
-    {/each}
-  </nav>
-
-  <!-- Divider -->
-  <div class="nav-divider"></div>
-
-  <!-- Action Navigation -->
-  <nav class="sidebar-nav action-nav">
-    {#each actionNavItems as item}
-      <a 
-        href={item.href} 
-        class="nav-item action-item {page.url.pathname === item.href ? 'active' : ''}"
-        title={item.label}
-      >
-        <svelte:component this={item.icon} size={20} />
-        <span class="nav-label">{item.label}</span>
-      </a>
-    {/each}
-  </nav>
-
-  <!-- Divider -->
-  <div class="nav-divider"></div>
-
-  <!-- Settings Navigation -->
-  <nav class="sidebar-nav settings-nav">
-      {#each settingsNavItems as item}
-        <a 
-          href={item.href} 
-          class="nav-item {page.url.pathname === item.href ? 'active' : ''}"
-          title={item.label}
-        >
-          <svelte:component this={item.icon} size={20} />
-          <span class="nav-label">{item.label}</span>
-        </a>
-      {/each}
-    </nav>
-
-    <!-- Spacer -->
-    <div class="nav-spacer"></div>
-
-    <!-- User Section -->
-    <div class="user-section">
-      <div class="user-info">
-        <div class="user-avatar">{data.user?.name?.charAt(0) || 'U'}</div>
-        <div class="user-details">
-          <p class="user-name">{data.user?.name || 'User'}</p>
-          <p class="user-email">{data.user?.email || 'user@example.com'}</p>
-        </div>
-      </div>
+    {#if isLoggedIn}
+      <!-- LOGGED IN SIDEBAR -->
       
-      <form method="POST" action="/logout" class="logout-form">
-        <button type="submit" class="logout-button" title="Logout">
-          <svelte:component this={LogOut} size={20} />
-          <span class="logout-label">Logout</span>
-        </button>
-      </form>
-    </div>
+      <!-- Main Navigation -->
+      <nav class="sidebar-nav main-nav">
+        {#each mainNavItems as item}
+          <a 
+            href={item.href} 
+            class="nav-item {page.url.pathname === item.href ? 'active' : ''}"
+            title={item.label}
+          >
+            <svelte:component this={item.icon} size={20} />
+            <span class="nav-label">{item.label}</span>
+          </a>
+        {/each}
+      </nav>
+
+      <!-- Divider -->
+      <div class="nav-divider"></div>
+
+      <!-- User Navigation -->
+      <nav class="sidebar-nav user-nav">
+        {#each userNavItems as item}
+          <a 
+            href={item.href} 
+            class="nav-item {page.url.pathname === item.href ? 'active' : ''}"
+            title={item.label}
+          >
+            <svelte:component this={item.icon} size={20} />
+            <span class="nav-label">{item.label}</span>
+          </a>
+        {/each}
+      </nav>
+
+      <!-- Divider -->
+      <div class="nav-divider"></div>
+
+      <!-- Action Navigation -->
+      <nav class="sidebar-nav action-nav">
+        {#each actionNavItems as item}
+          <a 
+            href={item.href} 
+            class="nav-item action-item {page.url.pathname === item.href ? 'active' : ''}"
+            title={item.label}
+          >
+            <svelte:component this={item.icon} size={20} />
+            <span class="nav-label">{item.label}</span>
+          </a>
+        {/each}
+      </nav>
+
+      <!-- Divider -->
+      <div class="nav-divider"></div>
+
+      <!-- Settings Navigation -->
+      <nav class="sidebar-nav settings-nav">
+        {#each settingsNavItems as item}
+          <a 
+            href={item.href} 
+            class="nav-item {page.url.pathname === item.href ? 'active' : ''}"
+            title={item.label}
+          >
+            <svelte:component this={item.icon} size={20} />
+            <span class="nav-label">{item.label}</span>
+          </a>
+        {/each}
+      </nav>
+
+      <!-- Spacer -->
+      <div class="nav-spacer"></div>
+
+      <!-- User Section -->
+      <div class="user-section">
+        <div class="user-info">
+          <div class="user-avatar">{data.user?.name?.charAt(0) || 'U'}</div>
+          <div class="user-details">
+            <p class="user-name">{data.user?.name || 'User'}</p>
+            <p class="user-email">{data.user?.email || 'user@example.com'}</p>
+          </div>
+        </div>
+        
+        <form method="POST" 
+          action="/logout" 
+          class="logout-form"
+          use:enhance={() => { 
+            return async ({ result }) => {
+              if (result.type === 'redirect') {
+                await invalidateAll();
+              }
+            };
+          }}
+        >
+          <button type="submit" class="logout-button" title="Logout">
+            <svelte:component this={LogOut} size={20} />
+            <span class="logout-label">Logout</span>
+          </button>
+        </form>
+      </div>
+
+    {:else}
+      <!-- LOGGED OUT SIDEBAR -->
+      
+      <!-- Browse Section -->
+      <nav class="sidebar-nav main-nav">
+        {#each mainNavItems as item}
+          <a 
+            href={item.href} 
+            class="nav-item {page.url.pathname === item.href ? 'active' : ''}"
+            title={item.label}
+          >
+            <svelte:component this={item.icon} size={20} />
+            <span class="nav-label">{item.label}</span>
+          </a>
+        {/each}
+      </nav>
+
+      <!-- Spacer -->
+      <div class="nav-spacer"></div>
+
+      <!-- Login Prompt Section -->
+      <div class="login-prompt-section">
+        <div class="login-prompt-content">
+          <p class="login-prompt-text">Sign in to save passes and manage bookings</p>
+        </div>
+        
+        <a href="/login" class="login-button">
+          <svelte:component this={LogIn} size={20} />
+          <span>Sign In</span>
+        </a>
+        
+        <a href="/signup" class="signup-button">
+          Create Account
+        </a>
+      </div>
+    {/if}
   </aside>
   
   <!-- Main content area -->
@@ -122,38 +196,63 @@
   
   <!-- Mobile menu overlay -->
   {#if showMobileMenu}
-    <div 
+    <button
       class="mobile-menu-overlay" 
       on:click={() => showMobileMenu = false}
       on:keydown={(e) => e.key === 'Escape' && (showMobileMenu = false)}
-      role="presentation"
+      aria-label="Close Menu"
     >
-      <div class="mobile-menu" on:click|stopPropagation role="navigation">
+      <nav class="mobile-menu" on:click|stopPropagation>
         <div class="mobile-logo">
           <h2>Willie's Keys</h2>
         </div>
 
-        <nav class="mobile-nav">
-          {#each [...mainNavItems, ...actionNavItems, ...settingsNavItems] as item}
-            <a 
-              href={item.href} 
-              class="nav-item {page.url.pathname === item.href ? 'active' : ''}"
-              on:click={() => showMobileMenu = false}
-            >
-            <svelte:component this={item.icon} size={20} />
-              <span class="nav-label">{item.label}</span>
-            </a>
-          {/each}
-        </nav>
+        {#if isLoggedIn}
+          <nav class="mobile-nav">
+            {#each [...mainNavItems, ...userNavItems, ...actionNavItems, ...settingsNavItems] as item}
+              <a 
+                href={item.href} 
+                class="nav-item {page.url.pathname === item.href ? 'active' : ''}"
+                on:click={() => showMobileMenu = false}
+              >
+                <svelte:component this={item.icon} size={20} />
+                <span class="nav-label">{item.label}</span>
+              </a>
+            {/each}
+          </nav>
 
-        <form method="POST" action="/logout" class="mobile-logout">
-          <button type="submit" class="logout-button">
-            <svelte:component this={LogOut} size={20} />
-            <span class="logout-label">Logout</span>
-          </button>
-        </form>
-      </div>
-    </div>
+          <form method="POST" action="/logout" class="mobile-logout">
+            <button type="submit" class="logout-button">
+              <svelte:component this={LogOut} size={20} />
+              <span class="logout-label">Logout</span>
+            </button>
+          </form>
+        {:else}
+          <nav class="mobile-nav">
+            {#each mainNavItems as item}
+              <a 
+                href={item.href} 
+                class="nav-item {page.url.pathname === item.href ? 'active' : ''}"
+                on:click={() => showMobileMenu = false}
+              >
+                <svelte:component this={item.icon} size={20} />
+                <span class="nav-label">{item.label}</span>
+              </a>
+            {/each}
+          </nav>
+
+          <div class="mobile-auth-buttons">
+            <a href="/login" class="login-button">
+              <LogIn size={20} />
+              Sign In
+            </a>
+            <a href="/signup" class="signup-button">
+              Create Account
+            </a>
+          </div>
+        {/if}
+      </nav>
+    </button>
   {/if}
 </div>
 
@@ -207,96 +306,72 @@
   /* Navigation */
   .sidebar-nav {
     padding: 12px 8px;
-    flex-grow: 0;
-  }
-  
-  .main-nav {
-    padding-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
   
   .nav-item {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px 16px;
+    padding: 10px 12px;
     color: #6b7280;
     text-decoration: none;
-    transition: all 0.2s ease;
-    border-radius: 8px;
-    margin: 4px 0;
+    border-radius: 6px;
     font-size: 14px;
     font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
   }
   
   .nav-item:hover {
     background: #f3f4f6;
-    color: #2563eb;
+    color: #1f2937;
   }
   
   .nav-item.active {
     background: #eff6ff;
     color: #2563eb;
-    font-weight: 600;
-  }
-  
-  .nav-item.active::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: #2563eb;
-    border-radius: 0 8px 8px 0;
-  }
-  
-  .nav-item {
-    position: relative;
-    padding-left: 16px;
-  }
-  
-  .nav-icon {
-    font-size: 20px;
-    width: 24px;
-    text-align: center;
-    flex-shrink: 0;
   }
   
   .nav-label {
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   
-  /* Action item styling */
-  .action-item {
-    background: #fef3c7;
-    color: #b45309;
-  }
-  
-  .action-item:hover {
-    background: #fcd34d;
-    color: #92400e;
-  }
-  
-  .action-item.active {
-    background: #fbbf24;
-    color: #78350f;
-  }
-  
-  /* Dividers */
+  /* Divider */
   .nav-divider {
     height: 1px;
     background: #f3f4f6;
-    margin: 12px 0;
+    margin: 4px 0;
+  }
+  
+  /* Action Items */
+  .action-item {
+    background: #fef3c7;
+    color: #92400e;
+  }
+  
+  .action-item:hover {
+    background: #fde68a;
+    color: #78350f;
+  }
+  
+  .action-item.active {
+    background: #fcd34d;
+    color: #451a03;
   }
   
   /* Spacer */
   .nav-spacer {
-    flex-grow: 1;
+    flex: 1;
   }
   
   /* User Section */
   .user-section {
-    padding: 16px;
+    padding: 16px 8px;
     border-top: 1px solid #f3f4f6;
     display: flex;
     flex-direction: column;
@@ -307,6 +382,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
+    padding: 8px;
   }
   
   .user-avatar {
@@ -325,7 +401,6 @@
   
   .user-details {
     min-width: 0;
-    flex-grow: 1;
   }
   
   .user-name {
@@ -339,7 +414,7 @@
   }
   
   .user-email {
-    margin: 2px 0 0 0;
+    margin: 0;
     font-size: 12px;
     color: #9ca3af;
     white-space: nowrap;
@@ -347,9 +422,8 @@
     text-overflow: ellipsis;
   }
   
-  /* Logout Button */
   .logout-form {
-    margin: 0;
+    width: 100%;
   }
   
   .logout-button {
@@ -357,11 +431,11 @@
     display: flex;
     align-items: center;
     gap: 12px;
+    padding: 10px 12px;
     background: #fee2e2;
     color: #991b1b;
     border: none;
-    padding: 12px 16px;
-    border-radius: 8px;
+    border-radius: 6px;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
@@ -373,50 +447,111 @@
     color: #7f1d1d;
   }
   
-  .logout-icon {
-    font-size: 18px;
-  }
-  
   .logout-label {
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Login Prompt Section (Logged Out) */
+  .login-prompt-section {
+    padding: 16px 12px;
+    border-top: 1px solid #f3f4f6;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .login-prompt-content {
+    background: #fef3c7;
+    border-radius: 8px;
+    padding: 12px;
+  }
+
+  .login-prompt-text {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: #92400e;
+    line-height: 1.4;
+  }
+
+  .login-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .login-button:hover {
+    background: #1d4ed8;
+  }
+
+  .signup-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 12px;
+    background: white;
+    color: #2563eb;
+    border: 1px solid #2563eb;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .signup-button:hover {
+    background: #eff6ff;
   }
   
   /* Main Content */
   .main-content {
-    flex-grow: 1;
-    padding: 0;
-    max-width: calc(100% - 260px);
-    overflow-y: auto;
-    background: #f9fafb;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
   }
   
   /* Mobile Header */
   .mobile-header {
     display: none;
-    padding: 16px 20px;
-    background: white;
-    border-bottom: 1px solid #e5e7eb;
     align-items: center;
     gap: 16px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    padding: 16px;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
   }
   
   .mobile-header h2 {
     margin: 0;
-    font-size: 18px;
-    flex-grow: 1;
+    font-size: 16px;
+    color: #1f2937;
   }
   
   .mobile-menu-toggle {
     background: none;
     border: none;
-    font-size: 24px;
-    cursor: pointer;
     color: #6b7280;
-    padding: 4px;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   
-  /* Mobile Menu */
   .mobile-menu-overlay {
     display: none;
     position: fixed;
@@ -425,45 +560,58 @@
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
+    z-index: 40;
   }
   
   .mobile-menu {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
-    width: 260px;
-    height: 100%;
+    width: 100%;
+    max-width: 260px;
+    height: 100vh;
     background: white;
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-    overflow-y: auto;
-    z-index: 1001;
     display: flex;
     flex-direction: column;
+    z-index: 50;
+    overflow-y: auto;
   }
   
   .mobile-logo {
-    padding: 20px 16px;
+    padding: 16px;
     border-bottom: 1px solid #f3f4f6;
   }
   
   .mobile-logo h2 {
     margin: 0;
-    font-size: 18px;
+    font-size: 16px;
+    font-weight: 700;
     color: #1f2937;
   }
   
   .mobile-nav {
     padding: 12px 8px;
-    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
   }
-  
+
+  .mobile-auth-buttons {
+    padding: 16px 12px;
+    border-top: 1px solid #f3f4f6;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
   .mobile-logout {
-    padding: 16px;
+    width: 100%;
+    padding: 16px 12px;
     border-top: 1px solid #f3f4f6;
   }
   
-  /* Responsive Design */
+  /* Responsive */
   @media (max-width: 768px) {
     .sidebar {
       display: none;
@@ -471,10 +619,6 @@
     
     .mobile-header {
       display: flex;
-    }
-    
-    .main-content {
-      max-width: 100%;
     }
     
     .mobile-menu-overlay {
