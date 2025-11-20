@@ -7,12 +7,10 @@ export const handle: Handle = async ({ event, resolve }) => {
   await initializeDb(event.platform);
 
   const token = event.cookies.get('session');
-  console.log('🪝 Hooks - Session token:', token?.substring(0,8) + '...');
 
   if (token) {
     // Get user token from cookies 
     const user = await getSessionUser(event.platform, token);
-    console.log('🪝 Hooks - Got user:', user?.email);
     if (user) {
       event.locals.user = user;
       event.locals.session = { token };
