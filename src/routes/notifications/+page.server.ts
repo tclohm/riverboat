@@ -240,7 +240,7 @@ export const actions = {
       throw redirect(303, '/login');
     }
 
-    const formData = await request.formDate();
+    const formData = await request.formData();
     const notificationId = parseInt(formData.get('notificationId')?.toString() || '0');
 
     if (!notificationId) {

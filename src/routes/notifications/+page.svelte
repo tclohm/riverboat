@@ -1,26 +1,26 @@
 <script lang="ts">
   export let data;
   import { enhance } from '$app/forms';
-
-  type TabType = 'new' | 'coming' | 'requests' | 'archived'; 
+  
+  type TabType = 'new' | 'coming' | 'requests' | 'archived';
   let activeTab: TabType = 'new';
-
+  
   interface Notification {
     id: number;
     title: string;
     message: string;
-    read: boolean; 
+    read: boolean;
     archived: boolean;
-    createdAt: Date; 
+    createdAt: Date;
     metadata?: string;
   }
-
+  
   interface Inquiry {
-    id: number; 
+    id: number;
     passId: number;
-    senderUserId: string; 
-    receiverUserId: string; 
-    message: string; 
+    senderUserId: string;
+    receiverUserId: string;
+    message: string;
     contactInfo?: string;
     requestedDates?: string;
     status: 'pending' | 'approved' | 'rejected';
@@ -30,7 +30,7 @@
       title: string;
     };
   }
-
+  
   function parseRequestedDates(dateString: string): { startDate: Date; endDate: Date } | null {
     if (!dateString) return null;
     
@@ -107,7 +107,7 @@
   function getPendingInquiries(): Inquiry[] {
     return data.inquiries.filter(inq => inq.status === 'pending');
   }
-
+  
   function getMetadata(metadataString?: string): any {
     if (!metadataString) return null;
     try {
@@ -117,6 +117,34 @@
     }
   }
   
+  function getNotificationLink(notification: Notification): string {
+    try {
+      const metadata = getMetadata(notification.metadata);
+      
+      // For approved request notifications
+      if (metadata?.status === 'approved') {
+        return '#coming';
+      }
+      // For declined request notifications
+      else if (metadata?.status === 'declined') {
+        return '#archived';
+      }
+      // For new pass requests
+      else if (metadata?.inquiryId) {
+        return '#requests';
+      }
+    } catch {
+      return '#new';
+    }
+    
+    return '#new';
+  }
+  
+  function handleNotificationClick(notification: Notification) {
+    const link = getNotificationLink(notification);
+    const tab = link.replace('#', '') as TabType;
+    activeTab = tab;
+  }
 </script>
 
 <svelte:head>
@@ -168,7 +196,17 @@
       {:else}
         <div class="notifications-list">
           {#each getNotificationsByTab('new') as notification}
-            <div class="notification-card unread">
+            <div 
+              class="notification-card unread"
+              role="button"
+              tabindex="0"
+              on:click={() => handleNotificationClick(notification)}
+              on:keydown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  handleNotificationClick(notification);
+                }
+              }}
+            >
               <div class="notification-icon">
                 {#if notification.title.includes('Approved')}
                   <span>✅</span>
@@ -190,6 +228,7 @@
                 action="?/archiveNotification"
                 use:enhance
                 class="archive-form"
+                on:click|stopPropagation
               >
                 <input type="hidden" name="notificationId" value={notification.id} />
                 <button type="submit" class="archive-button" aria-label="Archive">×</button>
@@ -223,7 +262,8 @@
                   <div class="trip-dates">
                     <span class="dates-label">📅 {getMetadata(notification.metadata).requestedDates}</span>
                   </div>
-                {/if}                <span class="notification-time">
+                {/if}
+                <span class="notification-time">
                   Approved on {new Date(notification.createdAt).toLocaleString()}
                 </span>
               </div>
@@ -437,6 +477,13 @@
     align-items: flex-start;
     gap: 16px;
     position: relative;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .notification-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
   }
   
   .notification-card.unread {
