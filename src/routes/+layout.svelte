@@ -25,7 +25,7 @@
     { href: '/profile', label: 'Profile', icon: UserRoundPen },
   ];
 
-  const isLoggedIn = !!data.user;
+  $: isLoggedIn = !!data.user;
 </script>
 
 <div class="admin-layout">
