@@ -31,7 +31,7 @@ function parseRequestedDates(dateString: string): { startDate: Date, endDate: Da
     const monthStr = match[1];
     const startDay = parseInt(match[2]);
     const endDay = parseInt(match[3]);
-    const year = parseIng(match[4]);
+    const year = parseInt(match[4]);
 
     const month = getMonthIndex(monthStr);
     if (month === undefined) return null;
