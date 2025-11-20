@@ -1,53 +1,5 @@
 <script lang="ts">
-  export let data;
-
-  import NotificationsMenu from '$lib/components/NotificationsMenu.svelte';
-
-  async function markNotificationRead(event) {
-    const { id } = event.detail;
-
-    try {
-      const response = await fetch(`/api/notifications/${id}/read`, { 
-        method: 'POST'
-      });
-      
-      if (response.ok) {
-        data.notifications = data.notifications.map(notifcation => {
-          if (notifcation.id === id) {
-            return { ...notifcation, read: true };
-          }
-          return notifcation;
-        });
-
-        data.unreadCount = data.notifcation.filter(n => !n.read).length;
-      }
-    } catch (error) {
-      console.error('Failed to mark notification as read', error);
-    }
-  }
-
-  async function markAllNotificationsRead() {
-    try {
-      const response = await fetch('/api/notifications/read-all', { 
-        method: 'POST'
-      })
-
-      if (response.ok) {
-        data.notifications = data.notifications.map(notification => { 
-          return { ...notification, read: true };
-        });
-
-        data.unreadCount = 0;
-      }
-    } catch (error) { 
-      console.error('Failed to mark all notifications as read:', error);
-    }
-  }
-
-  function navigateToNotifications() {
-    window.location.href = '/notifications';
-  }
-
+  export let data; 
 </script>
 
 <svelte:head>
@@ -59,23 +11,6 @@
     <div class="header-content">
       <h1>WILLIE'S KEYS</h1>
       <p>Share the magic</p>
-    </div>
-    <div class="header-actions">
-      {#if data.user}
-        <div class="user-actions">
-          <NotificationsMenu 
-            notifications={data.notifications || []} 
-            unreadCount={data.unreadCount || 0}
-            on:markRead={markNotificationRead}
-            on:markAllRead={markAllNotificationsRead}
-            on:viewAll={navigateToNotifications}
-          /> 
-          <span class="user-name">Hi, {data.user.name}</span>
-        </div>
-      {:else}
-        <a href="/login" class="login-link">Login</a>
-        <a href="/login?returnTo=/add" class="share-button">List your Pass</a>
-      {/if}
     </div>
   </header>
 
