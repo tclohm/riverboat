@@ -1,6 +1,13 @@
 <script lang="ts">
   export let data;
   import { enhance } from '$app/forms';
+  import { invalidateAll } from '$app/navigation';
+
+  // page loads, invalidate the layout data so the notication badge updates 
+  $: if (typeof window !== 'undefined') {
+    invalidateAll();
+  }
+  
   
   type TabType = 'new' | 'coming' | 'requests' | 'archived';
   let activeTab: TabType = 'new';
@@ -331,7 +338,13 @@
                 <form 
                   method="POST" 
                   action="?/updateInquiryStatus"
-                  use:enhance
+                  use:enhance={() => {
+                    return async ({ result }) => {
+                      if (result.type === 'success') {
+                        window.location.reload();
+                      }
+                    };
+                  }}
                 >
                   <input type="hidden" name="inquiryId" value={inquiry.id} />
                   <input type="hidden" name="status" value="approved" />
@@ -341,7 +354,13 @@
                 <form 
                   method="POST" 
                   action="?/updateInquiryStatus"
-                  use:enhance
+                  use:enhance={() => {
+                    return async ({ result }) => {
+                      if (result.type === 'success') {
+                        window.location.reload();
+                      }
+                    };
+                  }}
                 >
                   <input type="hidden" name="inquiryId" value={inquiry.id} />
                   <input type="hidden" name="status" value="rejected" />
