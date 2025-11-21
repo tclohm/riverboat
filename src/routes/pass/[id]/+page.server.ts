@@ -141,8 +141,8 @@ export const actions = {
     try {
       const db = await getDb(platform);
       
-      // create inquiry
-      const inquiryResult = await db.insert(inquiries).values({
+      // create inquiry - this is the notification for the pass owner
+      await db.insert(inquiries).values({
         passId,
         senderUserId: locals.user.id,
         receiverUserId,
@@ -152,31 +152,8 @@ export const actions = {
         status: 'pending',
         createdAt: new Date(),
         updatedAt: new Date()
-      }).returning();
-      
-      // get pass
-      const pass = await db.select().from(passes).where(eq(passes.id, passId)).get();
-      if (!pass) {
-        return fail(404, { error: 'Pass not found' });
-      }
-
-      // create notification
-      await db.insert(notifications).values({
-        userId: receiverUserId,
-        passId,
-        type: 'inquiry',
-        title: 'New Pass Request',
-        message: `Someone is interested in your "${pass.title}" pass for ${requestedDates}`,
-        read: false,
-        archived: false,
-        createdAt: new Date(),
-        metadata: JSON.stringify({
-          inquiryId: inquiryResult[0].id,
-          requestedDates,
-          senderName: locals.user.name
-        })
       });
-
+      
       return { success: true };
     } catch (error) {
       console.error('Failed to create inquiry:', error);
