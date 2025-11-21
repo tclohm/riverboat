@@ -1,6 +1,6 @@
 import { getDb } from '$lib/db';
 import { notifications, inquiries } from '$lib/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, desc } from 'drizzle-orm';
 
 export async function load({ platform, cookies, locals }) {
   // If user is already loaded in locals, use it
