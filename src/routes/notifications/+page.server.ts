@@ -156,6 +156,8 @@ export const actions = {
     const formData = await request.formData();
     const inquiryId = parseInt(formData.get('inquiryId')?.toString() || '0');
     const status = formData.get('status')?.toString();
+
+    console.log('Processing inquiry:', inquiryId, 'with status:', status);
     
     if (!inquiryId || !status) {
       return { error: 'Invalid input' };
@@ -261,7 +263,7 @@ export const actions = {
           .where(eq(notifications.id, notificationResult[0].id))
           .run();
       }
-      
+      console.log('Successfully updated inquiry status')
       return { success: true };
     } catch (error) {
       console.error('Failed to update inquiry status:', error);
