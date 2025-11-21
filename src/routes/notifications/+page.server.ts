@@ -189,6 +189,40 @@ export const actions = {
         .where(eq(inquiries.id, inquiryId))
         .run();
 
+      // Find and update the notification that matches this inquiry 
+      const existingNotifications = await db.select()
+        .from(notifications)
+        .where(
+          and(
+            eq(notifications.userId, locals.user.id),
+            eq(notifications.type, 'inquiry')
+          )
+        )
+        .all();
+
+
+      // Find the notification that has this inquiryId in its metadata 
+      for (const notif of existingNotifications) {
+        try {
+          const metadata = JSON.parse(notif.metadata || '{}');
+          if (metadata.inquiryId) {
+            // Mark this notification as read and optionally archived 
+            await db.update(notifications)
+              .set({
+                read: true,
+                archived: status === 'rejected',
+                archivedAt: status === 'rejected' ? new Date : null
+              })
+              .where(eq(notifications.id, notif.id))
+              .run();
+            break;
+          }
+        } catch (e) {
+          // skip if metadata parsings fails 
+          continue;
+        }
+      }
+
       // send notification to the requester
       const statusMessage = status === 'approved' ? 'approved' : 'declined';
       const notificationTitle = status === 'approved' ? 'Request Approved!' : 'Request Declined';
