@@ -6,12 +6,12 @@
 
   // page loads, invalidate the layout data so the notication badge updates 
   $: if (typeof window !== 'undefined') {
-    invalidateAll();
-  }
+     invalidateAll();
+   }
   
   
-  type TabType = 'new' | 'coming' | 'requests' | 'archived';
-  let activeTab: TabType = 'new';
+  type TabType = 'requests' | 'upcoming' | 'archived';
+  let activeTab: TabType = 'requests';
   
   interface Notification {
     id: number;
@@ -112,10 +112,21 @@
     });
   }
   
-  function getPendingInquiries(): Inquiry[] {
-    return data.inquiries.filter(inq => inq.status === 'pending');
-  }
+  // Make these reactive with $: so they update when data changes
+  $: pendingInquiries = data.inquiries.filter(inq => inq.status === 'pending');
   
+  $: upcomingTrips = data.notifications.filter(notif => {
+    if (notif.archived) return false;
+    try {
+      const metadata = JSON.parse(notif.metadata || '{}');
+      return metadata.status === 'approved' && isDateInFuture(metadata.requestedDates);
+    } catch {
+      return false
+    }
+  })
+
+  $: archivedNotifications = data.notifications.filter(notif => notif.archived);
+
   function getMetadata(metadataString?: string): any {
     if (!metadataString) return null;
     try {
@@ -125,34 +136,6 @@
     }
   }
   
-  function getNotificationLink(notification: Notification): string {
-    try {
-      const metadata = getMetadata(notification.metadata);
-      
-      // For approved request notifications
-      if (metadata?.status === 'approved') {
-        return '#coming';
-      }
-      // For declined request notifications
-      else if (metadata?.status === 'declined') {
-        return '#archived';
-      }
-      // For new pass requests
-      else if (metadata?.inquiryId) {
-        return '#requests';
-      }
-    } catch {
-      return '#new';
-    }
-    
-    return '#new';
-  }
-  
-  function handleNotificationClick(notification: Notification) {
-    const link = getNotificationLink(notification);
-    const tab = link.replace('#', '') as TabType;
-    activeTab = tab;
-  }
 </script>
 
 <svelte:head>
@@ -165,24 +148,20 @@
   <div class="tabs">
     <button 
       class="tab-button" 
-      class:active={activeTab === 'new'}
-      on:click={() => activeTab = 'new'}
-    >
-      What's New
-    </button>
-    <button 
-      class="tab-button" 
-      class:active={activeTab === 'coming'}
-      on:click={() => activeTab = 'coming'}
-    >
-      What's Coming Up
-    </button>
-    <button 
-      class="tab-button" 
       class:active={activeTab === 'requests'}
       on:click={() => activeTab = 'requests'}
     >
-      Your Pass Requests
+      Pending Requests
+      {#if pendingInquiries.length > 0}
+        <span class="tab-badge">{pendingInquiries.length}</span>
+      {/if}
+    </button>
+    <button 
+      class="tab-button" 
+      class:active={activeTab === 'upcoming'}
+      on:click={() => activeTab = 'upcoming'}
+    >
+      Upcoming Trips
     </button>
     <button 
       class="tab-button" 
@@ -192,123 +171,18 @@
       Archived
     </button>
   </div>
-  
-  <!-- What's New Tab -->
-  {#if activeTab === 'new'}
-    <div class="tab-content">
-      <h2>What's New</h2>
-      {#if getNotificationsByTab('new').length === 0}
-        <div class="empty-state">
-          <p>No new notifications</p>
-        </div>
-      {:else}
-        <div class="notifications-list">
-          {#each getNotificationsByTab('new') as notification}
-            <div 
-              class="notification-card unread"
-              role="button"
-              tabindex="0"
-              on:click={() => handleNotificationClick(notification)}
-              on:keydown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  handleNotificationClick(notification);
-                }
-              }}
-            >
-              <div class="notification-icon">
-                {#if notification.title.includes('Approved')}
-                  <Check />
-                {:else if notification.title.includes('Declined')}
-                  <Ban />
-                {:else}
-                  <Mail />
-                {/if}
-              </div>
-              <div class="notification-content">
-                <h3>{notification.title}</h3>
-                <p>{notification.message}</p>
-                <span class="notification-time">
-                  {new Date(notification.createdAt).toLocaleString()}
-                </span>
-              </div>
-              <form 
-                method="POST" 
-                action="?/archiveNotification"
-                use:enhance={() => {
-                  return async ({ result }) => {
-                    if (result.type === 'success') {
-                      // invalidate all data to refresh the page and sidebar 
-                      await invalidateAll(); 
-                    }
-                  }
-                }}
-                class="archive-form"
-                on:click|stopPropagation
-              >
-                <input type="hidden" name="notificationId" value={notification.id} />
-                <button type="submit" class="archive-button" aria-label="Archive">×</button>
-              </form>
-            </div>
-          {/each}
-        </div>
-      {/if}
-    </div>
-  {/if}
-  
-  <!-- What's Coming Up Tab -->
-  {#if activeTab === 'coming'}
-    <div class="tab-content">
-      <h2>What's Coming Up</h2>
-      {#if getNotificationsByTab('coming').length === 0}
-        <div class="empty-state">
-          <p>No upcoming trips scheduled</p>
-        </div>
-      {:else}
-        <div class="notifications-list">
-          {#each getNotificationsByTab('coming') as notification}
-            <div class="notification-card coming-up">
-              <div class="notification-icon">
-                <MailOpen />
-              </div>
-              <div class="notification-content">
-                <h3>{notification.title}</h3>
-                <p>{notification.message}</p>
-                {#if getMetadata(notification.metadata)?.requestedDates}
-                  <div class="trip-dates">
-                    <span class="dates-label"><CalendarDays /> {getMetadata(notification.metadata).requestedDates}</span>
-                  </div>
-                {/if}
-                <span class="notification-time">
-                  Approved on {new Date(notification.createdAt).toLocaleString()}
-                </span>
-              </div>
-              <form 
-                method="POST" 
-                action="?/archiveNotification"
-                use:enhance
-                class="archive-form"
-              >
-                <input type="hidden" name="notificationId" value={notification.id} />
-                <button type="submit" class="archive-button" aria-label="Archive">×</button>
-              </form>
-            </div>
-          {/each}
-        </div>
-      {/if}
-    </div>
-  {/if}
-  
+ 
   <!-- Your Pass Requests Tab -->
   {#if activeTab === 'requests'}
     <div class="tab-content">
       <h2>Your Pass Requests</h2>
-      {#if getPendingInquiries().length === 0}
+      {#if pendingInquiries.length === 0}
         <div class="empty-state">
           <p>No pending requests for your passes</p>
         </div>
       {:else}
         <div class="inquiries-list">
-          {#each getPendingInquiries() as inquiry}
+          {#each pendingInquiries as inquiry (inquiry.id)}
             <div class="inquiry-card">
               <div class="inquiry-header">
                 <h3>Request for {inquiry.pass?.title || 'a pass'}</h3>
@@ -346,14 +220,12 @@
                 <form 
                   method="POST" 
                   action="?/updateInquiryStatus"
-                  use:enhance={({ cancel }) => {
+                  use:enhance={() => {
                     return async ({ result, update }) => {
+                      await update();
                       if (result.type === 'success') {
-                        await update({ reset: false });
                         await invalidateAll();
-                      } else if (result.type === 'failure') {
-                        await update();
-                      }
+                      }                    
                     };
                   }}
                 >
@@ -365,14 +237,12 @@
                 <form 
                   method="POST" 
                   action="?/updateInquiryStatus"
-                  use:enhance={({ cancel }) => {
+                  use:enhance={() => {
                     return async ({ result, update }) => {
+                      await update();
                       if (result.type === 'success') {
-                        await update({ reset: false });
                         await invalidateAll();
-                      } else if (result.type === 'failure') {
-                        await update();
-                      }
+                      }                     
                     };
                   }}
                 >
@@ -387,18 +257,61 @@
       {/if}
     </div>
   {/if}
+ 
+  <!-- Upcoming Trips Tab -->
+  {#if activeTab === 'upcoming'}
+    <div class="tab-content">
+      <h2>Upcoming Trips</h2>
+      {#if upcomingTrips.length === 0}
+        <div class="empty-state">
+          <p>No upcoming trips scheduled</p>
+        </div>
+      {:else}
+        <div class="notifications-list">
+          {#each upcomingTrips as notification}
+            <div class="notification-card coming-up">
+              <div class="notification-icon">
+                <MailOpen />
+              </div>
+              <div class="notification-content">
+                <h3>{notification.title}</h3>
+                <p>{notification.message}</p>
+                {#if getMetadata(notification.metadata)?.requestedDates}
+                  <div class="trip-dates">
+                    <span class="dates-label"><CalendarDays /> {getMetadata(notification.metadata).requestedDates}</span>
+                  </div>
+                {/if}
+                <span class="notification-time">
+                  Approved on {new Date(notification.createdAt).toLocaleString()}
+                </span>
+              </div>
+              <form 
+                method="POST" 
+                action="?/archiveNotification"
+                use:enhance
+                class="archive-form"
+              >
+                <input type="hidden" name="notificationId" value={notification.id} />
+                <button type="submit" class="archive-button" aria-label="Archive">×</button>
+              </form>
+            </div>
+          {/each}
+        </div>
+      {/if}
+    </div>
+  {/if}
   
   <!-- Archived Tab -->
   {#if activeTab === 'archived'}
     <div class="tab-content">
       <h2>Archived</h2>
-      {#if getNotificationsByTab('archived').length === 0}
+      {#if archivedNotifications.length === 0}
         <div class="empty-state">
           <p>No archived items</p>
         </div>
       {:else}
         <div class="notifications-list">
-          {#each getNotificationsByTab('archived') as notification}
+          {#each archivedNotifications as notification (notification.id)}
             <div class="notification-card archived">
               <div class="notification-icon">
                 {#if notification.title.includes('Declined')}
