@@ -33,6 +33,18 @@
 
   $: isLoggedIn = !!data.user;
   
+  function getNotificationLink(notification) {
+    // Route based on notification type
+    if (notification.type === 'inquiry') {
+      return '/requests';
+    }
+    if (notification.type === 'booking') {
+      return '/bookings';
+    }
+    // Default to requests for any other notification
+    return '/requests';
+  }
+  
   async function dismissNotification(notificationId) {
     try {
       const response = await fetch(`/api/notifications/${notificationId}/dismiss`, {
@@ -210,62 +222,67 @@
         <Menu size={20} />
       </button>
       <h2>Willie's Keys</h2>
-      
-      {#if isLoggedIn}
-        <!-- Notifications Bell in Top Right -->
-        <div class="header-notifications">
-          <button 
-            type="button"
-            class="notifications-bell"
-            on:click={() => showNotificationsMenu = !showNotificationsMenu}
-            aria-label="Notifications"
-          >
-            <Bell size={20} />
-            {#if data.unreadNotificationCount > 0}
-              <span class="bell-badge">{data.unreadNotificationCount}</span>
-            {/if}
-          </button>
-          
-          {#if showNotificationsMenu}
-            <div 
-              class="notifications-dropdown"
-              on:click|stopPropagation
-            >
-              <div class="dropdown-header">
-                <h3>Notifications</h3>
-              </div>
-              
-              <div class="notifications-list-dropdown">
-                {#if data.notifications.length === 0}
-                  <div class="empty-notifications">
-                    <p>No new notifications</p>
-                  </div>
-                {:else}
-                  {#each data.notifications as notification}
-                    <div class="notification-item">
-                      <div class="notification-content">
-                        <h4>{notification.title}</h4>
-                        <p>{notification.message}</p>
-                        <span class="notification-time">
-                          {new Date(notification.createdAt).toLocaleTimeString()}
-                        </span>
-                      </div>
-                      <button 
-                        class="dismiss-btn"
-                        on:click={() => dismissNotification(notification.id)}
-                        aria-label="Dismiss"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  {/each}
-                {/if}
-              </div>
-            </div>
-          {/if}
-        </div>
-      {/if}
     </div>
+
+    {#if isLoggedIn}
+      <!-- Notifications Bell (Desktop + Mobile) -->
+      <div class="header-notifications">
+        <button 
+          type="button"
+          class="notifications-bell"
+          on:click={() => showNotificationsMenu = !showNotificationsMenu}
+          aria-label="Notifications"
+        >
+          <Bell size={20} />
+          {#if data.unreadNotificationCount > 0}
+            <span class="bell-badge">{data.unreadNotificationCount}</span>
+          {/if}
+        </button>
+        
+        {#if showNotificationsMenu}
+          <div 
+            class="notifications-dropdown"
+            on:click|stopPropagation
+          >
+            <div class="dropdown-header">
+              <h3>Notifications</h3>
+            </div>
+            
+            <div class="notifications-list-dropdown">
+              {#if data.notifications.length === 0}
+                <div class="empty-notifications">
+                  <p>No new notifications</p>
+                </div>
+              {:else}
+                {#each data.notifications as notification}
+                  <a 
+                    href={getNotificationLink(notification)}
+                    class="notification-item"
+                    on:click={() => showNotificationsMenu = false}
+                  >
+                    <div class="notification-content">
+                      <h4>{notification.title}</h4>
+                      <p>{notification.message}</p>
+                      <span class="notification-time">
+                        {new Date(notification.createdAt).toLocaleTimeString()}
+                      </span>
+                    </div>
+                    <button 
+                      type="button"
+                      class="dismiss-btn"
+                      on:click|preventDefault|stopPropagation={() => dismissNotification(notification.id)}
+                      aria-label="Dismiss"
+                    >
+                      ×
+                    </button>
+                  </a>
+                {/each}
+              {/if}
+            </div>
+          </div>
+        {/if}
+      </div>
+    {/if}
     
     <!-- Page content -->
     <slot />
@@ -631,6 +648,7 @@
     display: flex;
     flex-direction: column;
     overflow: auto;
+    position: relative;
   }
   
   /* Mobile Header */
@@ -662,10 +680,13 @@
     justify-content: center;
   }
   
-  /* Header Notifications (Desktop - Top Right) */
+  /* Header Notifications (Desktop + Mobile) */
   .header-notifications {
-    position: relative;
-    display: none; /* Hidden on mobile, shown on desktop */
+    position: fixed;
+    top: 16px;
+    right: 24px;
+    z-index: 100;
+    display: block;
   }
   
   .notifications-bell {
@@ -712,7 +733,7 @@
     background: white;
     border-radius: 8px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
+    z-index: 1001;
     max-height: 500px;
     display: flex;
     flex-direction: column;
@@ -749,6 +770,9 @@
     gap: 12px;
     align-items: start;
     transition: background 0.2s;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
   }
   
   .notification-item:hover {
@@ -812,8 +836,8 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.3);
-    z-index: 999;
+    background: transparent;
+    z-index: 99;
   }
   
   .mobile-menu-overlay {
@@ -876,12 +900,6 @@
   }
   
   /* Responsive */
-  @media (min-width: 769px) {
-    .header-notifications {
-      display: block;
-    }
-  }
-  
   @media (max-width: 768px) {
     .sidebar {
       display: none;
@@ -894,9 +912,10 @@
     .mobile-menu-overlay {
       display: block;
     }
-    
+
     .header-notifications {
-      display: block;
+      top: 60px;
+      right: 16px;
     }
     
     .notifications-dropdown {
