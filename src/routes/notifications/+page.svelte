@@ -2,6 +2,7 @@
   export let data;
   import { enhance } from '$app/forms';
   import { invalidateAll } from '$app/navigation';
+  import { Check, Ban, Mail, MailOpen, CalendarDays } from '@lucide/svelte';
 
   // page loads, invalidate the layout data so the notication badge updates 
   $: if (typeof window !== 'undefined') {
@@ -216,11 +217,11 @@
             >
               <div class="notification-icon">
                 {#if notification.title.includes('Approved')}
-                  <span>✅</span>
+                  <Check />
                 {:else if notification.title.includes('Declined')}
-                  <span>❌</span>
+                  <Ban />
                 {:else}
-                  <span>📬</span>
+                  <Mail />
                 {/if}
               </div>
               <div class="notification-content">
@@ -233,7 +234,14 @@
               <form 
                 method="POST" 
                 action="?/archiveNotification"
-                use:enhance
+                use:enhance={() => {
+                  return async ({ result }) => {
+                    if (result.type === 'success') {
+                      // invalidate all data to refresh the page and sidebar 
+                      await invalidateAll(); 
+                    }
+                  }
+                }}
                 class="archive-form"
                 on:click|stopPropagation
               >
@@ -260,14 +268,14 @@
           {#each getNotificationsByTab('coming') as notification}
             <div class="notification-card coming-up">
               <div class="notification-icon">
-                <span>🎫</span>
+                <MailOpen />
               </div>
               <div class="notification-content">
                 <h3>{notification.title}</h3>
                 <p>{notification.message}</p>
                 {#if getMetadata(notification.metadata)?.requestedDates}
                   <div class="trip-dates">
-                    <span class="dates-label">📅 {getMetadata(notification.metadata).requestedDates}</span>
+                    <span class="dates-label"><CalendarDays /> {getMetadata(notification.metadata).requestedDates}</span>
                   </div>
                 {/if}
                 <span class="notification-time">
@@ -338,10 +346,13 @@
                 <form 
                   method="POST" 
                   action="?/updateInquiryStatus"
-                  use:enhance={() => {
-                    return async ({ result }) => {
+                  use:enhance={({ cancel }) => {
+                    return async ({ result, update }) => {
                       if (result.type === 'success') {
+                        await update({ reset: false });
                         await invalidateAll();
+                      } else if (result.type === 'failure') {
+                        await update();
                       }
                     };
                   }}
@@ -354,10 +365,13 @@
                 <form 
                   method="POST" 
                   action="?/updateInquiryStatus"
-                  use:enhance={() => {
-                    return async ({ result }) => {
+                  use:enhance={({ cancel }) => {
+                    return async ({ result, update }) => {
                       if (result.type === 'success') {
+                        await update({ reset: false });
                         await invalidateAll();
+                      } else if (result.type === 'failure') {
+                        await update();
                       }
                     };
                   }}
@@ -388,9 +402,11 @@
             <div class="notification-card archived">
               <div class="notification-icon">
                 {#if notification.title.includes('Declined')}
-                  <span>❌</span>
+                  <Ban />
+                {:else if notification.title.includes('Approved')}
+                  <Check />
                 {:else}
-                  <span>📬</span>
+                  <MailOpen />
                 {/if}
               </div>
               <div class="notification-content">
