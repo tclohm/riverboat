@@ -2,7 +2,7 @@
   export let data;
   import { enhance } from '$app/forms';
   import { invalidateAll } from '$app/navigation';
-  import { Check, Ban, Mail, MailOpen, CalendarDays } from '@lucide/svelte';
+  import { Check, Ban, MailOpen, CalendarDays, X } from '@lucide/svelte';
 
   // page loads, invalidate the layout data so the notication badge updates 
   $: if (typeof window !== 'undefined') {
@@ -89,27 +89,6 @@
     const parsed = parseRequestedDates(dateString);
     if (!parsed) return false;
     return parsed.endDate > new Date();
-  }
-  
-  function getNotificationsByTab(tab: TabType): Notification[] {
-    return data.notifications.filter(notif => {
-      switch (tab) {
-        case 'new':
-          return !notif.archived && !notif.read;
-        case 'coming':
-          if (notif.archived) return false;
-          try {
-            const metadata = JSON.parse(notif.metadata || '{}');
-            return metadata.status === 'approved' && isDateInFuture(metadata.requestedDates);
-          } catch {
-            return false;
-          }
-        case 'archived':
-          return notif.archived;
-        default:
-          return false;
-      }
-    });
   }
   
   // Make these reactive with $: so they update when data changes
@@ -310,6 +289,20 @@
           <p>No archived items</p>
         </div>
       {:else}
+        <form
+          method="POST"
+          action="?/clearArchived"
+          use:enhance={() => {
+            return async ({ result, update }) => {
+              await update();
+              if (result.type === 'success') {
+                await invalidateAll();
+              }
+            };
+          }}
+        >
+          <button type="submit" class="clear-all-btn">Clear All</button>
+        </form>
         <div class="notifications-list">
           {#each archivedNotifications as notification (notification.id)}
             <div class="notification-card archived">
@@ -329,6 +322,25 @@
                   {new Date(notification.createdAt).toLocaleString()}
                 </span>
               </div>
+              <!-- Delete --->
+              <form 
+                method="POST"
+                action="?/deleteNotification"
+                use:enhance={() => {
+                  return async ({ result, update }) => {
+                    await update();
+                    if (result.type === 'success') {
+                      await invalidateAll();
+                    }
+                  };
+                }}
+                class="delete-form"
+              >
+                <input type="hidden" name="notificationId" value={notification.id} />
+                <button type="submit" class="delete-button" aria-label="Delete">
+                  <X size={20} />
+                </button>
+              </form>
             </div>
           {/each}
         </div>
@@ -624,6 +636,28 @@
   
   .reject-btn:hover {
     background: #e5e7eb;
+  }
+
+  .delete-form {
+    flex-shrink: 0;
+  }
+
+  .delete-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #9ca3af;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+
+  .delete-button:hover {
+    background: #fee2e2;
+    color: #ef4444;
   }
   
   @media (max-width: 768px) {
