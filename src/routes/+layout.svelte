@@ -2,10 +2,11 @@
   import { invalidateAll } from '$app/navigation';
   import { enhance } from '$app/forms';
   import { page } from '$app/state';
-  import { Key, Binoculars, Tickets, CalendarDays, LogOut, Menu, Plus, UserRoundPen, LogIn, Bell } from '@lucide/svelte';
+  import { Key, Binoculars, Tickets, CalendarDays, LogOut, Menu, Plus, UserRoundPen, LogIn, Bell, Inbox } from '@lucide/svelte';
   export let data;
 
   let showMobileMenu = false;
+  let showNotificationsMenu = false;
   
   // Define navigation items with icons
   const mainNavItems = [
@@ -18,7 +19,7 @@
     userNavItems = [
       { href: '/admin', label: 'My Passes', icon: Tickets },
       { href: '/bookings', label: 'Bookings', icon: CalendarDays },
-      { href: '/notifications', label: 'Notifications', icon: Bell },
+      { href: '/requests', label: 'Requests', icon: Inbox },
     ];
   } 
 
@@ -31,6 +32,19 @@
   ];
 
   $: isLoggedIn = !!data.user;
+  
+  async function dismissNotification(notificationId) {
+    try {
+      const response = await fetch(`/api/notifications/${notificationId}/dismiss`, {
+        method: 'POST'
+      });
+      if (response.ok) {
+        await invalidateAll();
+      }
+    } catch (error) {
+      console.error('Failed to dismiss notification:', error);
+    }
+  }
 </script>
 
 <div class="admin-layout">
@@ -74,8 +88,8 @@
           >
             <svelte:component this={item.icon} size={20} />
             <span class="nav-label">{item.label}</span>
-            {#if item.href === '/notifications' && data.unreadCount > 0}
-              <span class="notification-badge">{data.unreadCount}</span>
+            {#if item.href === '/requests' && data.pendingRequestCount > 0}
+              <span class="notification-badge">{data.pendingRequestCount}</span>
             {/if}
           </a>
         {/each}
@@ -118,7 +132,7 @@
       <!-- Spacer -->
       <div class="nav-spacer"></div>
 
-      <!-- User Section -->
+      <!-- User Section (NO BELL HERE) -->
       <div class="user-section">
         <div class="user-info">
           <div class="user-avatar">{data.user?.name?.charAt(0) || 'U'}</div>
@@ -196,6 +210,61 @@
         <Menu size={20} />
       </button>
       <h2>Willie's Keys</h2>
+      
+      {#if isLoggedIn}
+        <!-- Notifications Bell in Top Right -->
+        <div class="header-notifications">
+          <button 
+            type="button"
+            class="notifications-bell"
+            on:click={() => showNotificationsMenu = !showNotificationsMenu}
+            aria-label="Notifications"
+          >
+            <Bell size={20} />
+            {#if data.unreadNotificationCount > 0}
+              <span class="bell-badge">{data.unreadNotificationCount}</span>
+            {/if}
+          </button>
+          
+          {#if showNotificationsMenu}
+            <div 
+              class="notifications-dropdown"
+              on:click|stopPropagation
+            >
+              <div class="dropdown-header">
+                <h3>Notifications</h3>
+              </div>
+              
+              <div class="notifications-list-dropdown">
+                {#if data.notifications.length === 0}
+                  <div class="empty-notifications">
+                    <p>No new notifications</p>
+                  </div>
+                {:else}
+                  {#each data.notifications as notification}
+                    <div class="notification-item">
+                      <div class="notification-content">
+                        <h4>{notification.title}</h4>
+                        <p>{notification.message}</p>
+                        <span class="notification-time">
+                          {new Date(notification.createdAt).toLocaleTimeString()}
+                        </span>
+                      </div>
+                      <button 
+                        class="dismiss-btn"
+                        on:click={() => dismissNotification(notification.id)}
+                        aria-label="Dismiss"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  {/each}
+                {/if}
+              </div>
+            </div>
+          {/if}
+        </div>
+      {/if}
     </div>
     
     <!-- Page content -->
@@ -225,6 +294,9 @@
               >
                 <svelte:component this={item.icon} size={20} />
                 <span class="nav-label">{item.label}</span>
+                {#if item.href === '/requests' && data.pendingRequestCount > 0}
+                  <span class="notification-badge">{data.pendingRequestCount}</span>
+                {/if}
               </a>
             {/each}
           </nav>
@@ -261,6 +333,18 @@
         {/if}
       </nav>
     </button>
+  {/if}
+  
+  <!-- Notifications Dropdown Overlay -->
+  {#if showNotificationsMenu}
+    <div 
+      class="notifications-overlay"
+      on:click={() => showNotificationsMenu = false}
+      on:keydown={(e) => e.key === 'Escape' && (showNotificationsMenu = false)}
+      role="button"
+      tabindex="0"
+      aria-label="Close notifications"
+    ></div>
   {/if}
 </div>
 
@@ -331,6 +415,7 @@
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
+    position: relative;
   }
   
   .nav-item:hover {
@@ -348,13 +433,13 @@
     color: white;
     font-size: 10px;
     font-weight: 700;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 6px;
+    border-radius: 9px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid white;
     margin-left: auto;
   }
   
@@ -552,6 +637,7 @@
   .mobile-header {
     display: none;
     align-items: center;
+    justify-content: space-between;
     gap: 16px;
     padding: 16px;
     background: white;
@@ -562,6 +648,7 @@
     margin: 0;
     font-size: 16px;
     color: #1f2937;
+    flex: 1;
   }
   
   .mobile-menu-toggle {
@@ -573,6 +660,160 @@
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+  
+  /* Header Notifications (Desktop - Top Right) */
+  .header-notifications {
+    position: relative;
+    display: none; /* Hidden on mobile, shown on desktop */
+  }
+  
+  .notifications-bell {
+    background: none;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+  
+  .notifications-bell:hover {
+    background: #f3f4f6;
+    color: #1f2937;
+  }
+  
+  .bell-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: #ef4444;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .notifications-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 360px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    max-height: 500px;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .dropdown-header {
+    padding: 16px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .dropdown-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+  }
+  
+  .notifications-list-dropdown {
+    overflow-y: auto;
+    max-height: 450px;
+  }
+  
+  .empty-notifications {
+    padding: 48px 24px;
+    text-align: center;
+    color: #9ca3af;
+    font-size: 14px;
+  }
+  
+  .notification-item {
+    padding: 16px;
+    border-bottom: 1px solid #f3f4f6;
+    display: flex;
+    gap: 12px;
+    align-items: start;
+    transition: background 0.2s;
+  }
+  
+  .notification-item:hover {
+    background: #f9fafb;
+  }
+  
+  .notification-item:last-child {
+    border-bottom: none;
+  }
+  
+  .notification-content {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .notification-content h4 {
+    margin: 0 0 4px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+  }
+  
+  .notification-content p {
+    margin: 0 0 6px 0;
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.4;
+  }
+  
+  .notification-time {
+    font-size: 12px;
+    color: #9ca3af;
+  }
+  
+  .dismiss-btn {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  
+  .dismiss-btn:hover {
+    background: #fee2e2;
+    color: #ef4444;
+  }
+  
+  .notifications-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 999;
   }
   
   .mobile-menu-overlay {
@@ -635,6 +876,12 @@
   }
   
   /* Responsive */
+  @media (min-width: 769px) {
+    .header-notifications {
+      display: block;
+    }
+  }
+  
   @media (max-width: 768px) {
     .sidebar {
       display: none;
@@ -646,6 +893,18 @@
     
     .mobile-menu-overlay {
       display: block;
+    }
+    
+    .header-notifications {
+      display: block;
+    }
+    
+    .notifications-dropdown {
+      position: fixed;
+      top: 60px;
+      right: 8px;
+      left: 8px;
+      width: auto;
     }
   }
 </style>
