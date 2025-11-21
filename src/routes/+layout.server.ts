@@ -1,6 +1,6 @@
 import { getDb } from '$lib/db';
-import { notifications } from '$lib/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { notifications, inquiries } from '$lib/db/schema';
+import { eq, and, desc } from 'drizzle-orm';
 
 export async function load({ platform, cookies, locals }) {
   // If user is already loaded in locals, use it
@@ -12,18 +12,7 @@ export async function load({ platform, cookies, locals }) {
     try {
       const db = await getDb(platform);
 
-      // Count 1: Pending inquiries (people want to use YOUR passes)
-      const pendingInquiriesCount = await db.select()
-        .from(inquiries)
-        .where(
-          and(
-            eq(inquiries.receiverUserId, user.id),
-            eq(inquiries.status, 'pending')
-          )
-        )
-        .all();
-      
-      // Count 2: Unread notifications (responses to YOUR requests)
+      // Get unread notifications (for bell icon)
       const unreadNotifications = await db.select()
         .from(notifications)
         .where(
@@ -33,17 +22,25 @@ export async function load({ platform, cookies, locals }) {
             eq(notifications.archived, false)
           )
         )
-        .orderBy(notifications.createdAt, 'desc')
+        .orderBy(desc(notifications.createdAt))
         .all();
       
-      // Count unread notifications
-      const unreadCount = pendingInquiriesCount.length + unreadNotifications.length;
+      // Get pending requests count (for sidebar badge)
+      const pendingRequests = await db.select()
+        .from(inquiries)
+        .where(
+          and(
+            eq(inquiries.receiverUserId, user.id),
+            eq(inquiries.status, 'pending')
+          )
+        )
+        .all();
       
       return {
         user,
         notifications: unreadNotifications,
-        pendingInquiriesCount: pendingInquiriesCount,
-        unreadCount
+        pendingInquiriesCount: unreadNotifications.length,
+        pendingRequestCount: pendingRequests.length
       };
     } catch (error) {
       console.error('Failed to load notifications:', error);
@@ -51,5 +48,10 @@ export async function load({ platform, cookies, locals }) {
     }
   }
   
-  return { user: null };
+  return { 
+    user: null,
+    notifications: [],
+    unreadNotificationCount: 0,
+    pendingRequestCount: 0
+  };
 }

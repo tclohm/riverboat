@@ -299,5 +299,57 @@ export const actions = {
       console.error('Failed to archive notification:', error);
       return { error: 'Failed to archive notification' };
     }
+  },
+
+  deleteNotification: async ({ request, platform, locals }) => {
+    if (!locals.user) {
+      throw redirect(303, '/login')
+    }
+
+    const formData = await request.formData();
+    const notificationId = parseInt(formData.get('notification')?.toString() || '0');
+
+    if (!notificationId) {
+      return { error: 'Invalid notification ID' };
+    }
+
+    try {
+      const db = await getDb(platform);
+
+      // Delete the notification permanently
+      await db.delete(notificaiton)
+        .where(eq(notifications.id, notificationId))
+        .run();
+
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to delete notification:', error);
+      return { error: 'Failed to delete notification' };
+    }
+  },
+
+  clearArchived: async ({ platform, locals }) => {
+    if (!locals.user) {
+      throw redirect(303, '/login');
+    }
+
+    try {
+      const db = await getDb(platform);
+
+      // Delete all archived notifications for this user
+      await db.delete(notifications)
+        .where(
+          and(
+            eq(notifications.userId, locals.user.id),
+            eq(notifications.archived, true)
+          )
+        )
+        .run();
+
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to clear archived notifications:', error);
+      return { error: 'Failed to clear notifications' };
+    }
   }
 };
