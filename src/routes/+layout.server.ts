@@ -11,9 +11,20 @@ export async function load({ platform, cookies, locals }) {
   if (user) {
     try {
       const db = await getDb(platform);
+
+      // Count 1: Pending inquiries (people want to use YOUR passes)
+      const pendingInquiriesCount = await db.select()
+        .from(inquiries)
+        .where(
+          and(
+            eq(inquiries.receiverUserId, user.id),
+            eq(inquiries.status, 'pending')
+          )
+        )
+        .all();
       
-      // Get recent unread, non-archived notifications
-      const userNotifications = await db.select()
+      // Count 2: Unread notifications (responses to YOUR requests)
+      const unreadNotifications = await db.select()
         .from(notifications)
         .where(
           and(
@@ -23,15 +34,15 @@ export async function load({ platform, cookies, locals }) {
           )
         )
         .orderBy(notifications.createdAt, 'desc')
-        .limit(10)
         .all();
       
       // Count unread notifications
-      const unreadCount = userNotifications.length;
+      const unreadCount = pendingInquiriesCount.length + unreadNotifications.length;
       
       return {
         user,
-        notifications: userNotifications,
+        notifications: unreadNotifications,
+        pendingInquiriesCount: pendingInquiriesCount,
         unreadCount
       };
     } catch (error) {
