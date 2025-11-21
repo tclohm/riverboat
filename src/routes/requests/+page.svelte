@@ -83,9 +83,6 @@
       on:click={() => activeTab = 'approved'}
     >
       Approved
-      {#if approvedInquiries.length > 0}
-        <span class="tab-badge">{approvedInquiries.length}</span>
-      {/if}
     </button>
     <button 
       class="tab-button" 
@@ -93,9 +90,6 @@
       on:click={() => activeTab = 'declined'}
     >
       Declined
-      {#if declinedInquiries.length > 0}
-        <span class="tab-badge">{declinedInquiries.length}</span>
-      {/if}
     </button>
   </div>
 
