@@ -12,6 +12,17 @@ export async function load({ platform, locals }) {
   try {
     const db = await getDb(platform);
     
+    // Check if user has created any passes
+    const userPasses = await db.select()
+      .from(passes)
+      .where(eq(passes.userId, locals.user.id))
+      .all();
+
+    // If user has no passes, redirect them to add a pass
+    if (userPasses.length === 0) {
+      throw redirect(303, '/add');
+    }
+    
     // Get all inquiries for the user's passes, joined with pass and sender user info
     const userInquiries = await db.select({
       inquiry: inquiries,
