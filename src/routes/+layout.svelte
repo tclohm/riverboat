@@ -109,6 +109,9 @@
             {#if item.href === '/requests' && data.pendingRequestCount > 0}
               <span class="notification-badge">{data.pendingRequestCount}</span>
             {/if}
+            {#if item.href === '/bookings' && data.unreadBookingsCount > 0}
+              <span class="notification-badge">{data.unreadBookingsCount}</span>
+            {/if}
           </a>
         {/each}
       </nav>
@@ -321,6 +324,9 @@
                 <span class="nav-label">{item.label}</span>
                 {#if item.href === '/requests' && data.pendingRequestCount > 0}
                   <span class="notification-badge">{data.pendingRequestCount}</span>
+                {/if}
+                {#if item.href === '/bookings' && data.unreadBookingsCount > 0}
+                  <span class="notification-badge">{data.unreadBookingsCount}</span>
                 {/if}
               </a>
             {/each}

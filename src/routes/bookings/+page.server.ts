@@ -1,6 +1,6 @@
 import { getDb } from '$lib/db';
-import { inquiries, passes, user, notifications } from '$lib/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { inquiries, passes, user } from '$lib/db/schema';
+import { eq, and, desc } from 'drizzle-orm';
 import { redirect } from '@sveltejs/kit';
 
 export async function load({ platform, locals }) {
@@ -27,6 +27,15 @@ export async function load({ platform, locals }) {
     .orderBy(desc(inquiries.createdAt))
     .all()
 
+    // Count unread inquiries (inquiries that haven't been viewed yet)
+    const unreadCount = userSentInquiries.filter(item => !item.inquiry.read).length;
+
+    // Mark all inquiries as read since user is now viewing them
+    await db.update(inquiries)
+      .set({ read: true })
+      .where(eq(inquiries.senderUserId, locals.user.id))
+      .run();
+
     // Transform the data for the component
     const transformedInquiries = userSentInquiries.map(item => ({
       ...item.inquiry,
@@ -35,10 +44,14 @@ export async function load({ platform, locals }) {
     }));
     
     return {
-      inquiries: transformedInquiries
+      inquiries: transformedInquiries,
+      unreadCount
     };
   } catch (error) {
     console.error('Failed to load bookings page:', error);
-    return { inquiries: [] };
+    return { 
+      inquiries: [],
+      unreadCount: 0
+    };
   }
 }

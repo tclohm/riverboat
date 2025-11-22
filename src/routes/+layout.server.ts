@@ -7,6 +7,7 @@ export async function load({ platform, cookies, locals }) {
   let user = locals.user || null;
 
   let userPassCount = 0;
+  let unreadBookingsCount = 0;
 
   // If user is authenticated, get their notifications and pass count
   if (user) {
@@ -20,6 +21,19 @@ export async function load({ platform, cookies, locals }) {
         .all();
       
       userPassCount = userPasses.length;
+
+      // Count unread inquiries sent by the user (their bookings)
+      const unreadBookings = await db.select()
+        .from(inquiries)
+        .where(
+          and(
+            eq(inquiries.senderUserId, user.id),
+            eq(inquiries.read, false)
+          )
+        )
+        .all();
+      
+      unreadBookingsCount = unreadBookings.length;
 
       // Get unread notifications (for bell icon)
       const unreadNotifications = await db.select()
@@ -48,6 +62,7 @@ export async function load({ platform, cookies, locals }) {
       return {
         user,
         userPassCount,
+        unreadBookingsCount,
         notifications: unreadNotifications,
         unreadNotificationCount: unreadNotifications.length,
         pendingRequestCount: pendingRequests.length
@@ -57,6 +72,7 @@ export async function load({ platform, cookies, locals }) {
       return { 
         user,
         userPassCount: 0,
+        unreadBookingsCount: 0,
         notifications: [],
         unreadNotificationCount: 0,
         pendingRequestCount: 0
@@ -67,6 +83,7 @@ export async function load({ platform, cookies, locals }) {
   return { 
     user: null,
     userPassCount: 0,
+    unreadBookingsCount: 0,
     notifications: [],
     unreadNotificationCount: 0,
     pendingRequestCount: 0
