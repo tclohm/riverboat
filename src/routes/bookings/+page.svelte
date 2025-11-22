@@ -1,11 +1,13 @@
 <script lang="ts">
   export let data;
   import { Check, Clock, X } from '@lucide/svelte';
+  import { invalidateAll } from '$app/navigation';
 
   interface Inquiry {
     id: number;
     createdAt: Date | string;
     status: 'pending' | 'approved' | 'rejected';
+    read: boolean;
     [key: string]: any;
   }
 
@@ -50,12 +52,58 @@
   $: approvedInquiries = data.inquiries.filter(inq => inq.status === 'approved');
   $: rejectedInquiries = data.inquiries.filter(inq => inq.status === 'rejected');
 
+  // Count unread inquiries per status
+  $: unreadPendingCount = pendingInquiries.filter(inq => !inq.read).length;
+  $: unreadApprovedCount = approvedInquiries.filter(inq => !inq.read).length;
+  $: unreadRejectedCount = rejectedInquiries.filter(inq => !inq.read).length;
+
   $: pendingGrouped = groupByDate(pendingInquiries);
   $: approvedGrouped = groupByDate(approvedInquiries);
   $: rejectedGrouped = groupByDate(rejectedInquiries);
 
   type TabType = 'pending' | 'approved' | 'rejected';
   let activeTab: TabType = 'approved';
+
+  // Mark items as read when switching to a tab
+  async function switchTab(tab: TabType) {
+    activeTab = tab;
+    
+    // Get the inquiries for this tab that are unread
+    let inquiriesToMark: Inquiry[] = [];
+    
+    if (tab === 'pending') {
+      inquiriesToMark = pendingInquiries.filter(inq => !inq.read);
+    } else if (tab === 'approved') {
+      inquiriesToMark = approvedInquiries.filter(inq => !inq.read);
+    } else if (tab === 'rejected') {
+      inquiriesToMark = rejectedInquiries.filter(inq => !inq.read);
+    }
+
+    // If there are unread items, mark them as read
+    if (inquiriesToMark.length > 0) {
+      try {
+        const response = await fetch('/api/inquiries/mark-as-read', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            inquiryIds: inquiriesToMark.map(inq => inq.id),
+            status: tab
+          })
+        });
+
+        if (response.ok) {
+          // Update the local data to reflect read status
+          inquiriesToMark.forEach(inq => {
+            inq.read = true;
+          });
+        }
+      } catch (error) {
+        console.error('Failed to mark inquiries as read:', error);
+      }
+    }
+  }
 </script>
 
 <svelte:head>
@@ -70,34 +118,34 @@
     <button 
       class="tab-button" 
       class:active={activeTab === 'approved'}
-      on:click={() => activeTab = 'approved'}
+      on:click={() => switchTab('approved')}
     >
       <Check size={18} />
       Approved
-      {#if approvedInquiries.length > 0}
-        <span class="tab-badge">{approvedInquiries.length}</span>
+      {#if unreadApprovedCount > 0}
+        <span class="tab-badge">{unreadApprovedCount}</span>
       {/if}
     </button>
     <button 
       class="tab-button" 
       class:active={activeTab === 'pending'}
-      on:click={() => activeTab = 'pending'}
+      on:click={() => switchTab('pending')}
     >
       <Clock size={18} />
       Pending
-      {#if pendingInquiries.length > 0}
-        <span class="tab-badge">{pendingInquiries.length}</span>
+      {#if unreadPendingCount > 0}
+        <span class="tab-badge">{unreadPendingCount}</span>
       {/if}
     </button>
     <button 
       class="tab-button" 
       class:active={activeTab === 'rejected'}
-      on:click={() => activeTab = 'rejected'}
+      on:click={() => switchTab('rejected')}
     >
       <X size={18} />
       Rejected
-      {#if rejectedInquiries.length > 0}
-        <span class="tab-badge">{rejectedInquiries.length}</span>
+      {#if unreadRejectedCount > 0}
+        <span class="tab-badge">{unreadRejectedCount}</span>
       {/if}
     </button>
   </div>
