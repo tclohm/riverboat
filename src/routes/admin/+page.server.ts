@@ -1,11 +1,11 @@
 import { getDb } from '$lib/db';
 import { passes } from '$lib/db/schema';
-import { eq, redirect } from 'drizzle-orm';
-import { redirect as svelteRedirect } from '@sveltejs/kit';
+import { eq } from 'drizzle-orm';
+import { redirect } from '@sveltejs/kit';
 
 export async function load({ platform, locals }) {
   if (!locals.user) {
-    throw svelteRedirect(303, '/login?redirect=/admin');
+    throw redirect(303, '/login?redirect=/admin');
   }
 
   const db = await getDb(platform);
@@ -18,7 +18,7 @@ export async function load({ platform, locals }) {
 
   // If user has no passes, redirect them to add a pass
   if (userPasses.length === 0) {
-    throw svelteRedirect(303, '/add');
+    throw redirect(303, '/add');
   }
 
   return {
