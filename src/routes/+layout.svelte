@@ -40,15 +40,27 @@
   $: isLoggedIn = !!data.user;
   
   function getNotificationLink(notification) {
+    // Get tab from metadata if available
+    let metadata = {};
+    try {
+      if (notification.metadata) {
+        metadata = JSON.parse(notification.metadata);
+      }
+    } catch (e) {
+      // metadata is not valid JSON
+    }
+
+    const tab = metadata.tab || 'approved';
+    
     // Route based on notification type
     if (notification.type === 'inquiry') {
-      return '/requests';
+      return `/bookings?tab=${tab}`;
     }
     if (notification.type === 'booking') {
-      return '/bookings';
+      return `/bookings?tab=${tab}`;
     }
-    // Default to requests for any other notification
-    return '/requests';
+    // Default to bookings with approved tab
+    return `/bookings?tab=${tab}`;
   }
   
   async function dismissNotification(notificationId) {
@@ -108,9 +120,6 @@
             <span class="nav-label">{item.label}</span>
             {#if item.href === '/requests' && data.pendingRequestCount > 0}
               <span class="notification-badge">{data.pendingRequestCount}</span>
-            {/if}
-            {#if item.href === '/bookings' && data.unreadBookingsCount > 0}
-              <span class="notification-badge">{data.unreadBookingsCount}</span>
             {/if}
           </a>
         {/each}
@@ -324,9 +333,6 @@
                 <span class="nav-label">{item.label}</span>
                 {#if item.href === '/requests' && data.pendingRequestCount > 0}
                   <span class="notification-badge">{data.pendingRequestCount}</span>
-                {/if}
-                {#if item.href === '/bookings' && data.unreadBookingsCount > 0}
-                  <span class="notification-badge">{data.unreadBookingsCount}</span>
                 {/if}
               </a>
             {/each}
