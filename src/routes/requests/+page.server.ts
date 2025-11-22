@@ -104,7 +104,10 @@ export const actions = {
         .where(eq(inquiries.id, inquiryId))
         .run();
 
-      // Create notification for the requester
+      // Determine which tab to show based on status
+      const tab = status === 'approved' ? 'approved' : 'rejected';
+
+      // Create notification for the requester with tab info
       const statusMessage = status === 'approved' ? 'approved' : 'declined';
       const notificationTitle = status === 'approved' ? 'Request Approved! ✓' : 'Request Declined';
       const notificationMessage = `Your request for "${pass?.title || 'a pass'}" has been ${statusMessage}.`;
@@ -121,7 +124,8 @@ export const actions = {
         metadata: JSON.stringify({
           inquiryId: inquiryId,
           status: status,
-          requestedDates: inquiry.requestedDates
+          requestedDates: inquiry.requestedDates,
+          tab: tab
         })
       }).run();
 
