@@ -80,6 +80,7 @@ export const inquiries = sqliteTable('inquiries', {
   contactInfo: text('contact_info'),
   requestedDates: text('requested_dates'),
   status: text('status').notNull().default('pending'), // 'pending', 'approved', 'rejected'
+  read: integer('read', { mode: 'boolean' }).notNull().default(false),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`)
 });
