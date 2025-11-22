@@ -56,7 +56,8 @@ export const actions = {
 
     console.log('Processing inquiry:', inquiryId, 'with status:', status);
     
-    if (!inquiryId || !status) {
+    // Validate status is one of the allowed values
+    if (!inquiryId || !status || !['approved', 'rejected'].includes(status)) {
       return { error: 'Invalid input' };
     }
     
@@ -86,7 +87,7 @@ export const actions = {
       // Update inquiry status
       await db.update(inquiries)
         .set({
-          status,
+          status: status,
           updatedAt: new Date()
         })
         .where(eq(inquiries.id, inquiryId))
@@ -108,7 +109,7 @@ export const actions = {
         createdAt: new Date(),
         metadata: JSON.stringify({
           inquiryId: inquiryId,
-          status,
+          status: status,
           requestedDates: inquiry.requestedDates
         })
       }).run();

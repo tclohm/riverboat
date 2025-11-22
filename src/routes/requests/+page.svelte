@@ -47,6 +47,7 @@
     return groups;
   }
 
+  // Compute filtered inquiries based on current data
   $: pendingInquiries = data.inquiries.filter(inq => inq.status === 'pending');
   $: approvedInquiries = data.inquiries.filter(inq => inq.status === 'approved');
   $: declinedInquiries = data.inquiries.filter(inq => inq.status === 'rejected');
@@ -83,6 +84,9 @@
       on:click={() => activeTab = 'approved'}
     >
       Approved
+      {#if approvedInquiries.length > 0}
+        <span class="tab-badge">{approvedInquiries.length}</span>
+      {/if}
     </button>
     <button 
       class="tab-button" 
@@ -90,6 +94,9 @@
       on:click={() => activeTab = 'declined'}
     >
       Declined
+      {#if declinedInquiries.length > 0}
+        <span class="tab-badge">{declinedInquiries.length}</span>
+      {/if}
     </button>
   </div>
 
@@ -142,10 +149,10 @@
                         action="?/updateInquiryStatus"
                         use:enhance={() => {
                           return async ({ result, update }) => {
-                            await update();
                             if (result.type === 'success') {
                               await invalidateAll();
-                            }                    
+                            }
+                            await update();
                           };
                         }}
                       >
@@ -159,10 +166,10 @@
                         action="?/updateInquiryStatus"
                         use:enhance={() => {
                           return async ({ result, update }) => {
-                            await update();
                             if (result.type === 'success') {
                               await invalidateAll();
-                            }                     
+                            }
+                            await update();
                           };
                         }}
                       >
