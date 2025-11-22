@@ -1,16 +1,25 @@
 import { getDb } from '$lib/db';
-import { notifications, inquiries } from '$lib/db/schema';
+import { notifications, inquiries, passes } from '$lib/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 
 export async function load({ platform, cookies, locals }) {
   // If user is already loaded in locals, use it
   let user = locals.user || null;
 
-  
-  // If user is authenticated, get their notifications
+  let userPassCount = 0;
+
+  // If user is authenticated, get their notifications and pass count
   if (user) {
     try {
       const db = await getDb(platform);
+
+      // Count how many passes the user has created
+      const userPasses = await db.select()
+        .from(passes)
+        .where(eq(passes.userId, user.id))
+        .all();
+      
+      userPassCount = userPasses.length;
 
       // Get unread notifications (for bell icon)
       const unreadNotifications = await db.select()
@@ -38,18 +47,26 @@ export async function load({ platform, cookies, locals }) {
       
       return {
         user,
+        userPassCount,
         notifications: unreadNotifications,
-        pendingInquiriesCount: unreadNotifications.length,
+        unreadNotificationCount: unreadNotifications.length,
         pendingRequestCount: pendingRequests.length
       };
     } catch (error) {
-      console.error('Failed to load notifications:', error);
-      return { user };
+      console.error('Failed to load layout data:', error);
+      return { 
+        user,
+        userPassCount: 0,
+        notifications: [],
+        unreadNotificationCount: 0,
+        pendingRequestCount: 0
+      };
     }
   }
   
   return { 
     user: null,
+    userPassCount: 0,
     notifications: [],
     unreadNotificationCount: 0,
     pendingRequestCount: 0

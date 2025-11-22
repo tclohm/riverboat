@@ -14,12 +14,18 @@
   ];
 
   let userNavItems = [];
+  let hasPassesCreated = false;
 
   $: {
+    // Check if user has any passes created
+    hasPassesCreated = data.userPassCount > 0;
+
     userNavItems = [
-      { href: '/admin', label: 'My Passes', icon: Tickets },
+      ...(hasPassesCreated ? [
+        { href: '/admin', label: 'My Passes', icon: Tickets },
+        { href: '/requests', label: 'Requests', icon: Inbox },
+      ] : []),
       { href: '/bookings', label: 'Bookings', icon: CalendarDays },
-      { href: '/requests', label: 'Requests', icon: Inbox },
     ];
   } 
 
@@ -108,7 +114,9 @@
       </nav>
 
       <!-- Divider -->
-      <div class="nav-divider"></div>
+      {#if userNavItems.length > 0}
+        <div class="nav-divider"></div>
+      {/if}
 
       <!-- Action Navigation -->
       <nav class="sidebar-nav action-nav">
