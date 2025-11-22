@@ -1,9 +1,9 @@
 import { getDb } from '$lib/db';
 import { inquiries, passes, user } from '$lib/db/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { redirect } from '@sveltejs/kit';
 
-export async function load({ platform, locals }) {
+export async function load({ platform, locals, url }) {
   // Check if user is logged in
   if (!locals.user) {
     throw redirect(303, '/login?returnTo=/bookings');
@@ -12,7 +12,7 @@ export async function load({ platform, locals }) {
   try {
     const db = await getDb(platform);
     
-    // Get all inquiries SENT by the user (not received)
+    // Get all inquiries SENT by the user
     const userSentInquiries = await db.select({
       inquiry: inquiries,
       pass: passes,
@@ -24,17 +24,7 @@ export async function load({ platform, locals }) {
     .where(
       eq(inquiries.senderUserId, locals.user.id)
     )
-    .orderBy(desc(inquiries.createdAt))
     .all()
-
-    // Count unread inquiries (inquiries that haven't been viewed yet)
-    const unreadCount = userSentInquiries.filter(item => !item.inquiry.read).length;
-
-    // Mark all inquiries as read since user is now viewing them
-    await db.update(inquiries)
-      .set({ read: true })
-      .where(eq(inquiries.senderUserId, locals.user.id))
-      .run();
 
     // Transform the data for the component
     const transformedInquiries = userSentInquiries.map(item => ({
@@ -42,16 +32,19 @@ export async function load({ platform, locals }) {
       pass: item.pass,
       ownerName: item.owner?.name
     }));
+
+    // Get the tab from URL query param (default to 'approved')
+    const tab = url.searchParams.get('tab') || 'approved';
     
     return {
       inquiries: transformedInquiries,
-      unreadCount
+      defaultTab: tab
     };
   } catch (error) {
     console.error('Failed to load bookings page:', error);
     return { 
       inquiries: [],
-      unreadCount: 0
+      defaultTab: 'approved'
     };
   }
 }
