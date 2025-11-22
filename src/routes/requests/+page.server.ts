@@ -1,5 +1,5 @@
 import { getDb } from '$lib/db';
-import { inquiries, passes, user } from '$lib/db/schema';
+import { inquiries, passes, user, notifications } from '$lib/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { redirect } from '@sveltejs/kit';
 
@@ -92,7 +92,28 @@ export const actions = {
         .where(eq(inquiries.id, inquiryId))
         .run();
 
-      console.log('Successfully updated inquiry status');
+      // Create notification for the requester
+      const statusMessage = status === 'approved' ? 'approved' : 'declined';
+      const notificationTitle = status === 'approved' ? 'Request Approved! ✓' : 'Request Declined';
+      const notificationMessage = `Your request for "${pass?.title || 'a pass'}" has been ${statusMessage}.`;
+
+      await db.insert(notifications).values({
+        userId: inquiry.senderUserId,
+        passId: inquiry.passId,
+        type: 'inquiry',
+        title: notificationTitle,
+        message: notificationMessage,
+        read: false,
+        archived: false,
+        createdAt: new Date(),
+        metadata: JSON.stringify({
+          inquiryId: inquiryId,
+          status,
+          requestedDates: inquiry.requestedDates
+        })
+      }).run();
+
+      console.log('Successfully updated inquiry status and created notification');
       return { success: true };
     } catch (error) {
       console.error('Failed to update inquiry status:', error);

@@ -83,9 +83,6 @@
       on:click={() => activeTab = 'approved'}
     >
       Approved
-      {#if approvedInquiries.length > 0}
-        <span class="tab-badge">{approvedInquiries.length}</span>
-      {/if}
     </button>
     <button 
       class="tab-button" 
@@ -93,9 +90,6 @@
       on:click={() => activeTab = 'declined'}
     >
       Declined
-      {#if declinedInquiries.length > 0}
-        <span class="tab-badge">{declinedInquiries.length}</span>
-      {/if}
     </button>
   </div>
 
@@ -335,15 +329,16 @@
   .tab-badge {
     background: #ef4444;
     color: white;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
-    min-width: 22px;
-    height: 22px;
-    padding: 0 6px;
-    border-radius: 11px;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
   }
   
   .tab-content {

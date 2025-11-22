@@ -450,14 +450,15 @@
     color: white;
     font-size: 10px;
     font-weight: 700;
-    min-width: 18px;
-    height: 18px;
-    padding: 0 6px;
-    border-radius: 9px;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     margin-left: auto;
+    flex-shrink: 0;
   }
   
   .nav-label {
