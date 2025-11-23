@@ -1,7 +1,7 @@
 <script>
   import { invalidateAll } from '$app/navigation';
   import { enhance } from '$app/forms';
-  import { page } from '$app/state';
+  import { page } from '$app/state';  
   import { Key, Binoculars, Tickets, CalendarDays, LogOut, Menu, Plus, UserRoundPen, LogIn, Bell, Inbox } from '@lucide/svelte';
   export let data;
 
@@ -14,12 +14,18 @@
   ];
 
   let userNavItems = [];
+  let hasPassesCreated = false;
 
   $: {
+    // Check if user has any passes created
+    hasPassesCreated = data.userPassCount > 0;
+
     userNavItems = [
-      { href: '/admin', label: 'My Passes', icon: Tickets },
+      ...(hasPassesCreated ? [
+        { href: '/admin', label: 'My Passes', icon: Tickets },
+        { href: '/requests', label: 'Requests', icon: Inbox },
+      ] : []),
       { href: '/bookings', label: 'Bookings', icon: CalendarDays },
-      { href: '/requests', label: 'Requests', icon: Inbox },
     ];
   } 
 
@@ -34,15 +40,27 @@
   $: isLoggedIn = !!data.user;
   
   function getNotificationLink(notification) {
+    // Get tab from metadata if available
+    let metadata = {};
+    try {
+      if (notification.metadata) {
+        metadata = JSON.parse(notification.metadata);
+      }
+    } catch (e) {
+      // metadata is not valid JSON
+    }
+
+    const tab = metadata.tab || 'approved';
+    
     // Route based on notification type
     if (notification.type === 'inquiry') {
-      return '/requests';
+      return `/bookings?tab=${tab}`;
     }
     if (notification.type === 'booking') {
-      return '/bookings';
+      return `/bookings?tab=${tab}`;
     }
-    // Default to requests for any other notification
-    return '/requests';
+    // Default to bookings with approved tab
+    return `/bookings?tab=${tab}`;
   }
   
   async function dismissNotification(notificationId) {
@@ -108,7 +126,9 @@
       </nav>
 
       <!-- Divider -->
-      <div class="nav-divider"></div>
+      {#if userNavItems.length > 0}
+        <div class="nav-divider"></div>
+      {/if}
 
       <!-- Action Navigation -->
       <nav class="sidebar-nav action-nav">
@@ -258,7 +278,9 @@
                   <a 
                     href={getNotificationLink(notification)}
                     class="notification-item"
-                    on:click={() => showNotificationsMenu = false}
+                    on:click={() => {
+                      showNotificationsMenu = false;
+                    }}
                   >
                     <div class="notification-content">
                       <h4>{notification.title}</h4>

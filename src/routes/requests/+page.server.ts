@@ -12,6 +12,17 @@ export async function load({ platform, locals }) {
   try {
     const db = await getDb(platform);
     
+    // Check if user has created any passes
+    const userPasses = await db.select()
+      .from(passes)
+      .where(eq(passes.userId, locals.user.id))
+      .all();
+
+    // If user has no passes, redirect them to add a pass
+    if (userPasses.length === 0) {
+      throw redirect(303, '/add');
+    }
+    
     // Get all inquiries for the user's passes, joined with pass and sender user info
     const userInquiries = await db.select({
       inquiry: inquiries,
@@ -56,7 +67,8 @@ export const actions = {
 
     console.log('Processing inquiry:', inquiryId, 'with status:', status);
     
-    if (!inquiryId || !status) {
+    // Validate status is one of the allowed values
+    if (!inquiryId || !status || !['approved', 'rejected'].includes(status)) {
       return { error: 'Invalid input' };
     }
     
@@ -86,13 +98,16 @@ export const actions = {
       // Update inquiry status
       await db.update(inquiries)
         .set({
-          status,
+          status: status,
           updatedAt: new Date()
         })
         .where(eq(inquiries.id, inquiryId))
         .run();
 
-      // Create notification for the requester
+      // Determine which tab to show based on status
+      const tab = status === 'approved' ? 'approved' : 'rejected';
+
+      // Create notification for the requester with tab info
       const statusMessage = status === 'approved' ? 'approved' : 'declined';
       const notificationTitle = status === 'approved' ? 'Request Approved! ✓' : 'Request Declined';
       const notificationMessage = `Your request for "${pass?.title || 'a pass'}" has been ${statusMessage}.`;
@@ -108,8 +123,9 @@ export const actions = {
         createdAt: new Date(),
         metadata: JSON.stringify({
           inquiryId: inquiryId,
-          status,
-          requestedDates: inquiry.requestedDates
+          status: status,
+          requestedDates: inquiry.requestedDates,
+          tab: tab
         })
       }).run();
 

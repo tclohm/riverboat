@@ -1,8 +1,6 @@
 <script lang="ts">
   export let data;
-  import { enhance } from '$app/forms';
-  import { invalidateAll } from '$app/navigation';
-  import { Check, Ban } from "@lucide/svelte";
+  import { Check, Clock, X } from '@lucide/svelte';
 
   interface Inquiry {
     id: number;
@@ -50,52 +48,111 @@
   // Compute filtered inquiries based on current data
   $: pendingInquiries = data.inquiries.filter(inq => inq.status === 'pending');
   $: approvedInquiries = data.inquiries.filter(inq => inq.status === 'approved');
-  $: declinedInquiries = data.inquiries.filter(inq => inq.status === 'rejected');
+  $: rejectedInquiries = data.inquiries.filter(inq => inq.status === 'rejected');
 
   $: pendingGrouped = groupByDate(pendingInquiries);
   $: approvedGrouped = groupByDate(approvedInquiries);
-  $: declinedGrouped = groupByDate(declinedInquiries);
+  $: rejectedGrouped = groupByDate(rejectedInquiries);
 
-  type TabType = 'pending' | 'approved' | 'declined';
-  let activeTab: TabType = 'pending';
+  type TabType = 'pending' | 'approved' | 'rejected';
+  let activeTab: TabType = (data.defaultTab as TabType) || 'approved';
 </script>
 
 <svelte:head>
-  <title>Pass Requests - Willie's Keys</title>
+  <title>My Bookings - Willie's Keys</title>
 </svelte:head>
 
 <div class="container">
-  <h1>Pass Requests</h1>
+  <h1>My Bookings</h1>
+  <p class="subtitle">View the status of your pass requests</p>
   
   <div class="tabs">
-    <button 
-      class="tab-button" 
-      class:active={activeTab === 'pending'}
-      on:click={() => activeTab = 'pending'}
-    >
-      Pending
-    </button>
     <button 
       class="tab-button" 
       class:active={activeTab === 'approved'}
       on:click={() => activeTab = 'approved'}
     >
+      <Check size={18} />
       Approved
     </button>
     <button 
       class="tab-button" 
-      class:active={activeTab === 'declined'}
-      on:click={() => activeTab = 'declined'}
+      class:active={activeTab === 'pending'}
+      on:click={() => activeTab = 'pending'}
     >
-      Declined
+      <Clock size={18} />
+      Pending
+    </button>
+    <button 
+      class="tab-button" 
+      class:active={activeTab === 'rejected'}
+      on:click={() => activeTab = 'rejected'}
+    >
+      <X size={18} />
+      Rejected
     </button>
   </div>
+
+  <!-- Approved Tab -->
+  {#if activeTab === 'approved'}
+    <div class="tab-content">
+      {#if approvedInquiries.length === 0}
+        <div class="empty-state">
+          <Check size={48} />
+          <p>No approved bookings yet</p>
+          <a href="/" class="cta-button">Browse Passes</a>
+        </div>
+      {:else}
+        {#each Object.entries(approvedGrouped) as [dateLabel, inquiries]}
+          <div class="date-group">
+            <h2 class="date-label">{dateLabel}</h2>
+            <div class="scroll-container">
+              <div class="cards-row">
+                {#each inquiries as inquiry (inquiry.id)}
+                  <div class="inquiry-card approved">
+                    <div class="card-header">
+                      <h3>{inquiry.pass?.title || 'A Pass'}</h3>
+                      <span class="status-badge approved">✓ Approved</span>
+                    </div>
+                    
+                    <div class="card-body">
+                      <div class="info-item">
+                        <span class="label">Host:</span>
+                        <span class="value">{inquiry.ownerName || 'Unknown'}</span>
+                      </div>
+                      {#if inquiry.requestedDates}
+                        <div class="info-item">
+                          <span class="label">Your Dates:</span>
+                          <span class="value">{inquiry.requestedDates}</span>
+                        </div>
+                      {/if}
+                      {#if inquiry.contactInfo}
+                        <div class="info-item">
+                          <span class="label">You Provided:</span>
+                          <span class="value">{inquiry.contactInfo}</span>
+                        </div>
+                      {/if}
+                      <div class="info-item">
+                        <span class="label">Your Message:</span>
+                        <p class="value">{inquiry.message}</p>
+                      </div>
+                    </div>
+                  </div>
+                {/each}
+              </div>
+            </div>
+          </div>
+        {/each}
+      {/if}
+    </div>
+  {/if}
 
   <!-- Pending Tab -->
   {#if activeTab === 'pending'}
     <div class="tab-content">
       {#if pendingInquiries.length === 0}
         <div class="empty-state">
+          <Clock size={48} />
           <p>No pending requests</p>
         </div>
       {:else}
@@ -108,66 +165,23 @@
                   <div class="inquiry-card pending">
                     <div class="card-header">
                       <h3>{inquiry.pass?.title || 'A Pass'}</h3>
-                      <span class="status-badge pending">Pending</span>
+                      <span class="status-badge pending">⏳ Waiting</span>
                     </div>
                     
                     <div class="card-body">
                       <div class="info-item">
-                        <span class="label">From:</span>
-                        <span class="value">{inquiry.senderName || inquiry.senderUserId}</span>
+                        <span class="label">Host:</span>
+                        <span class="value">{inquiry.ownerName || 'Unknown'}</span>
                       </div>
                       {#if inquiry.requestedDates}
                         <div class="info-item">
-                          <span class="label">Dates:</span>
+                          <span class="label">Your Dates:</span>
                           <span class="value">{inquiry.requestedDates}</span>
                         </div>
                       {/if}
-                      {#if inquiry.contactInfo}
-                        <div class="info-item">
-                          <span class="label">Contact:</span>
-                          <span class="value">{inquiry.contactInfo}</span>
-                        </div>
-                      {/if}
-                      <div class="info-item message">
-                        <span class="label">Message:</span>
-                        <p class="value">{inquiry.message}</p>
+                      <div class="help-text">
+                        The pass owner will review and contact you soon.
                       </div>
-                    </div>
-                    
-                    <div class="card-actions">
-                      <form 
-                        method="POST" 
-                        action="?/updateInquiryStatus"
-                        use:enhance={() => {
-                          return async ({ result, update }) => {
-                            if (result.type === 'success') {
-                              await invalidateAll();
-                            }
-                            await update();
-                          };
-                        }}
-                      >
-                        <input type="hidden" name="inquiryId" value={inquiry.id} />
-                        <input type="hidden" name="status" value="approved" />
-                        <button type="submit" class="approve-btn">Approve</button>
-                      </form>
-                      
-                      <form 
-                        method="POST" 
-                        action="?/updateInquiryStatus"
-                        use:enhance={() => {
-                          return async ({ result, update }) => {
-                            if (result.type === 'success') {
-                              await invalidateAll();
-                            }
-                            await update();
-                          };
-                        }}
-                      >
-                        <input type="hidden" name="inquiryId" value={inquiry.id} />
-                        <input type="hidden" name="status" value="rejected" />
-                        <button type="submit" class="reject-btn">Decline</button>
-                      </form>
                     </div>
                   </div>
                 {/each}
@@ -179,85 +193,42 @@
     </div>
   {/if}
 
-  <!-- Approved Tab -->
-  {#if activeTab === 'approved'}
+  <!-- Rejected Tab -->
+  {#if activeTab === 'rejected'}
     <div class="tab-content">
-      {#if approvedInquiries.length === 0}
+      {#if rejectedInquiries.length === 0}
         <div class="empty-state">
-          <p>No approved requests</p>
+          <X size={48} />
+          <p>No rejected requests</p>
         </div>
       {:else}
-        {#each Object.entries(approvedGrouped) as [dateLabel, inquiries]}
+        {#each Object.entries(rejectedGrouped) as [dateLabel, inquiries]}
           <div class="date-group">
             <h2 class="date-label">{dateLabel}</h2>
             <div class="scroll-container">
               <div class="cards-row">
                 {#each inquiries as inquiry (inquiry.id)}
-                  <div class="inquiry-card approved">
+                  <div class="inquiry-card rejected">
                     <div class="card-header">
                       <h3>{inquiry.pass?.title || 'A Pass'}</h3>
-                      <span class="status-badge approved">Approved</span>
+                      <span class="status-badge rejected">✕ Declined</span>
                     </div>
                     
                     <div class="card-body">
                       <div class="info-item">
-                        <span class="label">From:</span>
-                        <span class="value">{inquiry.senderName || inquiry.senderUserId}</span>
+                        <span class="label">Host:</span>
+                        <span class="value">{inquiry.ownerName || 'Unknown'}</span>
                       </div>
                       {#if inquiry.requestedDates}
                         <div class="info-item">
-                          <span class="label">Dates:</span>
+                          <span class="label">Requested Dates:</span>
                           <span class="value">{inquiry.requestedDates}</span>
                         </div>
                       {/if}
-                      {#if inquiry.contactInfo}
-                        <div class="info-item">
-                          <span class="label">Contact:</span>
-                          <span class="value">{inquiry.contactInfo}</span>
-                        </div>
-                      {/if}
                     </div>
-                  </div>
-                {/each}
-              </div>
-            </div>
-          </div>
-        {/each}
-      {/if}
-    </div>
-  {/if}
 
-  <!-- Declined Tab -->
-  {#if activeTab === 'declined'}
-    <div class="tab-content">
-      {#if declinedInquiries.length === 0}
-        <div class="empty-state">
-          <p>No declined requests</p>
-        </div>
-      {:else}
-        {#each Object.entries(declinedGrouped) as [dateLabel, inquiries]}
-          <div class="date-group">
-            <h2 class="date-label">{dateLabel}</h2>
-            <div class="scroll-container">
-              <div class="cards-row">
-                {#each inquiries as inquiry (inquiry.id)}
-                  <div class="inquiry-card declined">
-                    <div class="card-header">
-                      <h3>{inquiry.pass?.title || 'A Pass'}</h3>
-                      <span class="status-badge declined">Declined</span>
-                    </div>
-                    
-                    <div class="card-body">
-                      <div class="info-item">
-                        <span class="label">From:</span>
-                        <span class="value">{inquiry.senderName || inquiry.senderUserId}</span>
-                      </div>
-                      {#if inquiry.requestedDates}
-                        <div class="info-item">
-                          <span class="label">Dates:</span>
-                          <span class="value">{inquiry.requestedDates}</span>
-                        </div>
-                      {/if}
+                    <div class="card-footer">
+                      <a href="/" class="browse-link">Browse other passes</a>
                     </div>
                   </div>
                 {/each}
@@ -280,8 +251,14 @@
   h1 {
     font-size: 32px;
     font-weight: 700;
-    margin: 0 0 32px 0;
+    margin: 0 0 8px 0;
     color: #1a1a1a;
+    padding: 0 0 0 24px;
+  }
+
+  .subtitle {
+    color: #6b7280;
+    margin: 0 0 32px 0;
     padding: 0 0 0 24px;
   }
   
@@ -332,15 +309,34 @@
     background: #f9fafb;
     border: 2px dashed #e5e7eb;
     border-radius: 8px;
-    padding: 48px 32px;
+    padding: 80px 32px;
     text-align: center;
     color: #6b7280;
     margin: 0 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
   }
   
   .empty-state p {
     margin: 0;
-    font-size: 16px;
+    font-size: 18px;
+  }
+
+  .cta-button {
+    display: inline-block;
+    background: #2563eb;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background 0.2s;
+  }
+
+  .cta-button:hover {
+    background: #1d4ed8;
   }
 
   .date-group {
@@ -410,7 +406,7 @@
     border-top: 3px solid #10b981;
   }
 
-  .inquiry-card.declined {
+  .inquiry-card.rejected {
     border-top: 3px solid #ef4444;
   }
   
@@ -433,9 +429,9 @@
   
   .status-badge {
     display: inline-block;
-    padding: 4px 10px;
+    padding: 6px 12px;
     border-radius: 12px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     flex-shrink: 0;
     white-space: nowrap;
@@ -451,7 +447,7 @@
     color: #047857;
   }
   
-  .status-badge.declined {
+  .status-badge.rejected {
     background: #fee2e2;
     color: #b91c1c;
   }
@@ -467,10 +463,6 @@
     margin-bottom: 10px;
     display: flex;
     flex-direction: column;
-  }
-
-  .info-item.message {
-    margin-bottom: 0;
   }
 
   .label {
@@ -492,47 +484,32 @@
     max-height: 60px;
     overflow-y: auto;
   }
-  
-  .card-actions {
-    padding: 12px 16px;
-    border-top: 1px solid #e5e7eb;
-    display: flex;
-    gap: 8px;
+
+  .help-text {
+    font-size: 12px;
+    color: #6b7280;
+    font-style: italic;
+    margin-top: 8px;
+    padding: 8px;
+    background: #f3f4f6;
+    border-radius: 4px;
   }
 
-  .card-actions form {
-    flex: 1;
+  .card-footer {
+    padding: 12px 16px;
+    border-top: 1px solid #e5e7eb;
+    text-align: center;
   }
-  
-  .approve-btn,
-  .reject-btn {
-    width: 100%;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-weight: 600;
+
+  .browse-link {
     font-size: 12px;
-    cursor: pointer;
-    border: none;
-    transition: all 0.2s;
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 600;
   }
-  
-  .approve-btn {
-    background: #10b981;
-    color: white;
-  }
-  
-  .approve-btn:hover {
-    background: #059669;
-  }
-  
-  .reject-btn {
-    background: #f3f4f6;
-    color: #6b7280;
-  }
-  
-  .reject-btn:hover {
-    background: #e5e7eb;
-    color: #4b5563;
+
+  .browse-link:hover {
+    text-decoration: underline;
   }
   
   @media (max-width: 768px) {
@@ -543,6 +520,10 @@
     h1 {
       padding: 0 16px;
       font-size: 28px;
+    }
+
+    .subtitle {
+      padding: 0 16px;
     }
     
     .tabs {
