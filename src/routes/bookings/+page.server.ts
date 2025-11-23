@@ -1,5 +1,5 @@
 import { getDb } from '$lib/db';
-import { inquiries, passes, user } from '$lib/db/schema';
+import { inquiries, passes, user, notifications } from '$lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { redirect } from '@sveltejs/kit';
 
@@ -11,6 +11,12 @@ export async function load({ platform, locals, url }) {
   
   try {
     const db = await getDb(platform);
+
+    // Mark all unread notifications as read
+    await db.update(notifications)
+      .set({ read: true })
+      .where(eq(notifications.userId, locals.user.id))
+      .run();
     
     // Get all inquiries SENT by the user
     const userSentInquiries = await db.select({

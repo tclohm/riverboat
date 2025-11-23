@@ -2,7 +2,7 @@
   export let data;
   import { enhance } from '$app/forms';
   import { invalidateAll } from '$app/navigation';
-  import { Check, Ban } from '@lucide/svelte';
+  import { Check, Ban } from "@lucide/svelte";
 
   interface Inquiry {
     id: number;
@@ -61,7 +61,7 @@
 </script>
 
 <svelte:head>
-  <title>Requests - Willie's Keys</title>
+  <title>Pass Requests - Willie's Keys</title>
 </svelte:head>
 
 <div class="container">
@@ -74,9 +74,6 @@
       on:click={() => activeTab = 'pending'}
     >
       Pending
-      {#if pendingInquiries.length > 0}
-        <span class="tab-badge">{pendingInquiries.length}</span>
-      {/if}
     </button>
     <button 
       class="tab-button" 
@@ -84,9 +81,6 @@
       on:click={() => activeTab = 'approved'}
     >
       Approved
-      {#if approvedInquiries.length > 0}
-        <span class="tab-badge">{approvedInquiries.length}</span>
-      {/if}
     </button>
     <button 
       class="tab-button" 
@@ -94,9 +88,6 @@
       on:click={() => activeTab = 'declined'}
     >
       Declined
-      {#if declinedInquiries.length > 0}
-        <span class="tab-badge">{declinedInquiries.length}</span>
-      {/if}
     </button>
   </div>
 
@@ -331,21 +322,6 @@
   .tab-button.active {
     background: #e6f0fd;
     color: #2563eb;
-  }
-
-  .tab-badge {
-    background: #ef4444;
-    color: white;
-    font-size: 11px;
-    font-weight: 700;
-    width: 24px;
-    height: 24px;
-    padding: 0;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
   }
   
   .tab-content {

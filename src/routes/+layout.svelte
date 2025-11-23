@@ -1,7 +1,7 @@
 <script>
   import { invalidateAll } from '$app/navigation';
   import { enhance } from '$app/forms';
-  import { page } from '$app/state';
+  import { page } from '$app/state';  
   import { Key, Binoculars, Tickets, CalendarDays, LogOut, Menu, Plus, UserRoundPen, LogIn, Bell, Inbox } from '@lucide/svelte';
   export let data;
 
@@ -278,7 +278,9 @@
                   <a 
                     href={getNotificationLink(notification)}
                     class="notification-item"
-                    on:click={() => showNotificationsMenu = false}
+                    on:click={() => {
+                      showNotificationsMenu = false;
+                    }}
                   >
                     <div class="notification-content">
                       <h4>{notification.title}</h4>
