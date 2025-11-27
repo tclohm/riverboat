@@ -1,71 +1,177 @@
 <script lang="ts">
-  import DateRangePicker from './DateRangePicker.svelte';
-  import { Search } from 'lucide-svelte';
+  import { Search } from '@lucide/svelte';
   
   let guests = 1;
-  let formattedDates = '';
-  
-  function handleSearch(e: Event) {
-    const form = e.currentTarget as HTMLFormElement;
-    const formData = new FormData(form);
-    const dates = formData.get('requestedDates') as string;
+  let startDate = '';
+  let endDate = '';
+  let displayText = '';
+  let error = '';
+
+  // Get today's date in YYYY-MM-DD format
+  function getTodayString(): string {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  function formatDateRange(): string {
+    if (!startDate || !endDate) return '';
     
-    if (!dates) {
-      alert('Please select dates');
+    const [startYear, startMonth, startDay] = startDate.split('-');
+    const [endYear, endMonth, endDay] = endDate.split('-');
+    
+    const start = new Date(parseInt(startYear), parseInt(startMonth) - 1, parseInt(startDay));
+    const end = new Date(parseInt(endYear), parseInt(endMonth) - 1, parseInt(endDay));
+    
+    const startMonthStr = start.toLocaleDateString('en-US', { month: 'short' });
+    const startDayNum = start.getDate();
+    const endDayNum = end.getDate();
+    const yearNum = end.getFullYear();
+    
+    if (start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear()) {
+      return `${startMonthStr} ${startDayNum}-${endDayNum}, ${yearNum}`;
+    }
+    
+    const endMonthStr = end.toLocaleDateString('en-US', { month: 'short' });
+    return `${startMonthStr} ${startDayNum} - ${endMonthStr} ${endDayNum}, ${yearNum}`;
+  }
+
+  function validateDates() {
+    error = '';
+    
+    if (!startDate || !endDate) return;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const [startYear, startMonth, startDay] = startDate.split('-');
+    const [endYear, endMonth, endDay] = endDate.split('-');
+    
+    const start = new Date(parseInt(startYear), parseInt(startMonth) - 1, parseInt(startDay));
+    const end = new Date(parseInt(endYear), parseInt(endMonth) - 1, parseInt(endDay));
+    
+    if (start < today) {
+      error = 'Start date must be today or in the future';
+      startDate = '';
+      endDate = '';
       return;
     }
     
-    // Form will submit naturally to ?/search
-    form.submit();
+    if (end < today) {
+      error = 'End date must be today or in the future';
+      endDate = '';
+      return;
+    }
+    
+    if (end < start) {
+      error = 'End date must be after start date';
+      endDate = '';
+      return;
+    }
+  }
+
+  $: {
+    if (startDate || endDate) {
+      validateDates();
+    }
+    displayText = formatDateRange();
+  }
+
+  const minDate = getTodayString();
+
+  function handleSearch() {
+    if (!displayText) {
+      error = 'Please select dates';
+      return;
+    }
+    const form = document.querySelector('form') as HTMLFormElement;
+    if (form) {
+      form.submit();
+    }
   }
 </script>
 
 <div class="search-container">
-  <form method="POST" action="?/search" on:submit|preventDefault={handleSearch}>
+  <form method="POST" action="?/search">
     <div class="search-box">
-      <div class="search-fields">
-        <div class="field-group">
-          <label for="dates">Check In - Check Out</label>
-          <DateRangePicker />
+      <!-- Date Inputs -->
+      <div class="date-inputs">
+        <div class="date-group">
+          <label for="startDate">Check In</label>
+          <input 
+            type="date" 
+            id="startDate" 
+            bind:value={startDate}
+            min={minDate}
+            required
+          />
         </div>
         
-        <div class="field-group">
-          <label for="guests">Guests</label>
-          <div class="guest-input">
-            <button 
-              type="button" 
-              class="guest-btn"
-              on:click={() => guests > 1 && guests--}
-              aria-label="Decrease guests"
-            >
-              −
-            </button>
-            <input 
-              type="number" 
-              id="guests"
-              name="guests"
-              bind:value={guests}
-              min="1"
-              max="99"
-              readonly
-            />
-            <button 
-              type="button" 
-              class="guest-btn"
-              on:click={() => guests < 99 && guests++}
-              aria-label="Increase guests"
-            >
-              +
-            </button>
-          </div>
+        <div class="date-divider">to</div>
+        
+        <div class="date-group">
+          <label for="endDate">Check Out</label>
+          <input 
+            type="date" 
+            id="endDate" 
+            bind:value={endDate}
+            min={startDate || minDate}
+            required
+          />
         </div>
       </div>
+
+      <!-- Guests -->
+      <div class="guests-group">
+        <label for="guests">Guests</label>
+        <div class="guest-input">
+          <button 
+            type="button" 
+            class="guest-btn"
+            on:click={() => guests > 1 && guests--}
+            aria-label="Decrease guests"
+          >
+            −
+          </button>
+          <input 
+            type="number" 
+            id="guests"
+            name="guests"
+            bind:value={guests}
+            min="1"
+            max="99"
+            readonly
+          />
+          <button 
+            type="button" 
+            class="guest-btn"
+            on:click={() => guests < 99 && guests++}
+            aria-label="Increase guests"
+          >
+            +
+          </button>
+        </div>
+      </div>
+
+      <!-- Hidden input for form submission -->
+      <input 
+        type="hidden" 
+        name="requestedDates" 
+        value={displayText}
+      />
       
-      <button type="submit" class="search-button">
+      <!-- Search Button -->
+      <button type="button" class="search-button" on:click={handleSearch}>
         <Search size={20} />
         <span>Search</span>
       </button>
     </div>
+
+    {#if error}
+      <div class="error-message">{error}</div>
+    {/if}
   </form>
 </div>
 
@@ -83,35 +189,83 @@
     background: white;
     border: 2px solid #e0e0e0;
     border-radius: 12px;
-    padding: 24px;
+    padding: 20px;
     display: flex;
-    gap: 24px;
+    gap: 16px;
     align-items: flex-end;
     flex-wrap: wrap;
   }
 
-  .search-fields {
-    display: flex;
-    gap: 24px;
-    flex: 1;
-    min-width: 400px;
-    flex-wrap: wrap;
+  .date-inputs {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 12px;
+    align-items: flex-end;
   }
 
-  .field-group {
+  .date-group {
     display: flex;
     flex-direction: column;
-    flex: 1;
-    min-width: 200px;
   }
 
   label {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     color: #666;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+  }
+
+  input[type="date"] {
+    padding: 10px 12px;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    background: white;
+    color: #1a1a1a;
+    transition: border-color 0.2s;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+  }
+
+  input[type="date"]:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+
+  /* Style the placeholder text for date inputs */
+  input[type="date"]::placeholder {
+    color: #999;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    border-radius: 4px;
+    margin-right: 4px;
+    opacity: 0.6;
+    filter: invert(0.8);
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+  }
+
+  .date-divider {
+    text-align: center;
+    color: #999;
+    font-size: 12px;
+    font-weight: 500;
+    padding-bottom: 2px;
+  }
+
+  .guests-group {
+    display: flex;
+    flex-direction: column;
+    min-width: fit-content;
+    width: fit-content;
   }
 
   .guest-input {
@@ -121,20 +275,22 @@
     border-radius: 6px;
     background: white;
     overflow: hidden;
+    width: fit-content;
   }
 
   .guest-btn {
     background: none;
     border: none;
-    width: 40px;
-    height: 44px;
-    font-size: 20px;
+    width: 32px;
+    height: 38px;
+    font-size: 18px;
     cursor: pointer;
     color: #666;
     transition: all 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 0;
   }
 
   .guest-btn:hover {
@@ -142,28 +298,40 @@
     color: #2563eb;
   }
 
-  #guests {
-    flex: 1;
+  input[type="number"] {
     border: none;
     text-align: center;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 600;
     color: #1a1a1a;
-    padding: 0 12px;
-    min-width: 50px;
+    padding: 0 4px;
+    width: 30px;
+    height: 38px;
+    background: white;
   }
 
-  #guests:focus {
+  input[type="number"]:focus {
     outline: none;
+  }
+
+  /* Remove number input spinners */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type="number"] {
+    -moz-appearance: textfield;
   }
 
   .search-button {
     background: #2563eb;
     color: white;
     border: none;
-    padding: 12px 32px;
+    padding: 10px 24px;
     border-radius: 8px;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 600;
     cursor: pointer;
     display: flex;
@@ -171,7 +339,7 @@
     gap: 8px;
     transition: all 0.2s;
     white-space: nowrap;
-    height: 44px;
+    height: 38px;
   }
 
   .search-button:hover {
@@ -184,18 +352,28 @@
     transform: translateY(0);
   }
 
-  @media (max-width: 1024px) {
+  .error-message {
+    background: #fee2e2;
+    border: 1px solid #fca5a5;
+    border-radius: 6px;
+    padding: 12px;
+    margin-top: 12px;
+    font-size: 14px;
+    color: #b91c1c;
+    font-weight: 500;
+  }
+
+  @media (max-width: 768px) {
     .search-box {
       flex-direction: column;
-      align-items: stretch;
+      gap: 12px;
     }
 
-    .search-fields {
-      min-width: auto;
+    .date-inputs {
       width: 100%;
     }
 
-    .field-group {
+    .guests-group {
       width: 100%;
     }
 
@@ -208,20 +386,20 @@
   @media (max-width: 480px) {
     .search-box {
       padding: 16px;
-      gap: 16px;
-    }
-
-    .search-fields {
-      gap: 16px;
     }
 
     label {
-      font-size: 12px;
+      font-size: 11px;
+    }
+
+    input[type="date"] {
+      font-size: 13px;
+      padding: 8px 10px;
     }
 
     .search-button {
       font-size: 14px;
-      padding: 10px 20px;
+      padding: 8px 16px;
     }
   }
 </style>
