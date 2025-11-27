@@ -47,7 +47,11 @@
             <h2>{pass.passType}</h2>
             <p class="owner">{pass.owner}</p>
             <p class="dates">{pass.availableDates}</p>
-            <div class="price">${pass.price}<span>/day</span></div>
+          </div>
+          <div class="price">
+            <span class="currency">$</span>
+            <strong class="amount">{pass.price}</strong>
+            <span class="period">/day</span>
           </div>
         </a>
       {/each}
@@ -161,59 +165,117 @@
     background: #1d4ed8;
   }
 
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  .card {
+    background: white;
+    border: 2px solid #d1d5db;
+    padding: 0;
+    text-decoration: none;
+    color: #1a1a1a;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    cursor: pointer;
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    height: auto;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    padding: 40px 32px;
     gap: 32px;
   }
 
-  .card {
-    background: white;
-    border: 2px solid #e0e0e0;
-    padding: 32px;
-    text-decoration: none;
-    color: inherit;
-    transition: all 0.2s;
-    cursor: pointer;
-    border-radius: 8px;
+  .card:hover {
+    border-color: #9ca3af;
   }
 
-  .card:hover {
-    border-color: #2563eb;
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  .card-content {
+    padding: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    position: relative;
+    z-index: 1;
   }
 
   .card h2 {
-    font-size: 24px;
-    font-weight: 800;
-    margin: 0 0 12px 0;
-    color: #1a1a1a;
+    font-size: 56px;
+    font-weight: 900;
+    margin: 0 0 16px 0;
+    color: #1f2937;
+    text-transform: uppercase;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    word-break: break-word;
   }
 
   .owner {
-    font-size: 16px;
-    color: #666;
+    font-size: 14px;
+    color: #9ca3af;
     margin: 0 0 8px 0;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
   }
 
   .dates {
     font-size: 14px;
-    color: #999;
-    margin: 0 0 20px 0;
+    color: #d1d5db;
+    margin: 0;
+    font-weight: 600;
   }
 
   .price {
-    font-size: 36px;
-    font-weight: 900;
-    color: #2563eb;
-    margin: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    flex-shrink: 0;
+    text-align: center;
   }
 
-  .price span {
+  .price .currency {
+    font-size: 28px;
+    font-weight: 600;
+    color: #9ca3af;
+    line-height: 1;
+    display: block;
+    align-self: flex-start;
+    margin-top: 8px;
+    position: relative;
+    left: 1rem;
+    bottom: 0.5rem;
+  }
+
+  .price .amount {
+    font-size: 80px;
+    font-weight: 900;
+    color: #d1d5db;
+    line-height: 0.9;
+    margin: 0;
+    display: block;
+  }
+
+  .price .period {
     font-size: 18px;
-    font-weight: 400;
-    color: #666;
+    font-weight: 600;
+    color: #9ca3af;
+    display: block;
+    margin: 0;
+    align-self: flex-end;
+    margin-bottom: 12px;
+    position: relative;
+    right: 0.8rem;
+    top: 0.4rem;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
   }
 
   @media (max-width: 768px) {
@@ -229,11 +291,6 @@
       font-size: 18px;
     }
 
-    .grid {
-      grid-template-columns: 1fr;
-      gap: 24px;
-    }
-
     .search-info {
       flex-direction: column;
       gap: 12px;
@@ -242,6 +299,27 @@
 
     header {
       margin-bottom: 32px;
+    }
+
+    .card {
+      padding: 24px 20px;
+      gap: 20px;
+    }
+
+    .card h2 {
+      font-size: 32px;
+    }
+
+    .card-content {
+      padding: 0;
+    }
+
+    .price strong {
+      font-size: 48px;
+    }
+
+    .price span {
+      font-size: 14px;
     }
   }
 </style>
