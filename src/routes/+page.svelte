@@ -318,10 +318,10 @@
   .grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 1.25rem;
+    gap: 1rem;
   }
 
-  /* Mobile - sidebar hidden or collapsed - 1 column */
+  /* Mobile - 1 column - full width cards */
   @media (max-width: 640px) {
     .grid {
       grid-template-columns: 1fr;
@@ -329,27 +329,19 @@
     }
   }
 
-  /* Tablet with sidebar visible - 2 columns */
+  /* Tablet with sidebar - 2 columns - bigger cards */
   @media (min-width: 641px) and (max-width: 1023px) {
     .grid {
       grid-template-columns: repeat(2, 1fr);
-      gap: 1rem;
-    }
-  }
-
-  /* Large with sidebar visible - 3 columns */
-  @media (min-width: 1024px) and (max-width: 1279px) {
-    .grid {
-      grid-template-columns: repeat(3, 1fr);
       gap: 1.2rem;
     }
   }
 
-  /* Extra large with sidebar visible - 4 columns */
-  @media (min-width: 1280px) {
+  /* Large with sidebar - 3 columns - smaller cards */
+  @media (min-width: 1024px) {
     .grid {
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1.5rem;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.3rem;
     }
   }
 
@@ -358,6 +350,10 @@
       padding: 24px 16px;
       gap: 16px;
       min-height: 140px;
+    }
+
+    .card h2 {
+      font-size: 1rem;
     }
 
     .price .amount {
@@ -373,31 +369,16 @@
     }
   }
 
+  /* 2 columns - bigger cards */
   @media (min-width: 641px) and (max-width: 1023px) {
-    .card {
-      padding: 28px 20px;
-      gap: 20px;
-      min-height: 150px;
-    }
-
-    .price .amount {
-      font-size: 48px;
-    }
-
-    .price .currency {
-      font-size: 18px;
-    }
-
-    .price .period {
-      font-size: 13px;
-    }
-  }
-
-  @media (min-width: 1024px) and (max-width: 1279px) {
     .card {
       padding: 32px 24px;
       gap: 24px;
       min-height: 160px;
+    }
+
+    .card h2 {
+      font-size: 1.2rem;
     }
 
     .price .amount {
@@ -413,23 +394,28 @@
     }
   }
 
-  @media (min-width: 1280px) {
+  /* 3 columns - smaller cards */
+  @media (min-width: 1024px) {
     .card {
-      padding: 40px 32px;
-      gap: 32px;
-      min-height: 180px;
+      padding: 28px 20px;
+      gap: 20px;
+      min-height: 150px;
+    }
+
+    .card h2 {
+      font-size: 1.1rem;
     }
 
     .price .amount {
-      font-size: 80px;
+      font-size: 48px;
     }
 
     .price .currency {
-      font-size: 28px;
+      font-size: 20px;
     }
 
     .price .period {
-      font-size: 18px;
+      font-size: 13px;
     }
   }
 </style>
