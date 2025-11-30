@@ -174,7 +174,7 @@
     transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     cursor: pointer;
     border-radius: 16px;
-    overflow: hidden;
+    overflow: visible;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -184,6 +184,7 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     padding: 40px 32px;
     gap: 32px;
+    min-height: 180px;
   }
 
   .card:hover {
@@ -201,14 +202,31 @@
   }
 
   .card h2 {
-    font-size: 56px;
+    font-size: 1rem;
     font-weight: 900;
     margin: 0 0 16px 0;
     color: #1f2937;
     text-transform: uppercase;
     letter-spacing: -1px;
     line-height: 1.1;
-    word-break: break-word;
+  }
+
+  @media (min-width: 640px) {
+    .card h2 {
+      font-size: 1.1rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .card h2 {
+      font-size: 1.25rem;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .card h2 {
+      font-size: 1.5rem;
+    }
   }
 
   .owner {
@@ -235,10 +253,11 @@
     gap: 4px;
     flex-shrink: 0;
     text-align: center;
+    min-width: fit-content;
   }
 
   .price .currency {
-    font-size: 28px;
+    font-size: 24px;
     font-weight: 600;
     color: #9ca3af;
     line-height: 1;
@@ -246,12 +265,12 @@
     align-self: flex-start;
     margin-top: 8px;
     position: relative;
-    left: 1rem;
+    left: 0.5rem;
     bottom: 0.5rem;
   }
 
   .price .amount {
-    font-size: 80px;
+    font-size: 60px;
     font-weight: 900;
     color: #d1d5db;
     line-height: 0.9;
@@ -260,7 +279,7 @@
   }
 
   .price .period {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
     color: #9ca3af;
     display: block;
@@ -268,14 +287,89 @@
     align-self: flex-end;
     margin-bottom: 12px;
     position: relative;
-    right: 0.8rem;
+    right: 0.5rem;
     top: 0.4rem;
   }
 
   .grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 20px;
+    gap: 1.5rem;
+  }
+
+  @media (min-width: 640px) {
+    .grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
+    .card {
+      padding: 32px 24px;
+      gap: 24px;
+      min-height: 160px;
+    }
+
+    .price .amount {
+      font-size: 52px;
+    }
+
+    .price .currency {
+      font-size: 20px;
+    }
+
+    .price .period {
+      font-size: 14px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+
+    .card {
+      padding: 36px 28px;
+      gap: 28px;
+      min-height: 170px;
+    }
+
+    .price .amount {
+      font-size: 64px;
+    }
+
+    .price .currency {
+      font-size: 24px;
+    }
+
+    .price .period {
+      font-size: 16px;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .grid {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+    }
+
+    .card {
+      padding: 40px 32px;
+      gap: 32px;
+      min-height: 180px;
+    }
+
+    .price .amount {
+      font-size: 80px;
+    }
+
+    .price .currency {
+      font-size: 28px;
+    }
+
+    .price .period {
+      font-size: 18px;
+    }
   }
 
   @media (max-width: 768px) {
@@ -303,23 +397,28 @@
 
     .card {
       padding: 24px 20px;
-      gap: 20px;
+      gap: 16px;
+      min-height: 140px;
     }
 
     .card h2 {
-      font-size: 32px;
+      font-size: 1rem;
     }
 
     .card-content {
       padding: 0;
     }
 
-    .price strong {
-      font-size: 48px;
+    .price .amount {
+      font-size: 40px;
     }
 
-    .price span {
-      font-size: 14px;
+    .price .currency {
+      font-size: 18px;
+    }
+
+    .price .period {
+      font-size: 12px;
     }
   }
 </style>
