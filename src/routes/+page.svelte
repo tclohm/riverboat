@@ -71,7 +71,6 @@
     width: 100%;
     padding: 60px 40px;
     box-sizing: border-box;
-    overflow: hidden;
   }
 
   @media (max-width: 768px) {
@@ -88,7 +87,13 @@
 
   @media (min-width: 1024px) {
     .container {
-      padding: 60px 28px;
+      padding: 60px 24px;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .container {
+      padding: 60px 40px;
     }
   }
 
@@ -313,7 +318,7 @@
   .grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: 1.25rem;
   }
 
   /* Mobile - sidebar hidden or collapsed - 1 column */
@@ -336,7 +341,7 @@
   @media (min-width: 1024px) and (max-width: 1279px) {
     .grid {
       grid-template-columns: repeat(3, 1fr);
-      gap: 1.5rem;
+      gap: 1.2rem;
     }
   }
 
