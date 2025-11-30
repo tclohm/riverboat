@@ -322,7 +322,7 @@
   }
 
   /* Mobile - 1 column - full width cards */
-  @media (max-width: 989px) {
+  @media (max-width: 640px) {
     .grid {
       grid-template-columns: 1fr;
       gap: 1rem;
@@ -330,7 +330,7 @@
   }
 
   /* Tablet with sidebar - 2 columns - bigger cards */
-  @media (min-width: 990px) and (max-width: 1299px) {
+  @media (min-width: 641px) and (max-width: 1299px) {
     .grid {
       grid-template-columns: repeat(2, 1fr);
       gap: 1.2rem;
@@ -345,7 +345,7 @@
     }
   }
 
-  @media (max-width: 989px) {
+  @media (max-width: 640px) {
     .card {
       padding: 24px 16px;
       gap: 16px;
@@ -370,7 +370,7 @@
   }
 
   /* 2 columns - bigger cards */
-  @media (min-width: 990px) and (max-width: 1299px) {
+  @media (min-width: 641px) and (max-width: 1299px) {
     .card {
       padding: 32px 24px;
       gap: 24px;

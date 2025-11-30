@@ -256,11 +256,11 @@
     <!-- Danger Zone -->
     <div class="danger-section">
       <h3>Account Actions</h3>
-      <form method="POST" action="?/deleteAccount" class="danger-form">
+     <form method="POST" action="?/deleteAccount" class="danger-form" on:submit={(e) => !confirm('Are you sure? This cannot be undone.') && e.preventDefault()}>
         <p>Permanently delete your account and all associated data</p>
-        <button type="submit" class="btn-danger" onclick="return confirm('Are you sure? This cannot be undone.')">
+        <button type="submit" class="btn-danger">
           Delete Account
-        </button>
+        </button>      
       </form>
     </div>
   </div>
