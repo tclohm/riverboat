@@ -60,7 +60,7 @@
     }
     
     if (end < today) {
-      error = 'End date must be today or in the future';
+      error = 'End date must be today or or in the future';
       endDate = '';
       return;
     }
@@ -194,6 +194,7 @@
     gap: 16px;
     align-items: flex-end;
     flex-wrap: wrap;
+    min-width: 0;
   }
 
   .date-inputs {
@@ -201,6 +202,8 @@
     grid-template-columns: 1fr auto 1fr;
     gap: 12px;
     align-items: flex-end;
+    flex: 1;
+    min-width: 260px;
   }
 
   .date-group {
@@ -236,7 +239,6 @@
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
   }
 
-  /* Style the placeholder text for date inputs */
   input[type="date"]::placeholder {
     color: #999;
   }
@@ -266,6 +268,7 @@
     flex-direction: column;
     min-width: fit-content;
     width: fit-content;
+    flex-shrink: 0;
   }
 
   .guest-input {
@@ -314,7 +317,6 @@
     outline: none;
   }
 
-  /* Remove number input spinners */
   input[type="number"]::-webkit-outer-spin-button,
   input[type="number"]::-webkit-inner-spin-button {
     -webkit-appearance: none;
@@ -340,6 +342,7 @@
     transition: all 0.2s;
     white-space: nowrap;
     height: 38px;
+    flex-shrink: 0;
   }
 
   .search-button:hover {
@@ -363,14 +366,17 @@
     font-weight: 500;
   }
 
-  @media (max-width: 768px) {
+  /* Mobile layout - stacked */
+  @media (max-width: 640px) {
     .search-box {
       flex-direction: column;
       gap: 12px;
+      padding: 16px;
     }
 
     .date-inputs {
       width: 100%;
+      grid-template-columns: 1fr auto 1fr;
     }
 
     .guests-group {
@@ -381,12 +387,6 @@
       width: 100%;
       justify-content: center;
     }
-  }
-
-  @media (max-width: 480px) {
-    .search-box {
-      padding: 16px;
-    }
 
     label {
       font-size: 11px;
@@ -396,10 +396,72 @@
       font-size: 13px;
       padding: 8px 10px;
     }
+  }
+
+  /* Tablet with sidebar - horizontal layout with wrapping */
+  @media (min-width: 641px) and (max-width: 1023px) {
+    .search-box {
+      padding: 18px;
+      gap: 14px;
+    }
+
+    .date-inputs {
+      flex: 1;
+      min-width: 280px;
+    }
+
+    .guests-group {
+      min-width: fit-content;
+    }
 
     .search-button {
+      white-space: nowrap;
+    }
+  }
+
+  /* Large with sidebar - more compact */
+  @media (min-width: 1024px) and (max-width: 1279px) {
+    .search-box {
+      padding: 18px;
+      gap: 14px;
+    }
+
+    .date-inputs {
+      flex: 1;
+      min-width: 300px;
+    }
+
+    input[type="date"] {
+      font-size: 13px;
+      padding: 9px 11px;
+    }
+
+    .search-button {
+      padding: 9px 20px;
       font-size: 14px;
-      padding: 8px 16px;
+    }
+  }
+
+  /* Extra large - full breathing room */
+  @media (min-width: 1280px) {
+    .search-box {
+      padding: 20px;
+      gap: 16px;
+    }
+
+    .date-inputs {
+      flex: 1;
+      min-width: 320px;
+    }
+
+    input[type="date"] {
+      font-size: 14px;
+      padding: 10px 12px;
+    }
+
+    .search-button {
+      padding: 10px 24px;
+      font-size: 15px;
     }
   }
 </style>

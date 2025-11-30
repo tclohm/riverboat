@@ -68,9 +68,28 @@
   }
 
   .container {
-    max-width: 1400px;
-    margin: 0 auto;
+    width: 100%;
     padding: 60px 40px;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  @media (max-width: 768px) {
+    .container {
+      padding: 40px 20px;
+    }
+  }
+
+  @media (min-width: 769px) {
+    .container {
+      padding: 60px 32px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container {
+      padding: 60px 28px;
+    }
   }
 
   header {
@@ -297,12 +316,79 @@
     gap: 1.5rem;
   }
 
-  @media (min-width: 640px) {
+  /* Mobile - sidebar hidden or collapsed - 1 column */
+  @media (max-width: 640px) {
+    .grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+  }
+
+  /* Tablet with sidebar visible - 2 columns */
+  @media (min-width: 641px) and (max-width: 1023px) {
     .grid {
       grid-template-columns: repeat(2, 1fr);
       gap: 1rem;
     }
+  }
 
+  /* Large with sidebar visible - 3 columns */
+  @media (min-width: 1024px) and (max-width: 1279px) {
+    .grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+  }
+
+  /* Extra large with sidebar visible - 4 columns */
+  @media (min-width: 1280px) {
+    .grid {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .card {
+      padding: 24px 16px;
+      gap: 16px;
+      min-height: 140px;
+    }
+
+    .price .amount {
+      font-size: 40px;
+    }
+
+    .price .currency {
+      font-size: 16px;
+    }
+
+    .price .period {
+      font-size: 12px;
+    }
+  }
+
+  @media (min-width: 641px) and (max-width: 1023px) {
+    .card {
+      padding: 28px 20px;
+      gap: 20px;
+      min-height: 150px;
+    }
+
+    .price .amount {
+      font-size: 48px;
+    }
+
+    .price .currency {
+      font-size: 18px;
+    }
+
+    .price .period {
+      font-size: 13px;
+    }
+  }
+
+  @media (min-width: 1024px) and (max-width: 1279px) {
     .card {
       padding: 32px 24px;
       gap: 24px;
@@ -310,11 +396,11 @@
     }
 
     .price .amount {
-      font-size: 52px;
+      font-size: 56px;
     }
 
     .price .currency {
-      font-size: 20px;
+      font-size: 22px;
     }
 
     .price .period {
@@ -322,37 +408,7 @@
     }
   }
 
-  @media (min-width: 1024px) {
-    .grid {
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1.5rem;
-    }
-
-    .card {
-      padding: 36px 28px;
-      gap: 28px;
-      min-height: 170px;
-    }
-
-    .price .amount {
-      font-size: 64px;
-    }
-
-    .price .currency {
-      font-size: 24px;
-    }
-
-    .price .period {
-      font-size: 16px;
-    }
-  }
-
   @media (min-width: 1280px) {
-    .grid {
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1.5rem;
-    }
-
     .card {
       padding: 40px 32px;
       gap: 32px;
@@ -369,56 +425,6 @@
 
     .price .period {
       font-size: 18px;
-    }
-  }
-
-  @media (max-width: 768px) {
-    .container {
-      padding: 40px 20px;
-    }
-
-    h1 {
-      font-size: 48px;
-    }
-
-    header p {
-      font-size: 18px;
-    }
-
-    .search-info {
-      flex-direction: column;
-      gap: 12px;
-      text-align: center;
-    }
-
-    header {
-      margin-bottom: 32px;
-    }
-
-    .card {
-      padding: 24px 20px;
-      gap: 16px;
-      min-height: 140px;
-    }
-
-    .card h2 {
-      font-size: 1rem;
-    }
-
-    .card-content {
-      padding: 0;
-    }
-
-    .price .amount {
-      font-size: 40px;
-    }
-
-    .price .currency {
-      font-size: 18px;
-    }
-
-    .price .period {
-      font-size: 12px;
     }
   }
 </style>
