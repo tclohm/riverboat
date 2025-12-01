@@ -1,4 +1,4 @@
-import { passes, inquiries, notifications } from '$lib/db/schema';
+import { passes, inquiries, notifications, user } from '$lib/db/schema';
 import { getDb } from '$lib/db';
 import { error, fail, redirect } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
