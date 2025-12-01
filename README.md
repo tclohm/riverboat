@@ -9,11 +9,20 @@ A marketplace for sharing Disney Magic Key passes, inspired by Steamboat Willie 
 - **Manage passes** - Create, edit, and delete your own pass listings
 - **Notifications** - Receive notifications when others request your passes
 - **Inquiries** - Review and approve/decline pass requests from other users
+- **User profiles** - View and edit your profile with personal information (name, phone, location, bio)
+- **Account stats** - See your pass count, bookings, and rating at a glance
 - **User authentication** - Secure login/registration with session management
 - **Responsive design** - Mobile-friendly interface
 - **Clean aesthetic** - Minimal, Steamboat Willie-inspired design
 
 ## New Features
+
+### User Profile System
+- Complete profile management with editable fields
+- Profile fields: name, email, phone, location, and bio
+- View account statistics (passes listed, total bookings, rating)
+- Member since date tracking
+- Account deletion with confirmation
 
 ### Date Range Picker
 - Users can select pass dates using HTML5 calendar inputs
@@ -52,10 +61,10 @@ This project uses a robust database connection pattern:
 
 ### Database Schema
 
-- **passes** - Magic Key pass listings (title, type, price, available dates)
-- **user** - User profiles with authentication info
+- **user** - User profiles with authentication info and profile fields (phone, location, bio)
 - **account** - User account and authentication provider data
 - **session** - Active user sessions with secure tokens
+- **passes** - Magic Key pass listings (title, type, price, available dates)
 - **inquiries** - Pass requests with dates, contact info, and status
 - **notifications** - System notifications for pass activity
 - **verification** - Email verification and password reset tokens
@@ -106,6 +115,7 @@ Open http://localhost:5173
 1. Register a new account through the UI
 2. Create passes and test the full flow
 3. Use multiple browsers/tabs to simulate different users
+4. Visit `/profile` to view and edit your profile
 
 ## Database Management
 
@@ -162,6 +172,9 @@ willies-keys/
 │       ├── add/                        # Create new pass
 │       ├── pass/[id]/                  # Pass details & inquiries
 │       ├── admin/                      # User dashboard
+│       ├── bookings/                   # User's booking requests
+│       ├── requests/                   # Received pass requests
+│       ├── profile/                    # User profile & settings
 │       ├── notifications/              # View notifications & manage requests
 │       ├── login/, signup/             # Auth routes
 │       └── ...
@@ -253,7 +266,7 @@ Secure user authentication with:
 ### Creating a Pass
 
 1. Login or create an account
-2. Go to "List Your Pass"
+2. Go to "Add Pass"
 3. Fill in pass details (type, price, available dates)
 4. Pass appears on homepage for others to request
 
@@ -268,10 +281,20 @@ Secure user authentication with:
 
 ### Managing Requests
 
-1. Go to Notifications page
-2. View pending pass requests
+1. Go to Requests or Bookings page
+2. View pending/approved/declined pass requests
 3. Approve or decline each request
 4. Approved notifications auto-archive after dates pass
+
+### Managing Your Profile
+
+1. Click "Profile" in the sidebar
+2. View your profile card with avatar and member since date
+3. Click "Edit Profile" to update your information
+4. Edit: name, phone, location, and bio (max 160 characters)
+5. Save changes or cancel
+6. View account stats: passes listed, total bookings, rating
+7. Optionally delete your account (permanent action)
 
 ## License
 
