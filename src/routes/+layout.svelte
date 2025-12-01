@@ -1,4 +1,5 @@
 <script>
+  import '../app.css';
   import { invalidateAll } from '$app/navigation';
   import { enhance } from '$app/forms';
   import { page } from '$app/state';  
@@ -393,7 +394,7 @@
     min-height: 100vh;
     background: #f9fafb;
   }
-  
+
   /* ===== SIDEBAR ===== */
   .sidebar {
     width: 260px;
@@ -406,7 +407,7 @@
     top: 0;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   }
-  
+
   /* Logo Section */
   .sidebar-logo {
     padding: 20px 16px;
@@ -415,7 +416,7 @@
     gap: 12px;
     border-bottom: 1px solid #f3f4f6;
   }
-  
+
   .logo-icon {
     font-size: 28px;
     width: 40px;
@@ -426,14 +427,14 @@
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 10px;
   }
-  
+
   .logo-text h1 {
     margin: 0;
     font-size: 16px;
     font-weight: 700;
     color: #1f2937;
   }
-  
+
   /* Navigation */
   .sidebar-nav {
     padding: 12px 8px;
@@ -441,7 +442,7 @@
     flex-direction: column;
     gap: 4px;
   }
-  
+
   .nav-item {
     display: flex;
     align-items: center;
@@ -456,17 +457,17 @@
     transition: all 0.2s ease;
     position: relative;
   }
-  
+
   .nav-item:hover {
     background: #f3f4f6;
     color: #1f2937;
   }
-  
+
   .nav-item.active {
     background: #eff6ff;
     color: #2563eb;
   }
-  
+
   .notification-badge {
     background: #ef4444;
     color: white;
@@ -482,41 +483,41 @@
     margin-left: auto;
     flex-shrink: 0;
   }
-  
+
   .nav-label {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  
+
   /* Divider */
   .nav-divider {
     height: 1px;
     background: #f3f4f6;
     margin: 4px 0;
   }
-  
+
   /* Action Items */
   .action-item {
     background: #fef3c7;
     color: #92400e;
   }
-  
+
   .action-item:hover {
     background: #fde68a;
     color: #78350f;
   }
-  
+
   .action-item.active {
     background: #fcd34d;
     color: #451a03;
   }
-  
+
   /* Spacer */
   .nav-spacer {
     flex: 1;
   }
-  
+
   /* User Section */
   .user-section {
     padding: 16px 8px;
@@ -525,14 +526,14 @@
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .user-info {
     display: flex;
     align-items: center;
     gap: 12px;
     padding: 8px;
   }
-  
+
   .user-avatar {
     width: 40px;
     height: 40px;
@@ -546,11 +547,11 @@
     font-size: 16px;
     flex-shrink: 0;
   }
-  
+
   .user-details {
     min-width: 0;
   }
-  
+
   .user-name {
     margin: 0;
     font-size: 14px;
@@ -560,7 +561,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  
+
   .user-email {
     margin: 0;
     font-size: 12px;
@@ -569,11 +570,11 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  
+
   .logout-form {
     width: 100%;
   }
-  
+
   .logout-button {
     width: 100%;
     display: flex;
@@ -589,12 +590,12 @@
     cursor: pointer;
     transition: all 0.2s ease;
   }
-  
+
   .logout-button:hover {
     background: #fecaca;
     color: #7f1d1d;
   }
-  
+
   .logout-label {
     white-space: nowrap;
     overflow: hidden;
@@ -664,7 +665,7 @@
   .signup-button:hover {
     background: #eff6ff;
   }
-  
+
   /* Main Content */
   .main-content {
     flex: 1;
@@ -673,7 +674,7 @@
     overflow: auto;
     position: relative;
   }
-  
+
   /* Mobile Header */
   .mobile-header {
     display: none;
@@ -684,14 +685,14 @@
     background: white;
     border-bottom: 1px solid #e5e7eb;
   }
-  
+
   .mobile-header h2 {
     margin: 0;
     font-size: 16px;
     color: #1f2937;
     flex: 1;
   }
-  
+
   .mobile-menu-toggle {
     background: none;
     border: none;
@@ -702,7 +703,7 @@
     align-items: center;
     justify-content: center;
   }
-  
+
   /* Header Notifications (Desktop + Mobile) */
   .header-notifications {
     position: fixed;
@@ -711,7 +712,7 @@
     z-index: 100;
     display: block;
   }
-  
+
   .notifications-bell {
     background: none;
     border: none;
@@ -725,12 +726,12 @@
     border-radius: 6px;
     transition: all 0.2s;
   }
-  
+
   .notifications-bell:hover {
     background: #f3f4f6;
     color: #1f2937;
   }
-  
+
   .bell-badge {
     position: absolute;
     top: 2px;
@@ -747,7 +748,7 @@
     align-items: center;
     justify-content: center;
   }
-  
+
   .notifications-dropdown {
     position: absolute;
     top: calc(100% + 8px);
@@ -761,31 +762,31 @@
     display: flex;
     flex-direction: column;
   }
-  
+
   .dropdown-header {
     padding: 16px;
     border-bottom: 1px solid #e5e7eb;
   }
-  
+
   .dropdown-header h3 {
     margin: 0;
     font-size: 16px;
     font-weight: 600;
     color: #1f2937;
   }
-  
+
   .notifications-list-dropdown {
     overflow-y: auto;
     max-height: 450px;
   }
-  
+
   .empty-notifications {
     padding: 48px 24px;
     text-align: center;
     color: #9ca3af;
     font-size: 14px;
   }
-  
+
   .notification-item {
     padding: 16px;
     border-bottom: 1px solid #f3f4f6;
@@ -797,39 +798,39 @@
     color: inherit;
     cursor: pointer;
   }
-  
+
   .notification-item:hover {
     background: #f9fafb;
   }
-  
+
   .notification-item:last-child {
     border-bottom: none;
   }
-  
+
   .notification-content {
     flex: 1;
     min-width: 0;
   }
-  
+
   .notification-content h4 {
     margin: 0 0 4px 0;
     font-size: 14px;
     font-weight: 600;
     color: #1f2937;
   }
-  
+
   .notification-content p {
     margin: 0 0 6px 0;
     font-size: 13px;
     color: #6b7280;
     line-height: 1.4;
   }
-  
+
   .notification-time {
     font-size: 12px;
     color: #9ca3af;
   }
-  
+
   .dismiss-btn {
     background: none;
     border: none;
@@ -847,12 +848,12 @@
     flex-shrink: 0;
     line-height: 1;
   }
-  
+
   .dismiss-btn:hover {
     background: #fee2e2;
     color: #ef4444;
   }
-  
+
   .notifications-overlay {
     position: fixed;
     top: 0;
@@ -862,7 +863,7 @@
     background: transparent;
     z-index: 99;
   }
-  
+
   .mobile-menu-overlay {
     display: none;
     position: fixed;
@@ -873,7 +874,7 @@
     background: rgba(0, 0, 0, 0.5);
     z-index: 40;
   }
-  
+
   .mobile-menu {
     position: fixed;
     top: 0;
@@ -887,19 +888,19 @@
     z-index: 50;
     overflow-y: auto;
   }
-  
+
   .mobile-logo {
     padding: 16px;
     border-bottom: 1px solid #f3f4f6;
   }
-  
+
   .mobile-logo h2 {
     margin: 0;
     font-size: 16px;
     font-weight: 700;
     color: #1f2937;
   }
-  
+
   .mobile-nav {
     padding: 12px 8px;
     display: flex;
@@ -921,17 +922,17 @@
     padding: 16px 12px;
     border-top: 1px solid #f3f4f6;
   }
-  
+
   /* Responsive */
   @media (max-width: 768px) {
     .sidebar {
       display: none;
     }
-    
+
     .mobile-header {
       display: flex;
     }
-    
+
     .mobile-menu-overlay {
       display: block;
     }
@@ -940,7 +941,7 @@
       top: 60px;
       right: 16px;
     }
-    
+
     .notifications-dropdown {
       position: fixed;
       top: 60px;
