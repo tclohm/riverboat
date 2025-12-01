@@ -3,6 +3,8 @@
   import { Mail, Phone, MapPin, Calendar, Edit2, Save, X } from '@lucide/svelte';
   export let data;
 
+  console.log(data.user);
+
   let isEditing = false;
   let formData = {
     name: data.user?.name || '',
