@@ -1,13 +1,35 @@
 import { getDb, initializeDb } from './index';
-import { passes } from './schema';
+import { user, account, passes } from './schema';
+import bcrypt from 'bcryptjs';
+import { randomBytes } from 'crypto';
 
-// Define sample data
-const owners = [
-  'Sarah M.', 'Mike R.', 'Emily T.', 'David K.', 'Jessica L.', 'Robert H.',
-  'Amanda P.', 'Chris W.', 'Nicole B.', 'Ryan S.', 'Lauren F.', 'James D.',
-  'Megan C.', 'Tyler J.', 'Ashley R.', 'Kevin M.', 'Brittany L.', 'Brandon T.',
-  'Stephanie H.', 'Justin K.', 'Rachel G.', 'Andrew N.', 'Samantha V.', 'Daniel P.',
-  'Jennifer W.'
+// Define sample data with full names
+const ownerNames = [
+  'Sarah Mitchell', 'Mike Rodriguez', 'Emily Thompson', 'David Kennedy', 'Jessica Lambert', 'Robert Harrison',
+  'Amanda Patterson', 'Chris Williams', 'Nicole Brown', 'Ryan Sullivan', 'Lauren Foster', 'James Davis',
+  'Megan Clark', 'Tyler Johnson', 'Ashley Robinson', 'Kevin Murphy', 'Brittany Lewis', 'Brandon Taylor',
+  'Stephanie Hughes', 'Justin Kelly', 'Rachel Garcia', 'Andrew Nelson', 'Samantha Valdez', 'Daniel Parker',
+  'Jennifer Watson'
+];
+
+const bios = [
+  'Disney enthusiast and frequent visitor!',
+  'Love exploring the parks with family',
+  'Passionate about magical experiences',
+  'Making memories one visit at a time',
+  'Disney magic is real and I believe in it',
+  'Annual pass holder who loves the adventure',
+  'Creating unforgettable moments at Disney',
+  'Believer in the magic of Disney parks',
+  'Living the Disney dream!',
+  'Where are you going? To the happiest place on earth!'
+];
+
+const locations = [
+  'Los Angeles, CA', 'Orange County, CA', 'San Diego, CA', 'San Francisco, CA',
+  'Las Vegas, NV', 'Phoenix, AZ', 'Denver, CO', 'Dallas, TX', 'Austin, TX',
+  'Houston, TX', 'Chicago, IL', 'Nashville, TN', 'Atlanta, GA', 'Miami, FL',
+  'Orlando, FL', 'New York, NY', 'Boston, MA', 'Seattle, WA', 'Portland, OR'
 ];
 
 const passTypes = ['Believe Key', 'Enchant Key', 'Inspire Key', 'Dream Key'];
@@ -19,11 +41,38 @@ const dateOptions = [
 ];
 
 // Generate seed data
-function generateSeedData() {
+function generateUserData() {
+  const userData = [];
+  
+  for (let i = 0; i < ownerNames.length; i++) {
+    const name = ownerNames[i];
+    const email = `user${i + 1}@example.com`;
+    const phone = `(${Math.floor(Math.random() * 900) + 100}) ${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`;
+    const location = locations[Math.floor(Math.random() * locations.length)];
+    const bio = bios[Math.floor(Math.random() * bios.length)];
+    
+    userData.push({
+      id: randomBytes(16).toString('hex'),
+      name,
+      email,
+      phone,
+      location,
+      bio,
+      emailVerified: true,
+      image: null,
+      createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000), // Random date in last 30 days
+      updatedAt: new Date(),
+    });
+  }
+  
+  return userData;
+}
+
+function generatePassData(userIds: string[]) {
   const seedData = [];
 
   for (let i = 1; i <= 50; i++) {
-    const owner = owners[Math.floor(Math.random() * owners.length)];
+    const userId = userIds[Math.floor(Math.random() * userIds.length)];
     const passType = passTypes[Math.floor(Math.random() * passTypes.length)];
     const dates = dateOptions[Math.floor(Math.random() * dateOptions.length)];
     
@@ -38,10 +87,10 @@ function generateSeedData() {
 
     seedData.push({
       title: `Magic Key - ${passType}`,
-      owner: owner,
+      userId,
       price: price,
       passType: passType,
-      availableDates: dates
+      availableDates: dates,
     });
   }
 
@@ -50,23 +99,13 @@ function generateSeedData() {
 
 // Check if we're generating SQL or seeding directly
 const generateSQL = process.argv.includes('--sql');
-const seedData = generateSeedData();
-
-// Generate SQL statements
-if (generateSQL) {
-  seedData.forEach(pass => {
-    console.log(
-      `INSERT INTO passes (title, owner, price, pass_type, available_dates) VALUES ('${pass.title}', '${pass.owner}', ${pass.price}, '${pass.passType}', '${pass.availableDates}');`
-    );
-  });
-  process.exit(0);
-}
 
 // Export the seeding function
 export async function seedDatabase() {
   try {
     console.log('Starting database seeding process...');
     console.log(`Environment mode: ${import.meta.env.MODE}`);
+    
     // Initialize the database
     console.log('Initializing database...');
     await initializeDb();
@@ -76,17 +115,49 @@ export async function seedDatabase() {
     const db = await getDb();
     console.log('Database client obtained successfully');
     
-    // generate seed data
-    const seedData = generateSeedData();
-    console.log(`Generated ${seedData.length} seed records`);
+    // Generate user data
+    console.log('Generating user data...');
+    const userData = generateUserData();
+    console.log(`Generated ${userData.length} users`);
 
-    // insert seed data 
-    console.log('Inserting seed data...');
-    const result = await db.insert(passes).values(seedData);
-    console.log('Insert operation completed', result); 
+    // Insert users
+    console.log('Inserting users...');
+    await db.insert(user).values(userData).run();
+    console.log('Users inserted successfully');
 
+    // Insert accounts (passwords for test users)
+    console.log('Inserting accounts...');
+    const accountData = [];
+    for (const u of userData) {
+      const hashedPassword = await bcrypt.hash('password123', 10);
+      accountData.push({
+        id: randomBytes(16).toString('hex'),
+        accountId: u.email,
+        providerId: 'email',
+        userId: u.id,
+        password: hashedPassword,
+        createdAt: u.createdAt,
+        updatedAt: u.updatedAt,
+      });
+    }
+    await db.insert(account).values(accountData).run();
+    console.log('Accounts inserted successfully');
 
-    console.log('Database seeded successfully with 50 passes!');
+    // Generate and insert pass data
+    console.log('Generating pass data...');
+    const userIds = userData.map(u => u.id);
+    const passData = generatePassData(userIds);
+    console.log(`Generated ${passData.length} passes`);
+
+    console.log('Inserting passes...');
+    await db.insert(passes).values(passData).run();
+    console.log('Passes inserted successfully');
+
+    console.log('\n✅ Database seeded successfully!');
+    console.log(`   - ${userData.length} users created`);
+    console.log(`   - ${accountData.length} accounts created (password: password123)`);
+    console.log(`   - ${passData.length} passes created`);
+    
     return true
   } catch (error) {
     console.error('Error seeding database:', error);
@@ -94,16 +165,8 @@ export async function seedDatabase() {
   }
 }
 
-// Auto-run if this is the main script
-if (process.argv.includes('--sql')) {
-  const seedData = generateSeedData();
-  seedData.forEach(pass => {
-    console.log(
-      `INSERT INTO passes (title, owner, price, pass_type, available_dates) VALUES ('${pass.title}', '${pass.owner}', ${pass.price}, '${pass.passType}', '${pass.availableDates}');`
-    );
-  });
-} else {
-  // Always run the seeding function
+// Only run seeding if this is the main script
+if (!generateSQL) {
   console.log('Running seed script...');
   seedDatabase()
     .then(success => {
