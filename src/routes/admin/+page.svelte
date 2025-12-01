@@ -220,20 +220,6 @@
     margin: 0;
   }
   
-  .add-button {
-    background: #2563eb;
-    color: white;
-    padding: 12px 24px;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 600;
-    transition: background 0.2s;
-  }
-  
-  .add-button:hover {
-    background: #1d4ed8;
-  }
-  
   .empty-state {
     background: #f9fafb;
     border: 2px dashed #e5e7eb;
@@ -636,11 +622,7 @@
       flex-direction: column;
       align-items: flex-start;
     }
-    
-    .add-button {
-      margin-top: 16px;
-    }
-    
+        
     .passes-grid {
       grid-template-columns: 1fr;
     }
