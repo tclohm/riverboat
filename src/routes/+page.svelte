@@ -321,31 +321,39 @@
     gap: 1rem;
   }
 
-  /* Mobile - 1 column - full width cards */
-  @media (max-width: 640px) {
+  /* Mobile - 1 column - full width cards (no sidebar visible) */
+  @media (max-width: 989px) {
     .grid {
       grid-template-columns: 1fr;
       gap: 1rem;
     }
   }
 
-  /* Tablet with sidebar - 2 columns - bigger cards */
-  @media (min-width: 641px) and (max-width: 1299px) {
+  /* Tablet with sidebar - 2 columns
+     Sidebar: 260px
+     Breakpoint: 260px + (2 × card) needs at least 1250px total viewport
+     At 1250px: 260px sidebar + 990px content area = perfect for 2 cols
+  */
+  @media (min-width: 1250px) and (max-width: 1549px) {
     .grid {
       grid-template-columns: repeat(2, 1fr);
       gap: 1.2rem;
     }
   }
 
-  /* Large with sidebar - 3 columns - smaller cards */
-  @media (min-width: 1300px) {
+  /* Large with sidebar - 3 columns
+     At 1550px and above: 260px sidebar + 1290px content = 3 cols comfortably
+  */
+  @media (min-width: 1550px) {
     .grid {
       grid-template-columns: repeat(3, 1fr);
       gap: 1.3rem;
     }
   }
 
-  @media (max-width: 640px) {
+  /* Card styling breakpoints - ALSO NEED TO UPDATE */
+
+  @media (max-width: 989px) {
     .card {
       padding: 24px 16px;
       gap: 16px;
@@ -370,7 +378,7 @@
   }
 
   /* 2 columns - bigger cards */
-  @media (min-width: 641px) and (max-width: 1299px) {
+  @media (min-width: 1250px) and (max-width: 1549px) {
     .card {
       padding: 32px 24px;
       gap: 24px;
@@ -395,7 +403,7 @@
   }
 
   /* 3 columns - smaller cards */
-  @media (min-width: 1300px) {
+  @media (min-width: 1550px) {
     .card {
       padding: 28px 20px;
       gap: 20px;
@@ -417,5 +425,5 @@
     .price .period {
       font-size: 13px;
     }
-  }
+}
 </style>
