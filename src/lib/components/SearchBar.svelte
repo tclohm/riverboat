@@ -367,7 +367,7 @@
   }
 
   /* Mobile layout - stacked */
-  @media (max-width: 640px) {
+   @media (max-width: 640px) {
     .search-box {
       flex-direction: column;
       gap: 12px;
@@ -398,16 +398,58 @@
     }
   }
 
-  /* Tablet with sidebar - horizontal layout with wrapping */
-  @media (min-width: 641px) and (max-width: 1023px) {
+/* Tablet/Desktop with sidebar - stacked layout
+   At 920px viewport (660px content), horizontal layout causes wrapping
+   Switch to stacked/column layout here for better UX
+*/
+  @media (min-width: 641px) and (max-width: 1249px) {
     .search-box {
+      flex-direction: column;
+      gap: 14px;
+      padding: 16px;
+    }
+
+    .date-inputs {
+      width: 100%;
+      grid-template-columns: 1fr auto 1fr;
+      flex: none;
+    }
+
+    .guests-group {
+      width: 100%;
+      align-self: flex-start;
+    }
+
+    .search-button {
+      width: 100%;
+      justify-content: center;
+    }
+
+    label {
+      font-size: 12px;
+    }
+
+    input[type="date"] {
+      font-size: 13px;
+      padding: 9px 11px;
+    }
+  }
+
+  /* Large with sidebar - horizontal layout with plenty of space
+     1250px+ viewport means 990px+ content area, safe for horizontal
+  */
+  @media (min-width: 1250px) and (max-width: 1549px) {
+    .search-box {
+      flex-direction: row;
       padding: 18px;
       gap: 14px;
+      flex-wrap: nowrap;
     }
 
     .date-inputs {
       flex: 1;
-      min-width: 280px;
+      min-width: 300px;
+      grid-template-columns: 1fr auto 1fr;
     }
 
     .guests-group {
@@ -416,19 +458,7 @@
 
     .search-button {
       white-space: nowrap;
-    }
-  }
-
-  /* Large with sidebar - more compact */
-  @media (min-width: 1024px) and (max-width: 1279px) {
-    .search-box {
-      padding: 18px;
-      gap: 14px;
-    }
-
-    .date-inputs {
-      flex: 1;
-      min-width: 300px;
+      width: auto;
     }
 
     input[type="date"] {
@@ -443,15 +473,18 @@
   }
 
   /* Extra large - full breathing room */
-  @media (min-width: 1280px) {
+  @media (min-width: 1550px) {
     .search-box {
+      flex-direction: row;
       padding: 20px;
       gap: 16px;
+      flex-wrap: nowrap;
     }
 
     .date-inputs {
       flex: 1;
       min-width: 320px;
+      grid-template-columns: 1fr auto 1fr;
     }
 
     input[type="date"] {
