@@ -673,6 +673,7 @@
     flex-direction: column;
     overflow: auto;
     position: relative;
+    padding: 60px 32px;
   }
 
   /* Mobile Header */
@@ -698,10 +699,15 @@
     border: none;
     color: #6b7280;
     cursor: pointer;
-    padding: 0;
+    padding: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  .mobile-menu-toggle:hover {
+    background: #f3f4f6;
+    color: #1f2937;
   }
 
   /* Header Notifications (Desktop + Mobile) */
@@ -875,6 +881,10 @@
     z-index: 40;
   }
 
+  .mobile-menu-overlay:hover {
+    background: rgba(0, 0, 0, 0.5) !important;
+  }
+
   .mobile-menu {
     position: fixed;
     top: 0;
@@ -887,6 +897,7 @@
     flex-direction: column;
     z-index: 50;
     overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .mobile-logo {
@@ -929,7 +940,13 @@
       display: none;
     }
 
+    .main-content {
+      padding: 0;
+    }
+
     .mobile-header {
+      padding: 16px;
+      border-bottom: 1px solid #e5e7eb;
       display: flex;
     }
 
@@ -938,8 +955,10 @@
     }
 
     .header-notifications {
-      top: 60px;
+      position: absolute;
+      top: 17px;
       right: 16px;
+      z-index: 100;
     }
 
     .notifications-dropdown {
@@ -949,5 +968,6 @@
       left: 8px;
       width: auto;
     }
+
   }
 </style>
