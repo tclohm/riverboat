@@ -24,7 +24,7 @@
   <div class="detail">
     <div class="info">
       <h1>{pass.passType}</h1>
-      <p class="owner">Hosted by {pass.owner}</p>
+      <p class="owner">Hosted by {pass.ownerName}</p>
       
       <div class="section">
         <h2>Available Dates</h2>
