@@ -22,61 +22,59 @@
       await update();
     };
   }}>
-    <div class="form-grid">
-      <div class="form-group">
-        <label for="title">Pass Title</label>
-        <input 
-          type="text" 
-          id="title" 
-          name="title" 
-          placeholder="Magic Key - Dream Pass"
-          required
-        />
-      </div>
+    <div class="form-group">
+      <label for="title">Pass Title</label>
+      <input 
+        type="text" 
+        id="title" 
+        name="title" 
+        placeholder="Magic Key - Dream Pass"
+        required
+      />
+    </div>
 
-      <div class="form-group">
-        <label for="name">Your Name</label>
-        <input 
-          type="text" 
-          id="name" 
-          value={data.user.name}
-          disabled
-        />
-      </div>
+    <div class="form-group">
+      <label for="name">Your Name</label>
+      <input 
+        type="text" 
+        id="name" 
+        value={data.user.name}
+        disabled
+      />
+    </div>
 
-      <div class="form-group">
-        <label for="passType">Pass Type</label>
-        <select id="passType" name="passType" required>
-          <option value="">Select pass type</option>
-          <option value="Dream Key">Dream Key</option>
-          <option value="Inspire Key">Inspire Key</option>
-          <option value="Enchant Key">Enchant Key</option>
-          <option value="Believe Key">Believe Key</option>
-        </select>
-      </div>
+    <div class="form-group">
+      <label for="passType">Pass Type</label>
+      <select id="passType" name="passType" required>
+        <option value="">Select pass type</option>
+        <option value="Dream Key">Dream Key</option>
+        <option value="Inspire Key">Inspire Key</option>
+        <option value="Enchant Key">Enchant Key</option>
+        <option value="Believe Key">Believe Key</option>
+      </select>
+    </div>
 
-      <div class="form-group">
-        <label for="price">Price per day ($)</label>
-        <input 
-          type="number" 
-          id="price" 
-          name="price" 
-          placeholder="85"
-          min="1"
-          required
-        />
-      </div>
+    <div class="form-group">
+      <label for="price">Price per day ($)</label>
+      <input 
+        type="number" 
+        id="price" 
+        name="price" 
+        placeholder="85"
+        min="1"
+        required
+      />
+    </div>
 
-      <div class="form-group full-width">
-        <label for="availableDates">Available Dates</label>
-        <input 
-          type="text" 
-          id="availableDates" 
-          name="availableDates" 
-          placeholder="Nov 15-20, Dec 5-10"
-          required
-        />
-      </div>
+    <div class="form-group">
+      <label for="availableDates">Available Dates</label>
+      <input 
+        type="text" 
+        id="availableDates" 
+        name="availableDates" 
+        placeholder="Nov 15-20, Dec 5-10"
+        required
+      />
     </div>
 
     <button type="submit" disabled={loading}>
@@ -91,8 +89,8 @@
   }
 
   .container {
-    max-width: 800px;
-    margin: 80px auto;
+    max-width: 1200px;
+    margin: 60px auto;
     padding: 0 24px;
   }
 
@@ -122,19 +120,9 @@
     gap: 24px;
   }
 
-  .form-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 24px;
-  }
-
   .form-group {
     display: flex;
     flex-direction: column;
-  }
-
-  .form-group.full-width {
-    grid-column: 1 / -1;
   }
 
   label {
@@ -193,16 +181,12 @@
 
   @media (max-width: 768px) {
     .container {
-      margin: 40px auto;
+      margin: 40px auto 0 auto;
+      padding: 0 16px;
     }
 
     h1 {
       font-size: 28px;
-    }
-
-    .form-grid {
-      grid-template-columns: 1fr;
-      gap: 20px;
     }
   }
 </style>
