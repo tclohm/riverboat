@@ -84,14 +84,26 @@ function parseRequestedDates(dateString: string): { startDate: Date, endDate: Da
 
 export async function load({ params, platform, locals }) {
   const db = await getDb(platform);
-  const pass = await db.select().from(passes).where(eq(passes.id, parseInt(params.id))).get();
 
-  if (!pass) {
+  const passWithOwner = await db.select({
+    pass: passes,
+    owner: user
+  }).from(passes)
+  .leftJoin(user, eq(passes.userId, user.id))
+  .where(eq(passes.id, parseInt(params.id)))
+  .get();
+
+  if (!passWithOwner || !passWithOwner.pass) {
     throw error(404, 'Pass not found');
   }
 
+  const passData = {
+    ...passWithOwner.pass,
+    ownerName: passWithOwner.owner?.name || 'Unknown'
+  };
+
   return { 
-    pass,
+    pass: passData,
     user: locals.user
   };
 }
