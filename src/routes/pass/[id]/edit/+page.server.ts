@@ -44,21 +44,19 @@ export const actions = {
 
     const data = await request.formData();
     const title = data.get('title')?.toString();
-    const owner = data.get('owner')?.toString();
     const passType = data.get('passType')?.toString();
     const price = parseInt(data.get('price')?.toString() || '0');
     const availableDates = data.get('availableDates')?.toString();
 
-    // Validate
-    if (!title || !owner || !passType || !price || !availableDates) {
+    // Validate - no longer require owner
+    if (!title || !passType || !price || !availableDates) {
       return fail(400, { error: 'All fields are required' });
     }
 
-    // Update in database
+    // Update in database - keep owner as is, don't update it
     await db.update(passes)
       .set({
         title,
-        owner,
         passType,
         price,
         availableDates
@@ -87,7 +85,6 @@ export const actions = {
     if (pass.userId != locals.user.id) {
       throw error(403, 'You do not have permission to delete this pass');
     }
-
 
     await db.delete(passes)
       .where(eq(passes.id, parseInt(params.id)))

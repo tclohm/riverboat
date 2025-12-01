@@ -32,59 +32,50 @@
       await update();
     };
   }}>
-    <div class="form-group">
-      <label for="title">Pass Title</label>
-      <input 
-        type="text" 
-        id="title" 
-        name="title" 
-        value={pass.title}
-        required
-      />
-    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="title">Pass Title</label>
+        <input 
+          type="text" 
+          id="title" 
+          name="title" 
+          value={pass.title}
+          required
+        />
+      </div>
 
-    <div class="form-group">
-      <label for="owner">Your Name</label>
-      <input 
-        type="text" 
-        id="owner" 
-        name="owner" 
-        value={pass.owner}
-        required
-      />
-    </div>
+      <div class="form-group">
+        <label for="passType">Pass Type</label>
+        <select id="passType" name="passType" required>
+          <option value="Dream Key" selected={pass.passType === 'Dream Key'}>Dream Key</option>
+          <option value="Inspire Key" selected={pass.passType === 'Inspire Key'}>Inspire Key</option>
+          <option value="Enchant Key" selected={pass.passType === 'Enchant Key'}>Enchant Key</option>
+          <option value="Believe Key" selected={pass.passType === 'Believe Key'}>Believe Key</option>
+        </select>
+      </div>
 
-    <div class="form-group">
-      <label for="passType">Pass Type</label>
-      <select id="passType" name="passType" required>
-        <option value="Dream Key" selected={pass.passType === 'Dream Key'}>Dream Key</option>
-        <option value="Inspire Key" selected={pass.passType === 'Inspire Key'}>Inspire Key</option>
-        <option value="Enchant Key" selected={pass.passType === 'Enchant Key'}>Enchant Key</option>
-        <option value="Believe Key" selected={pass.passType === 'Believe Key'}>Believe Key</option>
-      </select>
-    </div>
+      <div class="form-group">
+        <label for="price">Price per day ($)</label>
+        <input 
+          type="number" 
+          id="price" 
+          name="price" 
+          value={pass.price}
+          min="1"
+          required
+        />
+      </div>
 
-    <div class="form-group">
-      <label for="price">Price per day ($)</label>
-      <input 
-        type="number" 
-        id="price" 
-        name="price" 
-        value={pass.price}
-        min="1"
-        required
-      />
-    </div>
-
-    <div class="form-group">
-      <label for="availableDates">Available Dates</label>
-      <input 
-        type="text" 
-        id="availableDates" 
-        name="availableDates" 
-        value={pass.availableDates}
-        required
-      />
+      <div class="form-group">
+        <label for="availableDates">Available Dates</label>
+        <input 
+          type="text" 
+          id="availableDates" 
+          name="availableDates" 
+          value={pass.availableDates}
+          required
+        />
+      </div>
     </div>
 
     <button type="submit" disabled={loading} class="save-button">
@@ -99,14 +90,17 @@
         Delete Pass
       </button>
     {:else}
-      <p class="confirm-text">Are you sure? This cannot be undone.</p>
+      <p class="confirm-text">Are you sure? This action cannot be undone.</p>
+      
       <div class="confirm-buttons">
-        <form method="POST" action="?/delete" use:enhance>
-          <button type="submit" class="confirm-delete">Yes, Delete</button>
-        </form>
         <button type="button" class="cancel-delete" on:click={cancelDelete}>
           Cancel
         </button>
+        <form method="POST" action="?/delete" use:enhance>
+          <button type="submit" class="confirm-delete">
+            Yes, Delete
+          </button>
+        </form>
       </div>
     {/if}
   </div>
@@ -118,8 +112,8 @@
   }
 
   .container {
-    max-width: 500px;
-    margin: 80px auto;
+    max-width: 800px;
+    margin: 80px 0 0 0;
     padding: 0 24px;
   }
 
@@ -146,6 +140,13 @@
   form {
     display: flex;
     flex-direction: column;
+    gap: 24px;
+    margin-bottom: 48px;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: 24px;
   }
 
@@ -203,24 +204,24 @@
   }
 
   .danger-zone {
-    margin-top: 48px;
-    padding: 24px;
-    border: 1px solid #d0d0d0;
-    border-radius: 8px;
     background: white;
+    border: 2px solid #fecaca;
+    border-radius: 8px;
+    padding: 24px;
+    margin-top: 48px;
   }
 
   .danger-zone h2 {
-    font-size: 16px;
-    font-weight: 600;
-    color: #666;
+    font-size: 18px;
+    font-weight: 700;
+    color: #dc2626;
     margin: 0 0 16px 0;
   }
 
   .delete-button {
     background: white;
-    color: #ef4444;
-    border: 1px solid #ef4444;
+    color: #dc2626;
+    border: 1px solid #dc2626;
     padding: 12px 24px;
     border-radius: 8px;
     font-size: 14px;
@@ -288,11 +289,17 @@
 
   @media (max-width: 768px) {
     .container {
-      margin: 40px auto;
+      margin: 40px 0 0 0;
+      padding: 0 16px;
     }
 
     h1 {
       font-size: 28px;
+    }
+
+    .form-grid {
+      grid-template-columns: 1fr;
+      gap: 20px;
     }
   }
 </style>

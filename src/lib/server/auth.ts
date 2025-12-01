@@ -21,7 +21,7 @@ export async function createUser(platform: any, email: string, password: string,
   // check if user exists
   const existing = await db.select().from(user).where(eq(user.email, email)).get();
   if (existing) {
-    throw new ('Email already exists');
+    throw new Error('Email already exists');
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
