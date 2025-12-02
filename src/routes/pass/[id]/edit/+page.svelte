@@ -111,12 +111,6 @@
     background-color: #f5f5f5;
   }
 
-  .container {
-    max-width: 800px;
-    margin: 80px 0 0 0;
-    padding: 0 24px;
-  }
-
   .back {
     display: inline-block;
     color: #666;

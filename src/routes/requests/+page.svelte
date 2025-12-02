@@ -531,10 +531,7 @@
   }
   
   @media (max-width: 768px) {
-    .container {
-      padding: 0;
-    }
-
+    
     h1 {
       padding: 0 16px;
       font-size: 28px;

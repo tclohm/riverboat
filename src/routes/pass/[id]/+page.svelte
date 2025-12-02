@@ -162,11 +162,6 @@
 {/if}
 
 <style>
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 60px 40px;
-  }
 
   .back {
     display: inline-block;
