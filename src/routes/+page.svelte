@@ -67,36 +67,6 @@
     color: #1a1a1a;
   }
 
-  .container {
-    width: 100%;
-    padding: 60px 40px;
-    box-sizing: border-box;
-  }
-
-  @media (max-width: 768px) {
-    .container {
-      padding: 40px 20px;
-    }
-  }
-
-  @media (min-width: 769px) {
-    .container {
-      padding: 60px 32px;
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .container {
-      padding: 60px 24px;
-    }
-  }
-
-  @media (min-width: 1280px) {
-    .container {
-      padding: 60px 40px;
-    }
-  }
-
   header {
     display: flex;
     justify-content: space-between;

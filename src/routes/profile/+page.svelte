@@ -269,9 +269,14 @@
 <style>
   .profile-container {
     width: 100%;
-    max-width: 900px;
+    max-width: 100%;
     margin: 0 auto;
-    padding: 20px;
+    padding: 0 16px;
+    box-sizing: border-box;
+  }
+
+  :global(.main-content) {
+    padding: 0;
   }
 
   /* Header */
@@ -706,4 +711,42 @@
       justify-content: center;
     }
   }
+
+  @media (max-width: 1024px) {
+    .profile-container {
+      max-width: 100%;
+      padding: 0 16px;
+    }
+
+    .details-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .stats-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .profile-container {
+      padding: 0 16px;
+    }
+
+    .details-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .stats-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .danger-form {
+      flex-direction: column;
+    }
+
+    .btn-danger {
+      width: 100%;
+    }
+  }
+
 </style>
