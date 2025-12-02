@@ -118,7 +118,7 @@
     <div class="sidebar-logo">
       <div class="logo-icon"><Key size={30} /></div>
       <div class="logo-text">
-        <h1 class="font-fredoka font-700">WILLIE'S KEYS</h1>
+        <h1 class="font-[Fredoka] font-700">WILLIE'S KEYS</h1>
       </div>
     </div>
     
@@ -275,7 +275,7 @@
       >
         <Menu size={20} />
       </button>
-      <h2>Willie's Keys</h2>
+      <h2 class="font-[Fredoka] font-bold">Willie's Keys</h2>
     </div>
 
     {#if isLoggedIn && !showMobileMenu}
