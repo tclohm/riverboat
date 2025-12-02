@@ -118,7 +118,7 @@
     <div class="sidebar-logo">
       <div class="logo-icon"><Key size={30} /></div>
       <div class="logo-text">
-        <h1>Willie's Keys</h1>
+        <h1 class="font-fredoka font-700">WILLIE'S KEYS</h1>
       </div>
     </div>
     
