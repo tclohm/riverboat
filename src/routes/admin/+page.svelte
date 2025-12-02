@@ -195,11 +195,6 @@
 </div>
 
 <style>
-  .container {
-    max-width: 1200px;
-    margin: 60px auto;
-    padding: 0 24px;
-  }
   
   header {
     display: flex;
