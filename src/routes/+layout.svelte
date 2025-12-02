@@ -1,78 +1,111 @@
 <script>
+  import './layout.css';
   import '../app.css';
   import { invalidateAll } from '$app/navigation';
   import { enhance } from '$app/forms';
-  import { page } from '$app/state';  
-  import { Key, Binoculars, Tickets, CalendarDays, LogOut, Menu, Plus, UserRoundPen, LogIn, Bell, Inbox } from '@lucide/svelte';
+  import { page } from '$app/state';
+  
+  import {
+    Key,
+    Binoculars,
+    Tickets,
+    CalendarDays,
+    LogOut,
+    Menu,
+    Plus,
+    UserRoundPen,
+    LogIn,
+    Bell,
+    Inbox
+  } from '@lucide/svelte';
+  
   export let data;
-
+  
   let showMobileMenu = false;
   let showNotificationsMenu = false;
   
   // Define navigation items with icons
   const mainNavItems = [
-    { href: '/', label: 'Browse', icon: Binoculars },
+    { href: '/', label: 'Browse', icon: Binoculars }
   ];
-
+  
   let userNavItems = [];
   let hasPassesCreated = false;
-
+  
   $: {
     // Check if user has any passes created
     hasPassesCreated = data.userPassCount > 0;
-
+  
     userNavItems = [
-      ...(hasPassesCreated ? [
-        { href: '/admin', label: 'My Passes', icon: Tickets },
-        { href: '/requests', label: 'Requests', icon: Inbox },
-      ] : []),
-      { href: '/bookings', label: 'Bookings', icon: CalendarDays },
+      ...hasPassesCreated
+        ? [
+          {
+            href: '/admin',
+            label: 'My Passes',
+            icon: Tickets
+          },
+          {
+            href: '/requests',
+            label: 'Requests',
+            icon: Inbox
+          }
+        ]
+        : [],
+      {
+        href: '/bookings',
+        label: 'Bookings',
+        icon: CalendarDays
+      }
     ];
-  } 
-
+  }
+  
   const actionNavItems = [
-    { href: '/add', label: 'Add Pass', icon: Plus },
+    { href: '/add', label: 'Add Pass', icon: Plus }
   ];
-
+  
   const settingsNavItems = [
-    { href: '/profile', label: 'Profile', icon: UserRoundPen },
+    {
+      href: '/profile',
+      label: 'Profile',
+      icon: UserRoundPen
+    }
   ];
-
+  
   $: isLoggedIn = !!data.user;
   
   function getNotificationLink(notification) {
     // Get tab from metadata if available
     let metadata = {};
+  
     try {
       if (notification.metadata) {
         metadata = JSON.parse(notification.metadata);
       }
-    } catch (e) {
-      // metadata is not valid JSON
-    }
-
+    } catch(e) {} // metadata is not valid JSON
+  
     const tab = metadata.tab || 'approved';
-    
+  
     // Route based on notification type
     if (notification.type === 'inquiry') {
       return `/bookings?tab=${tab}`;
     }
+  
     if (notification.type === 'booking') {
       return `/bookings?tab=${tab}`;
     }
+  
     // Default to bookings with approved tab
     return `/bookings?tab=${tab}`;
   }
   
   async function dismissNotification(notificationId) {
     try {
-      const response = await fetch(`/api/notifications/${notificationId}/dismiss`, {
-        method: 'POST'
-      });
+      const response = await fetch(`/api/notifications/${notificationId}/dismiss`, { method: 'POST' });
+  
       if (response.ok) {
         await invalidateAll();
       }
-    } catch (error) {
+    } catch(error) {
       console.error('Failed to dismiss notification:', error);
     }
   }
