@@ -53,11 +53,6 @@
       <p>Here you can view, edit, and manage all your listed passes</p>
     </div>
   </header>
-  <div class="admin-nav">
-    <a href="/admin" class="nav-item active">Dashboard</a>
-    <a href="/add" class="nav-item">Add New Pass</a>
-  </div>
-
   <div class="filter-bar">
     <div class="filter-group">
       <label for="filterType">Filter by Type:</label>
@@ -392,6 +387,7 @@
     border-radius: 8px;
     padding: 4px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border: 1px solid #d1d5db;
   }
 
   .nav-item {
