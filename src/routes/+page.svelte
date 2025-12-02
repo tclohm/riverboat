@@ -7,11 +7,16 @@
   <title>Willie's Keys</title>
 </svelte:head>
 
-<div class="container">
-  <header>
-    <div class="header-content">
-      <h1>WILLIE'S KEYS</h1>
-      <p>Share the magic</p>
+<div class="container max-w-7xl mx-auto px-4 md:px-8 lg:px-12 py-12">
+  <!-- Header -->
+  <header class="flex justify-between items-start mb-12 pb-6 border-b border-gray-300">
+    <div class="flex-1">
+      <h1 class="text-6xl md:text-7xl font-black -tracking-wide mb-4 text-gray-900 leading-tight">
+        WILLIE'S KEYS
+      </h1>
+      <p class="text-xl md:text-2xl text-gray-600 font-light">
+        Share the magic
+      </p>
     </div>
   </header>
 
@@ -20,38 +25,62 @@
 
   <!-- Results Info -->
   {#if data.searchDates}
-    <div class="search-info">
-      <p>
-        Showing passes available for <strong>{data.searchDates}</strong>
+    <div class="flex justify-between items-center bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
+      <p class="text-blue-900 font-medium m-0">
+        Showing passes available for <strong class="font-bold text-blue-950">{data.searchDates}</strong>
         {#if data.guests}
-          for <strong>{data.guests} {data.guests === 1 ? 'guest' : 'guests'}</strong>
+          for <strong class="font-bold text-blue-950">{data.guests} {data.guests === 1 ? 'guest' : 'guests'}</strong>
         {/if}
       </p>
-      <a href="/" class="clear-search">Clear search</a>
+      <a href="/" class="text-blue-600 font-semibold text-sm hover:underline transition">
+        Clear search
+      </a>
     </div>
   {/if}
 
   <!-- Passes Grid -->
   {#if data.passes.length === 0}
-    <div class="empty-state">
-      <p>No passes available{data.searchDates ? ' for those dates' : ''}</p>
+    <div class="text-center py-20 bg-white rounded-lg border-2 border-dashed border-gray-300">
+      <p class="text-lg text-gray-600 mb-6">
+        No passes available{data.searchDates ? ' for those dates' : ''}
+      </p>
       {#if data.searchDates}
-        <a href="/" class="browse-all">Browse all passes</a>
+        <a href="/" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+          Browse all passes
+        </a>
       {/if}
     </div>
   {:else}
-    <div class="grid">
+    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
       {#each data.passes as pass}
-        <a href="/pass/{pass.id}" class="card">
-          <div class="card-content">
-            <h2>{pass.passType}</h2>
-            <p class="owner">{pass.owner}</p>
-            <p class="dates">{pass.availableDates}</p>
+        <a 
+          href="/pass/{pass.id}" 
+          class="group bg-white border-2 border-gray-300 rounded-2xl p-8 lg:p-6 xl:p-7 flex flex-col lg:flex-row lg:items-center lg:gap-6 xl:flex-col xl:gap-0 hover:border-gray-400 transition-all duration-300 shadow-lg hover:shadow-xl min-h-40 lg:min-h-40 xl:min-h-auto cursor-pointer"
+        >
+          <!-- Content -->
+          <div class="flex-1">
+            <h2 class="text-lg lg:text-base xl:text-xl font-black uppercase -tracking-tight text-gray-900 leading-tight mb-4">
+              {pass.passType}
+            </h2>
+            <p class="text-sm font-bold uppercase tracking-wider text-gray-400 mb-2">
+              {pass.owner}
+            </p>
+            <p class="text-sm font-semibold text-gray-400">
+              {pass.availableDates}
+            </p>
           </div>
-          <div class="price">
-            <span class="currency">$</span>
-            <strong class="amount">{pass.price}</strong>
-            <span class="period">/day</span>
+
+          <!-- Price -->
+          <div class="flex items-center justify-center lg:justify-end xl:justify-center gap-1 flex-shrink-0 mt-6 lg:mt-0 xl:mt-4 text-right">
+            <span class="text-xl lg:text-lg xl:text-2xl font-bold text-gray-400 leading-none">
+              $
+            </span>
+            <strong class="text-5xl lg:text-4xl xl:text-5xl font-black text-gray-400 leading-tight">
+              {pass.price}
+            </strong>
+            <span class="text-base lg:text-sm xl:text-base font-semibold text-gray-400 self-end mb-3 lg:mb-2 xl:mb-3">
+              /day
+            </span>
           </div>
         </a>
       {/each}
@@ -61,339 +90,6 @@
 
 <style>
   :global(body) {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #f5f5f5;
-    color: #1a1a1a;
+    @apply bg-gray-50;
   }
-
-  header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 48px;
-    padding-bottom: 24px;
-    border-bottom: 1px solid #e0e0e0;
-  }
-
-  .header-content {
-    flex: 1;
-  }
-
-  h1 {
-    font-size: 72px;
-    font-weight: 900;
-    letter-spacing: -2px;
-    margin: 0 0 16px 0;
-    color: #1a1a1a;
-    line-height: 0.9;
-  }
-
-  header p {
-    font-size: 24px;
-    color: #666;
-    margin: 0;
-    font-weight: 300;
-  }
-
-  .search-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #eff6ff;
-    border: 1px solid #bfdbfe;
-    border-radius: 8px;
-    padding: 16px 20px;
-    margin-bottom: 32px;
-  }
-
-  .search-info p {
-    margin: 0;
-    color: #1e40af;
-    font-weight: 500;
-  }
-
-  .search-info strong {
-    font-weight: 700;
-    color: #1e3a8a;
-  }
-
-  .clear-search {
-    color: #2563eb;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 14px;
-    transition: all 0.2s;
-  }
-
-  .clear-search:hover {
-    text-decoration: underline;
-  }
-
-  .empty-state {
-    text-align: center;
-    padding: 80px 40px;
-    background: white;
-    border-radius: 8px;
-    border: 2px dashed #e0e0e0;
-  }
-
-  .empty-state p {
-    font-size: 18px;
-    color: #666;
-    margin: 0 0 24px 0;
-  }
-
-  .browse-all {
-    display: inline-block;
-    background: #2563eb;
-    color: white;
-    padding: 12px 24px;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 600;
-    transition: all 0.2s;
-  }
-
-  .browse-all:hover {
-    background: #1d4ed8;
-  }
-
-  .card {
-    background: white;
-    border: 2px solid #d1d5db;
-    padding: 0;
-    text-decoration: none;
-    color: #1a1a1a;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    cursor: pointer;
-    border-radius: 16px;
-    overflow: visible;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    height: auto;
-    position: relative;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    padding: 40px 32px;
-    gap: 32px;
-    min-height: 180px;
-  }
-
-  .card:hover {
-    border-color: #9ca3af;
-  }
-
-  .card-content {
-    padding: 0;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    position: relative;
-    z-index: 1;
-  }
-
-  .card h2 {
-    font-size: 1rem;
-    font-weight: 900;
-    margin: 0 0 16px 0;
-    color: #1f2937;
-    text-transform: uppercase;
-    letter-spacing: -1px;
-    line-height: 1.1;
-  }
-
-  @media (min-width: 640px) {
-    .card h2 {
-      font-size: 1.1rem;
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .card h2 {
-      font-size: 1.25rem;
-    }
-  }
-
-  @media (min-width: 1280px) {
-    .card h2 {
-      font-size: 1.5rem;
-    }
-  }
-
-  .owner {
-    font-size: 14px;
-    color: #9ca3af;
-    margin: 0 0 8px 0;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-  }
-
-  .dates {
-    font-size: 14px;
-    color: #d1d5db;
-    margin: 0;
-    font-weight: 600;
-  }
-
-  .price {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    flex-shrink: 0;
-    text-align: center;
-    min-width: fit-content;
-  }
-
-  .price .currency {
-    font-size: 24px;
-    font-weight: 600;
-    color: #9ca3af;
-    line-height: 1;
-    display: block;
-    align-self: flex-start;
-    margin-top: 8px;
-    position: relative;
-    left: 0.5rem;
-    bottom: 0.5rem;
-  }
-
-  .price .amount {
-    font-size: 60px;
-    font-weight: 900;
-    color: #d1d5db;
-    line-height: 0.9;
-    margin: 0;
-    display: block;
-  }
-
-  .price .period {
-    font-size: 16px;
-    font-weight: 600;
-    color: #9ca3af;
-    display: block;
-    margin: 0;
-    align-self: flex-end;
-    margin-bottom: 12px;
-    position: relative;
-    right: 0.5rem;
-    top: 0.4rem;
-  }
-
-  .grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-
-  /* Mobile - 1 column - full width cards (no sidebar visible) */
-  @media (max-width: 989px) {
-    .grid {
-      grid-template-columns: 1fr;
-      gap: 1rem;
-    }
-  }
-
-  /* Tablet with sidebar - 2 columns
-     Sidebar: 260px
-     Breakpoint: 260px + (2 × card) needs at least 1250px total viewport
-     At 1250px: 260px sidebar + 990px content area = perfect for 2 cols
-  */
-  @media (min-width: 1250px) and (max-width: 1549px) {
-    .grid {
-      grid-template-columns: repeat(2, 1fr);
-      gap: 1.2rem;
-    }
-  }
-
-  /* Large with sidebar - 3 columns
-     At 1550px and above: 260px sidebar + 1290px content = 3 cols comfortably
-  */
-  @media (min-width: 1550px) {
-    .grid {
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1.3rem;
-    }
-  }
-
-  /* Card styling breakpoints - ALSO NEED TO UPDATE */
-
-  @media (max-width: 989px) {
-    .card {
-      padding: 24px 16px;
-      gap: 16px;
-      min-height: 140px;
-    }
-
-    .card h2 {
-      font-size: 1rem;
-    }
-
-    .price .amount {
-      font-size: 40px;
-    }
-
-    .price .currency {
-      font-size: 16px;
-    }
-
-    .price .period {
-      font-size: 12px;
-    }
-  }
-
-  /* 2 columns - bigger cards */
-  @media (min-width: 1250px) and (max-width: 1549px) {
-    .card {
-      padding: 32px 24px;
-      gap: 24px;
-      min-height: 160px;
-    }
-
-    .card h2 {
-      font-size: 1.2rem;
-    }
-
-    .price .amount {
-      font-size: 56px;
-    }
-
-    .price .currency {
-      font-size: 22px;
-    }
-
-    .price .period {
-      font-size: 14px;
-    }
-  }
-
-  /* 3 columns - smaller cards */
-  @media (min-width: 1550px) {
-    .card {
-      padding: 28px 20px;
-      gap: 20px;
-      min-height: 150px;
-    }
-
-    .card h2 {
-      font-size: 1.1rem;
-    }
-
-    .price .amount {
-      font-size: 48px;
-    }
-
-    .price .currency {
-      font-size: 20px;
-    }
-
-    .price .period {
-      font-size: 13px;
-    }
-}
 </style>
