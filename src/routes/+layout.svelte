@@ -245,7 +245,7 @@
       <h2>Willie's Keys</h2>
     </div>
 
-    {#if isLoggedIn}
+    {#if isLoggedIn && !showMobileMenu}
       <!-- Notifications Bell (Desktop + Mobile) -->
       <div class="header-notifications">
         <button 
@@ -901,7 +901,7 @@
   }
 
   .mobile-logo {
-    padding: 16px;
+    padding: 25px;
     border-bottom: 1px solid #f3f4f6;
   }
 
@@ -929,7 +929,6 @@
   }
 
   .mobile-logout {
-    width: 100%;
     padding: 16px 12px;
     border-top: 1px solid #f3f4f6;
   }
