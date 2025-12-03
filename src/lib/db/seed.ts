@@ -140,15 +140,18 @@ export async function seedDatabase() {
         updatedAt: u.updatedAt,
       });
     }
+
+    const userIds = userData.map(u => u.id);
+    const passData = generatePassData(userIds);
+
+    console.log('Inserting users...');
+    await db.insert(user).values(userData).run();
+
+    console.log('Inserting accounts...');
     await db.insert(account).values(accountData).run();
     console.log('Accounts inserted successfully');
 
-    // Generate and insert pass data
-    console.log('Generating pass data...');
-    const userIds = userData.map(u => u.id);
-    const passData = generatePassData(userIds);
     console.log(`Generated ${passData.length} passes`);
-
     console.log('Inserting passes...');
     await db.insert(passes).values(passData).run();
     console.log('Passes inserted successfully');
@@ -157,7 +160,6 @@ export async function seedDatabase() {
     console.log(`   - ${userData.length} users created`);
     console.log(`   - ${accountData.length} accounts created (password: password123)`);
     console.log(`   - ${passData.length} passes created`);
-    
     return true
   } catch (error) {
     console.error('Error seeding database:', error);
