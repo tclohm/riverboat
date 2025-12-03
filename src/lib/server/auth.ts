@@ -74,6 +74,7 @@ export async function verifyPassword(platform: any, email: string, password: str
     return null;
   }
 
+
   return foundUser;
 }
 
@@ -118,3 +119,4 @@ export async function deleteSession(platform: any, token: string) {
   const db = await getDbFromClient(platform);
   await db.delete(session).where(eq(session.token, token)).run();
 }
+
