@@ -1,6 +1,6 @@
 import { DatabaseClient } from '$lib/db/client';
 import { user, session, account } from '$lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
 
@@ -23,6 +23,7 @@ export async function createUser(platform: any, email: string, password: string,
   if (existing) {
     throw new Error('Email already exists');
   }
+
   const hashedPassword = await bcrypt.hash(password, 10);
 
   const userId = randomBytes(16).toString('hex');
@@ -51,17 +52,20 @@ export async function createUser(platform: any, email: string, password: string,
 
 export async function verifyPassword(platform: any, email: string, password: string) {
   const db = await getDbFromClient(platform);
+
   // find user
   const foundUser = await db.select().from(user).where(eq(user.email, email)).get();
   if (!foundUser) {
     return null;
   }
 
-  // Get password from account table
+  // Get password from account table -- WE FUCK UP RIGHT HERE
   const foundAccount = await db.select().from(account)
-    .where(eq(account.userId, foundUser.id))
-    .where(eq(account.providerId, 'email'))
-    .get();
+    .where(and(
+      eq(account.userId, foundUser.id),
+      eq(account.providerId, 'email')
+    ))
+    .get(); 
 
   if (!foundAccount || !foundAccount.password) {
     return null;
@@ -71,7 +75,6 @@ export async function verifyPassword(platform: any, email: string, password: str
   if (!valid) {
     return null;
   }
-
 
   return foundUser;
 }
@@ -117,4 +120,3 @@ export async function deleteSession(platform: any, token: string) {
   const db = await getDbFromClient(platform);
   await db.delete(session).where(eq(session.token, token)).run();
 }
-
