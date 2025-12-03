@@ -27,9 +27,6 @@ export const actions = {
     const passType = formData.get('passType')?.toString();
     const availableDates = formData.get('availableDates')?.toString();
 
-    // Use the user's name from the session - no longer accepting owner from form
-    const owner = locals.user.name;
-
     if (!title || !price || !passType || !availableDates) {
       return fail(400, { 
         error: 'All fields are required',
@@ -42,7 +39,6 @@ export const actions = {
       
       await db.insert(passes).values({
         title,
-        owner,
         price,
         passType,
         availableDates,
