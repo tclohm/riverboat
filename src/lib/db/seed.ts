@@ -120,13 +120,7 @@ export async function seedDatabase() {
     const userData = generateUserData();
     console.log(`Generated ${userData.length} users`);
 
-    // Insert users
-    console.log('Inserting users...');
-    await db.insert(user).values(userData).run();
-    console.log('Users inserted successfully');
-
     // Insert accounts (passwords for test users)
-    console.log('Inserting accounts...');
     const accountData = [];
     for (const u of userData) {
       const hashedPassword = await bcrypt.hash('password123', 10);
@@ -144,7 +138,7 @@ export async function seedDatabase() {
     const userIds = userData.map(u => u.id);
     const passData = generatePassData(userIds);
 
-    console.log('Inserting users...');
+    console.log('Inserting users...'); 
     await db.insert(user).values(userData).run();
 
     console.log('Inserting accounts...');

@@ -23,7 +23,6 @@ export async function createUser(platform: any, email: string, password: string,
   if (existing) {
     throw new Error('Email already exists');
   }
-
   const hashedPassword = await bcrypt.hash(password, 10);
 
   const userId = randomBytes(16).toString('hex');
@@ -52,7 +51,6 @@ export async function createUser(platform: any, email: string, password: string,
 
 export async function verifyPassword(platform: any, email: string, password: string) {
   const db = await getDbFromClient(platform);
-
   // find user
   const foundUser = await db.select().from(user).where(eq(user.email, email)).get();
   if (!foundUser) {
