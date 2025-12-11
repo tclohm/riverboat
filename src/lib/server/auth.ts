@@ -59,7 +59,6 @@ export async function verifyPassword(platform: any, email: string, password: str
     return null;
   }
 
-  // Get password from account table -- WE FUCK UP RIGHT HERE
   const foundAccount = await db.select().from(account)
     .where(and(
       eq(account.userId, foundUser.id),
