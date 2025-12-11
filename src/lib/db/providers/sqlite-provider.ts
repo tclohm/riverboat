@@ -19,8 +19,7 @@ export class SQLiteProvider implements DbProvider {
       return this.db;
     } catch (error) {
       console.error('Failed to connect to SQLite database:', error);
-      throw new Error(`SQLite connection error: ${error instanceof Error ? error.message : String(error)};
-      `);
+      throw new Error(`SQLite connection error: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
