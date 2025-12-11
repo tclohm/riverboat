@@ -2,7 +2,7 @@ export interface DbProvider {
   connect(): Promise<any>;
   getDb(): any;
   isConnected(): boolean;
-  disconnect(); Promise<void>;
+  disconnect(): Promise<void>;
 }
 
 // ensure providers and db client has proper typing for all tables in schema
