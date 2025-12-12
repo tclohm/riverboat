@@ -18,9 +18,6 @@
 <div class="container">
   <div class="top-nav">
     <a href="/" class="back">← Back</a>
-    {#if isOwner}
-      <a href="/pass/{pass.id}/edit" class="edit-button">Edit Pass</a> 
-    {/if}
   </div>
 
   <div class="detail">
@@ -518,13 +515,50 @@
     }
   }
 
-  @media (max-width: 480px) {
+  @media (max-width: 968px) {
+    .detail {
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+
+    .booking {
+      position: static;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .container {
+      padding: 0 16px;
+    }
+
+    .top-nav {
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .back {
+      margin-bottom: 0;
+    }
+
+    .edit-button {
+      width: 100%;
+      text-align: center;
+      padding: 12px;
+    }
+
     .info h1 {
-      font-size: 32px;
+      font-size: 28px;
+      margin-bottom: 12px;
     }
 
     .owner {
       font-size: 16px;
+      margin-bottom: 24px;
+    }
+
+    .section {
+      margin-bottom: 32px;
     }
 
     .section h2 {
@@ -532,17 +566,123 @@
     }
 
     .section p {
+      font-size: 15px;
+    }
+
+    .booking {
+      position: static;
+    }
+
+    .price-box {
+      padding: 24px;
+    }
+
+    .price {
+      font-size: 40px;
+      margin-bottom: 20px;
+    }
+
+    .price span {
+      font-size: 20px;
+    }
+
+    .contact-button,
+    .login-button {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+    }
+
+    .modal-backdrop {
+      padding: 16px;
+    }
+
+    .modal-content {
+      width: 100%;
+      max-width: 100%;
+      padding: 24px;
+      border-radius: 2px;
+      max-height: 90vh;
+    }
+
+    .modal-content h2 {
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .form-group input,
+    .form-group textarea {
+      font-size: 14px;
+      padding: 10px 12px;
+    }
+
+    .form-actions {
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .cancel-button,
+    .submit-button {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 15px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .info h1 {
+      font-size: 24px;
+    }
+
+    .owner {
+      font-size: 14px;
+    }
+
+    .section h2 {
+      font-size: 18px;
+    }
+
+    .section p {
+      font-size: 13px;
+    }
+
+    .price {
+      font-size: 32px;
+    }
+
+    .price span {
       font-size: 16px;
     }
 
     .modal-content {
-      width: 95%;
+      padding: 20px;
     }
 
-    .modal-header,
-    .modal-body,
-    .modal-footer {
-      padding: 16px;
+    .modal-content h2 {
+      font-size: 18px;
+    }
+
+    .success-message {
+      padding: 32px 20px;
+    }
+
+    .success-message p {
+      font-size: 14px;
+    }
+
+    .close-button {
+      width: 100%;
+      padding: 12px 16px;
     }
   }
 </style>

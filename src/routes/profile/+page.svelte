@@ -63,9 +63,7 @@
     <div class="profile-card">
       <!-- Avatar Section -->
       <div class="avatar-section">
-        <div class="avatar-large">
-          {data.user?.name?.charAt(0).toUpperCase() || 'U'}
-        </div>
+        <div class="avatar-large">{data.user?.name?.charAt(0).toUpperCase() || 'U'}</div>
         <div class="avatar-info">
           <h2 class="user-name">{data.user?.name || 'User'}</h2>
           <p class="user-email">{data.user?.email || 'user@example.com'}</p>
@@ -104,7 +102,6 @@
             name="name"
             bind:value={formData.name}
             placeholder="Enter your full name"
-            class="form-input"
           />
         </div>
 
@@ -116,7 +113,7 @@
             id="email"
             disabled
             value={formData.email}
-            class="form-input readonly"
+            class="readonly"
           />
           <p class="field-note">Email cannot be changed</p>
         </div>
@@ -130,7 +127,6 @@
             name="phone"
             bind:value={formData.phone}
             placeholder="+1 (555) 123-4567"
-            class="form-input"
           />
         </div>
 
@@ -143,7 +139,6 @@
             name="location"
             bind:value={formData.location}
             placeholder="City, State"
-            class="form-input"
           />
         </div>
 
@@ -155,7 +150,6 @@
             name="bio"
             bind:value={formData.bio}
             placeholder="Tell us about yourself..."
-            class="form-textarea"
             rows="4"
           ></textarea>
           <p class="char-count">{formData.bio.length}/160 characters</p>
@@ -255,9 +249,9 @@
 
     <!-- Danger Zone -->
     <div class="danger-section">
-      <h3>Account Actions</h3>
-     <form method="POST" action="?/deleteAccount" class="danger-form" on:submit={(e) => !confirm('Are you sure? This cannot be undone.') && e.preventDefault()}>
-        <p>Permanently delete your account and all associated data</p>
+      <h3>Danger Zone</h3>
+      <p>Permanently delete your account and all associated data</p>
+      <form method="POST" action="?/deleteAccount" class="danger-form" on:submit={(e) => !confirm('Are you sure? This cannot be undone.') && e.preventDefault()}>
         <button type="submit" class="btn-danger">
           Delete Account
         </button>      
@@ -268,49 +262,43 @@
 
 <style>
   .profile-container {
-    width: 100%;
-    max-width: 100%;
+    max-width: 900px;
     margin: 0 auto;
     padding: 0 16px;
-    box-sizing: border-box;
-  }
-
-  :global(.main-content) {
-    padding: 0;
   }
 
   /* Header */
   .profile-header {
     margin-bottom: 32px;
     padding-bottom: 24px;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 2px solid #d4c4b0;
   }
 
   .header-content h1 {
     margin: 0 0 8px 0;
-    font-size: 28px;
+    font-size: 32px;
     font-weight: 700;
-    color: #1f2937;
+    color: #5a4a3a;
   }
 
   .header-content p {
     margin: 0;
-    color: #6b7280;
+    color: #8b7355;
     font-size: 14px;
   }
 
   /* Profile Card */
   .profile-card {
     background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
+    border: 2px solid #d4c4b0;
+    border-radius: 2px;
     padding: 24px;
     margin-bottom: 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 20px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
   }
 
   .avatar-section {
@@ -323,8 +311,8 @@
   .avatar-large {
     width: 80px;
     height: 80px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 2px;
+    background: #d9a574;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -332,6 +320,7 @@
     font-weight: 700;
     color: white;
     flex-shrink: 0;
+    border: 2px solid #8b7355;
   }
 
   .avatar-info {
@@ -342,22 +331,22 @@
     margin: 0 0 4px 0;
     font-size: 18px;
     font-weight: 700;
-    color: #1f2937;
+    color: #5a4a3a;
   }
 
   .user-email {
     margin: 0 0 8px 0;
     font-size: 14px;
-    color: #6b7280;
+    color: #8b7355;
   }
 
   .member-since {
     margin: 0;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
     font-size: 12px;
-    color: #9ca3af;
+    color: #a0937f;
   }
 
   /* Edit Button */
@@ -366,40 +355,41 @@
     align-items: center;
     gap: 8px;
     padding: 10px 16px;
-    background: #f3f4f6;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
+    background: #e8dcc8;
+    border: 2px solid #d4c4b0;
+    border-radius: 2px;
     cursor: pointer;
     font-size: 14px;
     font-weight: 600;
-    color: #374151;
+    font-family: 'Fredoka', sans-serif;
+    color: #5a4a3a;
     transition: all 0.2s ease;
   }
 
   .edit-toggle-btn:hover {
-    background: #e5e7eb;
-    border-color: #9ca3af;
+    background: #d4c4b0;
+    border-color: #8b7355;
   }
 
   .edit-toggle-btn.editing {
-    background: #fee2e2;
-    border-color: #fca5a5;
-    color: #7f1d1d;
+    background: rgba(200, 90, 84, 0.1);
+    border-color: #c85a54;
+    color: #c85a54;
   }
 
   /* Form */
   .profile-form {
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
+    background: #faf6f0;
+    border: 2px solid #d9a574;
+    border-radius: 2px;
     padding: 24px;
     margin-bottom: 24px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
   }
 
   .profile-form.editing {
-    border-color: #fcd34d;
-    background: #fffbeb;
+    border-color: #d9a574;
+    background: rgba(217, 165, 116, 0.05);
   }
 
   .form-group {
@@ -412,51 +402,61 @@
 
   .form-group label {
     display: block;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
     font-size: 14px;
     font-weight: 600;
-    color: #374151;
+    color: #5a4a3a;
   }
 
-  .form-input,
-  .form-textarea {
+  .form-group input,
+  .form-group textarea {
     width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    font-size: 14px;
-    font-family: inherit;
+    padding: 12px 16px;
+    border: 2px solid #d4c4b0;
+    border-radius: 2px;
+    font-size: 15px;
+    font-family: 'Fredoka', sans-serif;
+    background: white;
+    color: #5a4a3a;
     transition: all 0.2s ease;
+    box-sizing: border-box;
   }
 
-  .form-input:focus,
-  .form-textarea:focus {
+  .form-group input::placeholder,
+  .form-group textarea::placeholder {
+    color: #a0937f;
+  }
+
+  .form-group input:focus,
+  .form-group textarea:focus {
     outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    border-color: #c85a54;
+    box-shadow: 0 0 0 3px rgba(200, 90, 84, 0.1);
+    background: #fff;
   }
 
-  .form-input.readonly {
-    background: #f9fafb;
+  .form-group input.readonly {
+    background: #e8dcc8;
     cursor: not-allowed;
-    color: #6b7280;
+    color: #8b7355;
+    border-color: #d4c4b0;
   }
 
-  .form-textarea {
+  .form-group textarea {
     resize: vertical;
     min-height: 100px;
   }
 
   .field-note {
-    margin: 4px 0 0 0;
+    margin: 6px 0 0 0;
     font-size: 12px;
-    color: #9ca3af;
+    color: #a0937f;
   }
 
   .char-count {
-    margin: 4px 0 0 0;
+    margin: 6px 0 0 0;
     font-size: 12px;
-    color: #9ca3af;
+    color: #a0937f;
   }
 
   .form-actions {
@@ -464,7 +464,7 @@
     gap: 12px;
     margin-top: 24px;
     padding-top: 24px;
-    border-top: 1px solid #e5e7eb;
+    border-top: 2px solid #d4c4b0;
   }
 
   .btn-primary,
@@ -473,67 +473,72 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 16px;
-    border-radius: 8px;
+    padding: 12px 20px;
+    border-radius: 2px;
     border: none;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
+    font-family: 'Fredoka', sans-serif;
     cursor: pointer;
     transition: all 0.2s ease;
   }
 
   .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #d9a574;
     color: white;
+    border: 2px solid #8b7355;
+    flex: 1;
   }
 
   .btn-primary:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    background: #c85a54;
   }
 
   .btn-secondary {
-    background: #f3f4f6;
-    color: #374151;
-    border: 1px solid #d1d5db;
+    background: white;
+    color: #8b7355;
+    border: 2px solid #d4c4b0;
+    flex: 1;
   }
 
   .btn-secondary:hover {
-    background: #e5e7eb;
+    background: #e8dcc8;
+    border-color: #8b7355;
   }
 
   .success-message {
     margin-top: 16px;
     padding: 12px 16px;
-    background: #dcfce7;
-    color: #166534;
-    border-radius: 8px;
+    background: rgba(143, 168, 129, 0.15);
+    color: #5a7a4a;
+    border-radius: 2px;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
+    border-left: 4px solid #8fa881;
   }
 
   /* Profile Details (Display Mode) */
   .profile-details {
     background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
+    border: 2px solid #d4c4b0;
+    border-radius: 2px;
     padding: 24px;
     margin-bottom: 24px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
   }
 
   .details-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 20px;
     margin-bottom: 24px;
   }
 
   .detail-item {
     padding: 16px;
-    background: #f9fafb;
-    border-radius: 8px;
+    background: #faf6f0;
+    border-radius: 2px;
+    border: 1px solid #e5e7eb;
   }
 
   .detail-label {
@@ -541,8 +546,8 @@
     align-items: center;
     gap: 8px;
     font-size: 12px;
-    font-weight: 600;
-    color: #6b7280;
+    font-weight: 700;
+    color: #8b7355;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-bottom: 8px;
@@ -551,19 +556,19 @@
   .detail-value {
     font-size: 16px;
     font-weight: 600;
-    color: #1f2937;
+    color: #5a4a3a;
   }
 
   .bio-section {
     padding-top: 24px;
-    border-top: 1px solid #e5e7eb;
+    border-top: 2px solid #d4c4b0;
   }
 
   .bio-section h3 {
     margin: 0 0 12px 0;
     font-size: 14px;
     font-weight: 700;
-    color: #374151;
+    color: #5a4a3a;
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
@@ -571,25 +576,25 @@
   .bio-section p {
     margin: 0;
     font-size: 14px;
-    color: #4b5563;
+    color: #8b7355;
     line-height: 1.6;
   }
 
   /* Stats Section */
   .stats-section {
     background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
+    border: 2px solid #d4c4b0;
+    border-radius: 2px;
     padding: 24px;
     margin-bottom: 24px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
   }
 
   .stats-section h3 {
     margin: 0 0 20px 0;
     font-size: 16px;
     font-weight: 700;
-    color: #1f2937;
+    color: #5a4a3a;
   }
 
   .stats-grid {
@@ -600,70 +605,70 @@
 
   .stat-card {
     padding: 20px;
-    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-    border-radius: 8px;
+    background: #e8dcc8;
+    border: 2px solid #d4c4b0;
+    border-radius: 2px;
     text-align: center;
   }
 
   .stat-number {
     font-size: 28px;
-    font-weight: 700;
-    color: #667eea;
+    font-weight: 900;
+    color: #d9a574;
     margin-bottom: 8px;
   }
 
   .stat-label {
     font-size: 12px;
     font-weight: 600;
-    color: #6b7280;
+    color: #8b7355;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    margin: 0;
   }
 
   /* Danger Zone */
   .danger-section {
-    background: white;
-    border: 1px solid #fee2e2;
-    border-radius: 12px;
+    background: rgba(200, 90, 84, 0.08);
+    border: 2px solid #c85a54;
+    border-radius: 2px;
     padding: 24px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
   }
 
   .danger-section h3 {
-    margin: 0 0 16px 0;
+    margin: 0 0 8px 0;
     font-size: 16px;
     font-weight: 700;
-    color: #7f1d1d;
+    color: #c85a54;
+  }
+
+  .danger-section p {
+    margin: 0 0 16px 0;
+    font-size: 14px;
+    color: #8b7355;
   }
 
   .danger-form {
     display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-
-  .danger-form p {
-    margin: 0;
-    font-size: 14px;
-    color: #6b7280;
+    gap: 12px;
   }
 
   .btn-danger {
-    background: #dc2626;
+    background: #c85a54;
     color: white;
-    white-space: nowrap;
-    flex-shrink: 0;
+    border: 2px solid #8b7355;
   }
 
   .btn-danger:hover {
-    background: #b91c1c;
-    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+    background: #b84a45;
+    transform: translateY(-2px);
   }
 
   /* Responsive */
   @media (max-width: 768px) {
     .profile-container {
-      padding: 16px;
+      padding: 0 16px;
     }
 
     .profile-card {
@@ -681,7 +686,7 @@
     }
 
     .header-content h1 {
-      font-size: 24px;
+      font-size: 28px;
     }
 
     .details-grid {
@@ -694,7 +699,6 @@
 
     .danger-form {
       flex-direction: column;
-      align-items: stretch;
     }
 
     .btn-danger {
@@ -711,42 +715,4 @@
       justify-content: center;
     }
   }
-
-  @media (max-width: 1024px) {
-    .profile-container {
-      max-width: 100%;
-      padding: 0 16px;
-    }
-
-    .details-grid {
-      grid-template-columns: 1fr 1fr;
-    }
-
-    .stats-grid {
-      grid-template-columns: 1fr 1fr;
-    }
-  }
-
-  @media (max-width: 768px) {
-    .profile-container {
-      padding: 0 16px;
-    }
-
-    .details-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .stats-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .danger-form {
-      flex-direction: column;
-    }
-
-    .btn-danger {
-      width: 100%;
-    }
-  }
-
 </style>
