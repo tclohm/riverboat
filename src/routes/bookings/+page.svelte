@@ -63,8 +63,12 @@
 </svelte:head>
 
 <div class="container">
-  <h1>My Bookings</h1>
-  <p class="subtitle">View the status of your pass requests</p>
+  <header>
+    <div class="header-content">
+      <h1>My Bookings</h1>
+      <p>View the status of your pass requests</p>
+    </div>
+  </header>
   
   <div class="tabs">
     <button 
@@ -73,7 +77,8 @@
       on:click={() => activeTab = 'approved'}
     >
       <Check size={18} />
-      Approved
+      <span>Approved</span>
+      <span class="badge approved">{approvedInquiries.length}</span>
     </button>
     <button 
       class="tab-button" 
@@ -81,7 +86,8 @@
       on:click={() => activeTab = 'pending'}
     >
       <Clock size={18} />
-      Pending
+      <span>Pending</span>
+      <span class="badge pending">{pendingInquiries.length}</span>
     </button>
     <button 
       class="tab-button" 
@@ -89,7 +95,8 @@
       on:click={() => activeTab = 'rejected'}
     >
       <X size={18} />
-      Rejected
+      <span>Rejected</span>
+      <span class="badge rejected">{rejectedInquiries.length}</span>
     </button>
   </div>
 
@@ -106,40 +113,38 @@
         {#each Object.entries(approvedGrouped) as [dateLabel, inquiries]}
           <div class="date-group">
             <h2 class="date-label">{dateLabel}</h2>
-            <div class="scroll-container">
-              <div class="cards-row">
-                {#each inquiries as inquiry (inquiry.id)}
-                  <div class="inquiry-card approved">
-                    <div class="card-header">
-                      <h3>{inquiry.pass?.title || 'A Pass'}</h3>
-                      <span class="status-badge approved">✓ Approved</span>
+            <div class="cards-grid">
+              {#each inquiries as inquiry (inquiry.id)}
+                <div class="booking-card approved">
+                  <div class="card-header">
+                    <h3>{inquiry.pass?.title || 'A Pass'}</h3>
+                    <span class="status-badge approved">✓ Approved</span>
+                  </div>
+                  
+                  <div class="card-body">
+                    <div class="info-item">
+                      <span class="label">Host:</span>
+                      <span class="value">{inquiry.ownerName || 'Unknown'}</span>
                     </div>
-                    
-                    <div class="card-body">
+                    {#if inquiry.requestedDates}
                       <div class="info-item">
-                        <span class="label">Host:</span>
-                        <span class="value">{inquiry.ownerName || 'Unknown'}</span>
+                        <span class="label">Your Dates:</span>
+                        <span class="value">{inquiry.requestedDates}</span>
                       </div>
-                      {#if inquiry.requestedDates}
-                        <div class="info-item">
-                          <span class="label">Your Dates:</span>
-                          <span class="value">{inquiry.requestedDates}</span>
-                        </div>
-                      {/if}
-                      {#if inquiry.contactInfo}
-                        <div class="info-item">
-                          <span class="label">You Provided:</span>
-                          <span class="value">{inquiry.contactInfo}</span>
-                        </div>
-                      {/if}
+                    {/if}
+                    {#if inquiry.contactInfo}
                       <div class="info-item">
-                        <span class="label">Your Message:</span>
-                        <p class="value">{inquiry.message}</p>
+                        <span class="label">You Provided:</span>
+                        <span class="value">{inquiry.contactInfo}</span>
                       </div>
+                    {/if}
+                    <div class="info-item">
+                      <span class="label">Your Message:</span>
+                      <p class="value message-text">{inquiry.message}</p>
                     </div>
                   </div>
-                {/each}
-              </div>
+                </div>
+              {/each}
             </div>
           </div>
         {/each}
@@ -154,38 +159,37 @@
         <div class="empty-state">
           <Clock size={48} />
           <p>No pending requests</p>
+          <a href="/" class="cta-button">Browse More Passes</a>
         </div>
       {:else}
         {#each Object.entries(pendingGrouped) as [dateLabel, inquiries]}
           <div class="date-group">
             <h2 class="date-label">{dateLabel}</h2>
-            <div class="scroll-container">
-              <div class="cards-row">
-                {#each inquiries as inquiry (inquiry.id)}
-                  <div class="inquiry-card pending">
-                    <div class="card-header">
-                      <h3>{inquiry.pass?.title || 'A Pass'}</h3>
-                      <span class="status-badge pending">⏳ Waiting</span>
+            <div class="cards-grid">
+              {#each inquiries as inquiry (inquiry.id)}
+                <div class="booking-card pending">
+                  <div class="card-header">
+                    <h3>{inquiry.pass?.title || 'A Pass'}</h3>
+                    <span class="status-badge pending">⏳ Waiting</span>
+                  </div>
+                  
+                  <div class="card-body">
+                    <div class="info-item">
+                      <span class="label">Host:</span>
+                      <span class="value">{inquiry.ownerName || 'Unknown'}</span>
                     </div>
-                    
-                    <div class="card-body">
+                    {#if inquiry.requestedDates}
                       <div class="info-item">
-                        <span class="label">Host:</span>
-                        <span class="value">{inquiry.ownerName || 'Unknown'}</span>
+                        <span class="label">Your Dates:</span>
+                        <span class="value">{inquiry.requestedDates}</span>
                       </div>
-                      {#if inquiry.requestedDates}
-                        <div class="info-item">
-                          <span class="label">Your Dates:</span>
-                          <span class="value">{inquiry.requestedDates}</span>
-                        </div>
-                      {/if}
-                      <div class="help-text">
-                        The pass owner will review and contact you soon.
-                      </div>
+                    {/if}
+                    <div class="help-text">
+                      The pass owner will review and contact you soon.
                     </div>
                   </div>
-                {/each}
-              </div>
+                </div>
+              {/each}
             </div>
           </div>
         {/each}
@@ -200,39 +204,38 @@
         <div class="empty-state">
           <X size={48} />
           <p>No rejected requests</p>
+          <a href="/" class="cta-button">Browse More Passes</a>
         </div>
       {:else}
         {#each Object.entries(rejectedGrouped) as [dateLabel, inquiries]}
           <div class="date-group">
             <h2 class="date-label">{dateLabel}</h2>
-            <div class="scroll-container">
-              <div class="cards-row">
-                {#each inquiries as inquiry (inquiry.id)}
-                  <div class="inquiry-card rejected">
-                    <div class="card-header">
-                      <h3>{inquiry.pass?.title || 'A Pass'}</h3>
-                      <span class="status-badge rejected">✕ Declined</span>
-                    </div>
-                    
-                    <div class="card-body">
-                      <div class="info-item">
-                        <span class="label">Host:</span>
-                        <span class="value">{inquiry.ownerName || 'Unknown'}</span>
-                      </div>
-                      {#if inquiry.requestedDates}
-                        <div class="info-item">
-                          <span class="label">Requested Dates:</span>
-                          <span class="value">{inquiry.requestedDates}</span>
-                        </div>
-                      {/if}
-                    </div>
-
-                    <div class="card-footer">
-                      <a href="/" class="browse-link">Browse other passes</a>
-                    </div>
+            <div class="cards-grid">
+              {#each inquiries as inquiry (inquiry.id)}
+                <div class="booking-card rejected">
+                  <div class="card-header">
+                    <h3>{inquiry.pass?.title || 'A Pass'}</h3>
+                    <span class="status-badge rejected">✕ Declined</span>
                   </div>
-                {/each}
-              </div>
+                  
+                  <div class="card-body">
+                    <div class="info-item">
+                      <span class="label">Host:</span>
+                      <span class="value">{inquiry.ownerName || 'Unknown'}</span>
+                    </div>
+                    {#if inquiry.requestedDates}
+                      <div class="info-item">
+                        <span class="label">Requested Dates:</span>
+                        <span class="value">{inquiry.requestedDates}</span>
+                      </div>
+                    {/if}
+                  </div>
+
+                  <div class="card-footer">
+                    <a href="/" class="browse-link">Browse other passes</a>
+                  </div>
+                </div>
+              {/each}
             </div>
           </div>
         {/each}
@@ -242,44 +245,53 @@
 </div>
 
 <style>
-  
-  h1 {
-    font-size: 32px;
-    font-weight: 700;
-    margin: 0 0 8px 0;
-    color: #1a1a1a;
-    padding: 0 0 0 24px;
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 16px;
   }
 
-  .subtitle {
-    color: #6b7280;
-    margin: 0 0 32px 0;
-    padding: 0 0 0 24px;
+  header {
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 2px solid #d4c4b0;
+  }
+
+  .header-content h1 {
+    margin: 0 0 8px 0;
+    font-size: 32px;
+    font-weight: 700;
+    color: #5a4a3a;
+  }
+
+  .header-content p {
+    margin: 0;
+    color: #8b7355;
+    font-size: 14px;
   }
   
   .tabs {
     display: flex;
     margin-bottom: 32px;
-    background: white;
-    border-radius: 8px;
-    padding: 4px;
+    background: #e8dcc8;
+    border-radius: 2px;
+    padding: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     gap: 4px;
-    overflow-x: auto;
-    margin-left: 24px;
-    margin-right: 24px;
-    width: calc(100% - 48px);
+    border: 2px solid #d4c4b0;
+    flex-wrap: wrap;
   }
   
   .tab-button {
     padding: 12px 24px;
     background: none;
     border: none;
-    color: #6b7280;
-    font-size: 16px;
+    color: #8b7355;
+    font-size: 15px;
     font-weight: 600;
+    font-family: 'Fredoka', sans-serif;
     cursor: pointer;
-    border-radius: 6px;
+    border-radius: 2px;
     transition: all 0.2s;
     white-space: nowrap;
     display: flex;
@@ -288,12 +300,39 @@
   }
   
   .tab-button:hover {
-    color: #2563eb;
+    background: rgba(217, 165, 116, 0.1);
+    color: #5a4a3a;
   }
   
   .tab-button.active {
-    background: #e6f0fd;
-    color: #2563eb;
+    background: white;
+    color: #5a4a3a;
+    border: 1px solid #d4c4b0;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 6px;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+    color: white;
+  }
+
+  .badge.pending {
+    background: #d9a574;
+  }
+
+  .badge.approved {
+    background: #8fa881;
+  }
+
+  .badge.rejected {
+    background: #c85a54;
   }
   
   .tab-content {
@@ -301,37 +340,40 @@
   }
   
   .empty-state {
-    background: #f9fafb;
-    border: 2px dashed #e5e7eb;
-    border-radius: 8px;
+    background: #e8dcc8;
+    border: 2px dashed #d4c4b0;
+    border-radius: 2px;
     padding: 80px 32px;
     text-align: center;
-    color: #6b7280;
-    margin: 0 24px;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 16px;
+    color: #8b7355;
   }
   
   .empty-state p {
     margin: 0;
     font-size: 18px;
+    font-weight: 600;
+    color: #5a4a3a;
   }
 
   .cta-button {
     display: inline-block;
-    background: #2563eb;
+    background: #d9a574;
     color: white;
     padding: 12px 24px;
-    border-radius: 6px;
+    border-radius: 2px;
     text-decoration: none;
-    font-weight: 600;
-    transition: background 0.2s;
+    font-weight: 700;
+    font-size: 14px;
+    border: 2px solid #8b7355;
+    transition: all 0.2s;
   }
 
   .cta-button:hover {
-    background: #1d4ed8;
+    background: #c85a54;
   }
 
   .date-group {
@@ -339,70 +381,45 @@
   }
 
   .date-label {
-    font-size: 24px;
+    font-size: 16px;
     font-weight: 700;
     margin: 0 0 16px 0;
-    color: #1a1a1a;
-    padding: 0 24px;
+    color: #5a4a3a;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
-  .scroll-container {
-    overflow-x: auto;
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .scroll-container::-webkit-scrollbar {
-    height: 8px;
-  }
-
-  .scroll-container::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .scroll-container::-webkit-scrollbar-thumb {
-    background: #d0d0d0;
-    border-radius: 4px;
-  }
-
-  .scroll-container::-webkit-scrollbar-thumb:hover {
-    background: #999;
-  }
-  
-  .cards-row {
-    display: flex;
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 16px;
-    padding: 0 24px;
-    padding-bottom: 8px;
   }
   
-  .inquiry-card {
+  .booking-card {
     background: white;
-    border-radius: 8px;
-    min-width: 280px;
-    width: 280px;
+    border-radius: 2px;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    border: 1px solid #e5e7eb;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    border: 2px solid #d4c4b0;
     transition: all 0.2s;
   }
 
-  .inquiry-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  .booking-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
     transform: translateY(-4px);
   }
   
-  .inquiry-card.pending {
-    border-top: 3px solid #f59e0b;
+  .booking-card.pending {
+    border-top: 4px solid #d9a574;
   }
 
-  .inquiry-card.approved {
-    border-top: 3px solid #10b981;
+  .booking-card.approved {
+    border-top: 4px solid #8fa881;
   }
 
-  .inquiry-card.rejected {
-    border-top: 3px solid #ef4444;
+  .booking-card.rejected {
+    border-top: 4px solid #c85a54;
   }
   
   .card-header {
@@ -411,83 +428,88 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 8px;
+    gap: 12px;
   }
 
   .card-header h3 {
     margin: 0;
     font-size: 16px;
     font-weight: 600;
-    color: #1a1a1a;
+    color: #5a4a3a;
     flex: 1;
   }
   
   .status-badge {
     display: inline-block;
-    padding: 6px 12px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 2px;
+    font-size: 11px;
+    font-weight: 700;
     flex-shrink: 0;
     white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
   
   .status-badge.pending {
-    background: #fef3c7;
-    color: #d97706;
+    background: rgba(217, 165, 116, 0.15);
+    color: #8b6f38;
   }
   
   .status-badge.approved {
-    background: #d1fae5;
-    color: #047857;
+    background: rgba(143, 168, 129, 0.15);
+    color: #5a7a4a;
   }
   
   .status-badge.rejected {
-    background: #fee2e2;
-    color: #b91c1c;
+    background: rgba(200, 90, 84, 0.15);
+    color: #8b4545;
   }
   
   .card-body {
-    padding: 12px 16px;
+    padding: 16px;
     flex: 1;
     overflow-y: auto;
     font-size: 13px;
   }
 
   .info-item {
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     display: flex;
     flex-direction: column;
   }
 
   .label {
     font-weight: 600;
-    color: #6b7280;
+    color: #8b7355;
     font-size: 12px;
-    margin-bottom: 2px;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
   .value {
-    color: #1a1a1a;
+    color: #5a4a3a;
     word-break: break-word;
-    line-height: 1.3;
+    line-height: 1.4;
   }
 
-  .info-item.message .value {
-    font-size: 12px;
-    line-height: 1.4;
-    max-height: 60px;
+  .message-text {
+    font-size: 13px;
+    line-height: 1.5;
+    max-height: 80px;
     overflow-y: auto;
   }
 
   .help-text {
-    font-size: 12px;
-    color: #6b7280;
+    font-size: 13px;
+    color: #8b7355;
     font-style: italic;
     margin-top: 8px;
-    padding: 8px;
-    background: #f3f4f6;
-    border-radius: 4px;
+    padding: 12px;
+    background: #faf6f0;
+    border-radius: 2px;
+    border-left: 2px solid #d9a574;
   }
 
   .card-footer {
@@ -497,47 +519,52 @@
   }
 
   .browse-link {
-    font-size: 12px;
-    color: #2563eb;
+    font-size: 13px;
+    color: #d9a574;
     text-decoration: none;
-    font-weight: 600;
+    font-weight: 700;
+    transition: color 0.2s;
   }
 
   .browse-link:hover {
+    color: #c85a54;
     text-decoration: underline;
   }
-  
+
+  /* Responsive */
   @media (max-width: 768px) {
-    h1 {
-      padding: 0 16px;
+    .header-content h1 {
       font-size: 28px;
     }
 
-    .subtitle {
-      padding: 0 16px;
-    }
-    
     .tabs {
-      margin: 0 16px 32px 16px;
-      width: calc(100% - 32px);
+      gap: 4px;
+    }
+
+    .tab-button {
+      padding: 10px 16px;
+      font-size: 13px;
+      gap: 6px;
+    }
+
+    .tab-button span:nth-child(1) {
+      display: none;
+    }
+
+    .cards-grid {
+      grid-template-columns: 1fr;
     }
 
     .empty-state {
-      margin: 0 16px;
+      padding: 60px 24px;
     }
 
     .date-label {
-      padding: 0 16px;
+      font-size: 14px;
     }
 
-    .cards-row {
-      padding: 0 16px;
-      padding-bottom: 8px;
-    }
-
-    .inquiry-card {
-      min-width: 260px;
-      width: 260px;
+    .card-body {
+      font-size: 12px;
     }
   }
 </style>

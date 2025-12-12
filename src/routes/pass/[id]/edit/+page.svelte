@@ -31,7 +31,7 @@
       loading = false;
       await update();
     };
-  }}>
+  }} class="edit-form">
     <div class="form-grid">
       <div class="form-group">
         <label for="title">Pass Title</label>
@@ -85,22 +85,26 @@
 
   <div class="danger-zone">
     <h2>Delete Pass</h2>
+    <p>This action cannot be undone.</p>
+    
     {#if !showDeleteConfirm}
       <button type="button" class="delete-button" on:click={toggleConfirm}>
-        Delete Pass
+        Delete This Pass
       </button>
     {:else}
-      <p class="confirm-text">Are you sure? This action cannot be undone.</p>
-      
-      <div class="confirm-buttons">
-        <button type="button" class="cancel-delete" on:click={cancelDelete}>
-          Cancel
-        </button>
-        <form method="POST" action="?/delete" use:enhance>
-          <button type="submit" class="confirm-delete">
-            Yes, Delete
+      <div class="confirm-section">
+        <p class="confirm-text">Are you absolutely sure? This will permanently delete your pass.</p>
+        
+        <div class="confirm-buttons">
+          <button type="button" class="cancel-delete" on:click={cancelDelete}>
+            Cancel
           </button>
-        </form>
+          <form method="POST" action="?/delete" use:enhance>
+            <button type="submit" class="confirm-delete">
+              Yes, Delete Permanently
+            </button>
+          </form>
+        </div>
       </div>
     {/if}
   </div>
@@ -108,12 +112,18 @@
 
 <style>
   :global(body) {
-    background-color: #f5f5f5;
+    background-color: #faf6f0;
+  }
+
+  .container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 0 16px;
   }
 
   .back {
     display: inline-block;
-    color: #666;
+    color: #8b7355;
     text-decoration: none;
     font-size: 14px;
     margin-bottom: 32px;
@@ -121,17 +131,17 @@
   }
 
   .back:hover {
-    color: #2563eb;
+    color: #5a4a3a;
   }
 
   h1 {
     font-size: 32px;
     font-weight: 700;
     margin: 0 0 40px 0;
-    color: #1a1a1a;
+    color: #5a4a3a;
   }
 
-  form {
+  .edit-form {
     display: flex;
     flex-direction: column;
     gap: 24px;
@@ -147,49 +157,64 @@
   .form-group {
     display: flex;
     flex-direction: column;
+    gap: 8px;
   }
 
   label {
     display: block;
     font-size: 14px;
-    font-weight: 500;
-    color: #999;
-    margin-bottom: 8px;
+    font-weight: 600;
+    color: #5a4a3a;
   }
 
-  input, select {
+  input[type="text"],
+  input[type="number"],
+  select {
     width: 100%;
-    padding: 16px;
-    border: 1px solid #d0d0d0;
-    border-radius: 8px;
-    font-size: 16px;
-    font-family: inherit;
-    background: white;
-    transition: border-color 0.2s;
+    padding: 12px 16px;
+    border: 2px solid #d4c4b0;
+    border-radius: 2px;
+    font-size: 15px;
+    font-family: 'Fredoka', sans-serif;
+    background: #faf6f0;
+    color: #5a4a3a;
+    transition: all 0.2s ease;
     box-sizing: border-box;
   }
 
-  input:focus, select:focus {
+  input[type="text"]::placeholder,
+  input[type="number"]::placeholder {
+    color: #a0937f;
+  }
+
+  input[type="text"]:focus,
+  input[type="number"]:focus,
+  select:focus {
     outline: none;
-    border-color: #2563eb;
+    border-color: #c85a54;
+    box-shadow: 0 0 0 3px rgba(200, 90, 84, 0.1);
+    background: #fff;
   }
 
   .save-button {
     width: 100%;
-    background: #2563eb;
+    background: #d9a574;
     color: white;
-    border: none;
-    padding: 16px;
-    border-radius: 8px;
-    font-size: 18px;
-    font-weight: 600;
+    border: 2px solid #8b7355;
+    padding: 14px 16px;
+    border-radius: 2px;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: 'Fredoka', sans-serif;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s;
     margin-top: 8px;
   }
 
   .save-button:hover:not(:disabled) {
-    background: #1d4ed8;
+    background: #c85a54;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   }
 
   .save-button:disabled {
@@ -197,43 +222,60 @@
     cursor: not-allowed;
   }
 
+  .save-button:active {
+    transform: translateY(0);
+  }
+
+  /* Danger Zone */
   .danger-zone {
-    background: white;
-    border: 2px solid #fecaca;
-    border-radius: 8px;
+    background: rgba(200, 90, 84, 0.08);
+    border: 2px solid #c85a54;
+    border-radius: 2px;
     padding: 24px;
     margin-top: 48px;
   }
 
   .danger-zone h2 {
-    font-size: 18px;
+    margin: 0 0 8px 0;
+    font-size: 20px;
     font-weight: 700;
-    color: #dc2626;
+    color: #c85a54;
+  }
+
+  .danger-zone p {
     margin: 0 0 16px 0;
+    color: #8b7355;
+    font-size: 14px;
   }
 
   .delete-button {
     background: white;
-    color: #dc2626;
-    border: 1px solid #dc2626;
+    color: #c85a54;
+    border: 2px solid #c85a54;
     padding: 12px 24px;
-    border-radius: 8px;
+    border-radius: 2px;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
+    font-family: 'Fredoka', sans-serif;
     cursor: pointer;
     transition: all 0.2s;
   }
 
   .delete-button:hover {
-    background: #ef4444;
+    background: #c85a54;
     color: white;
   }
 
+  .confirm-section {
+    margin-top: 16px;
+  }
+
   .confirm-text {
-    color: #666;
-    font-weight: 500;
-    font-size: 14px;
     margin: 0 0 16px 0;
+    color: #5a4a3a;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1.6;
   }
 
   .confirm-buttons {
@@ -242,43 +284,41 @@
   }
 
   .confirm-buttons form {
-    padding: 0;
-    border: none;
-    background: none;
     margin: 0;
   }
 
+  .cancel-delete,
   .confirm-delete {
-    background: #ef4444;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-size: 14px;
+    padding: 10px 20px;
+    border-radius: 2px;
     font-weight: 600;
+    font-size: 14px;
+    font-family: 'Fredoka', sans-serif;
+    border: none;
     cursor: pointer;
-    transition: background 0.2s;
-  }
-
-  .confirm-delete:hover {
-    background: #dc2626;
+    transition: all 0.2s;
+    flex: 1;
   }
 
   .cancel-delete {
     background: white;
-    color: #666;
-    border: 1px solid #d0d0d0;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
+    color: #8b7355;
+    border: 2px solid #d4c4b0;
   }
 
   .cancel-delete:hover {
-    border-color: #1a1a1a;
-    color: #1a1a1a;
+    background: #d4c4b0;
+    color: #5a4a3a;
+  }
+
+  .confirm-delete {
+    background: #c85a54;
+    color: white;
+    border: 2px solid #8b7355;
+  }
+
+  .confirm-delete:hover {
+    background: #b84a45;
   }
 
   @media (max-width: 768px) {
@@ -294,6 +334,15 @@
     .form-grid {
       grid-template-columns: 1fr;
       gap: 20px;
+    }
+
+    .confirm-buttons {
+      flex-direction: column;
+    }
+
+    .cancel-delete,
+    .confirm-delete {
+      width: 100%;
     }
   }
 </style>
