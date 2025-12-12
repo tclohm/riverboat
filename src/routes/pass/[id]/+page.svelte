@@ -1,6 +1,6 @@
 <script lang="ts">
-  import DateRangePicker from '$lib/components/DateRangePicker.svelte';
   import Calendar from '$lib/components/Calendar.svelte';
+  import InteractiveCalendar from '$lib/components/InteractiveCalendar.svelte';
   import { X } from '@lucide/svelte';
   export let data;
   const { pass } = data;
@@ -9,6 +9,11 @@
   let showInquiryForm = false;
   let formSubmitting = false;
   let formSuccess = false;
+  let selectedDateRange = '';
+
+  function handleDateRangeSelect(startDate: string, endDate: string) {
+    selectedDateRange = `${startDate} - ${endDate}`;
+  }
 </script>
 
 <svelte:head>
@@ -125,7 +130,7 @@
           <div class="modal-body">
             <div class="form-group">
               <label for="requestedDates">When would you like to use this pass?</label>
-              <DateRangePicker />
+              <InteractiveCalendar onDateRangeSelect={handleDateRangeSelect} />
             </div>
 
             <div class="form-group">
@@ -153,6 +158,7 @@
         
           <input type="hidden" name="passId" value={data.pass.id} />
           <input type="hidden" name="receiverUserId" value={data.pass.userId} />
+          <input type="hidden" name="requestedDates" value={selectedDateRange} />
         
           <div class="modal-footer">
             <button 
