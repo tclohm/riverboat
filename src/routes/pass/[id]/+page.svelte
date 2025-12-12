@@ -1,5 +1,6 @@
 <script lang="ts">
   import DateRangePicker from '$lib/components/DateRangePicker.svelte';
+  import Calendar from '$lib/components/Calendar.svelte';
   import { X } from '@lucide/svelte';
   export let data;
   const { pass } = data;
@@ -18,9 +19,10 @@
   <div class="top-nav">
     <a href="/" class="back">← Back</a>
     {#if isOwner}
-    <a href="/pass/{pass.id}/edit" class="edit-button">Edit Pass</a> 
+      <a href="/pass/{pass.id}/edit" class="edit-button">Edit Pass</a> 
     {/if}
   </div>
+
   <div class="detail">
     <div class="info">
       <h1>{pass.passType}</h1>
@@ -30,6 +32,11 @@
         <h2>Available Dates</h2>
         <p>{pass.availableDates}</p>
       </div>
+
+      <div class="section">
+        <h2>About This Pass</h2>
+        <p>This is a wonderful opportunity to experience something special. Contact the host to learn more and discuss your specific needs.</p>
+      </div>
     </div>
     
     <div class="booking">
@@ -37,7 +44,7 @@
         <div class="price">${pass.price}<span>/day</span></div>
         <div class="pass-actions">
           {#if data.user && isOwner}
-            <a href="/pass/{data.pass.id}/edit" class="edit-button">Edit Pass</a>
+            <a href="/pass/{data.pass.id}/edit" class="edit-button-full">Edit Pass</a>
           {:else if data.user && !isOwner}
             <button 
               class="contact-button" 
@@ -46,13 +53,14 @@
             >
               Request This Pass
             </button>
-        {:else}
-          <a href="/login?returnTo=/pass/{data.pass.id}" class="login-button">Login to Request</a>
-        {/if}
+          {:else}
+            <a href="/login?returnTo=/pass/{data.pass.id}" class="login-button">Login to Request</a>
+          {/if}
+        </div>
+        <Calendar />
       </div>
     </div>
   </div>
-</div>
 </div>
 
 
@@ -69,11 +77,21 @@
       on:click|stopPropagation
       role="presentation"
     >
-      <h2>Request {data.pass.title}</h2>
+      <div class="modal-header">
+        <h2>Request {data.pass.title}</h2>
+        <button
+          type="button"
+          class="modal-close"
+          on:click={() => showInquiryForm = false}
+          aria-label="Close"
+        >
+          <X size={24} />
+        </button>
+      </div>
       
       {#if formSuccess}
         <div class="success-message">
-          <p>Your request has been sent to the owner. They will be notified and can contact you about using this pass.</p>
+          <p>✓ Your request has been sent! The owner will review and contact you soon.</p>
           <button 
             type="button" 
             class="close-button"
@@ -81,7 +99,6 @@
               showInquiryForm = false;
               formSuccess = false;
             }}
-            aria-label="Close modal"
           >
             Close
           </button>
@@ -102,70 +119,70 @@
                 formSuccess = true;
               }
             } catch (error) { 
-              console.error('Failed to submut request:', error);
+              console.error('Failed to submit request:', error);
             } finally { 
               formSubmitting = false;
             }
           }}>
+          
+          <div class="modal-body">
             <div class="form-group">
               <label for="requestedDates">When would you like to use this pass?</label>
               <DateRangePicker />
             </div>
 
-          
             <div class="form-group">
               <label for="contactInfo">Preferred Contact Method</label>
               <input 
                 type="text" 
                 id="contactInfo" 
                 name="contactInfo" 
-                placeholder="e.g. Phone: 555-123-4567 or Email: name@example.com" 
+                placeholder="Phone or Email" 
                 required
               />
             </div>
           
             <div class="form-group">
-              <label for="message">Message to the Owner</label>
+              <label for="message">Message to the Host</label>
               <textarea 
                 id="message" 
                 name="message" 
                 rows="4" 
-                placeholder="Introduce yourself and provide any additional details about your request." 
+                placeholder="Tell them about yourself..." 
                 required
               ></textarea>
             </div>
-          
-            <input type="hidden" name="passId" value={data.pass.id} />
-            <input type="hidden" name="receiverUserId" value={data.pass.userId} />
-          
-            <div class="form-actions">
-              <button 
-                type="button" 
-                class="cancel-button"
-                on:click={() => showInquiryForm = false}
-              >
-                Cancel
-              </button>
-              <button 
-                type="submit" 
-                class="submit-button"
-                disabled={formSubmitting}
-              >
-                {formSubmitting ? 'Sending...' : 'Send Request'}
-              </button>
-            </div>
-          </form>
-        {/if}
-
+          </div>
+        
+          <input type="hidden" name="passId" value={data.pass.id} />
+          <input type="hidden" name="receiverUserId" value={data.pass.userId} />
+        
+          <div class="modal-footer">
+            <button 
+              type="button" 
+              class="cancel-button"
+              on:click={() => showInquiryForm = false}
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit" 
+              class="submit-button"
+              disabled={formSubmitting}
+            >
+              {formSubmitting ? 'Sending...' : 'Send Request'}
+            </button>
+          </div>
+        </form>
+      {/if}
     </div>
   </div>
 {/if}
 
 <style>
-
   .back {
     display: inline-block;
-    color: #666;
+    color: #8b7355;
     text-decoration: none;
     font-size: 16px;
     margin-bottom: 40px;
@@ -173,7 +190,7 @@
   }
 
   .back:hover {
-    color: #2563eb;
+    color: #5a4a3a;
   }
 
   .detail {
@@ -186,12 +203,12 @@
     font-size: 48px;
     font-weight: 900;
     margin: 0 0 16px 0;
-    color: #1a1a1a;
+    color: #5a4a3a;
   }
 
   .owner {
     font-size: 20px;
-    color: #666;
+    color: #8b7355;
     margin: 0 0 40px 0;
   }
 
@@ -203,13 +220,14 @@
     font-size: 24px;
     font-weight: 700;
     margin: 0 0 12px 0;
-    color: #1a1a1a;
+    color: #5a4a3a;
   }
 
   .section p {
     font-size: 18px;
-    color: #666;
+    color: #8b7355;
     margin: 0;
+    line-height: 1.6;
   }
 
   .booking {
@@ -219,56 +237,63 @@
   }
 
   .price-box {
-    background: white;
-    border: 2px solid #e0e0e0;
+    background: #e8dcc8;
+    border: 2px solid #8b7355;
     padding: 32px;
+    border-radius: 2px;
   }
 
   .price {
     font-size: 48px;
     font-weight: 900;
-    color: #2563eb;
+    color: #d9a574;
     margin: 0 0 24px 0;
   }
 
   .price span {
     font-size: 24px;
     font-weight: 400;
-    color: #666;
+    color: #8b7355;
   }
 
+  .pass-actions {
+    display: flex;
+    flex-direction: column;
+  }
 
-  button {
+  .contact-button,
+  .login-button,
+  .edit-button,
+  .edit-button-full {
     width: 100%;
-    background: #2563eb;
+    background: #d9a574;
     color: white;
-    border: none;
+    border: 2px solid #8b7355;
     padding: 16px;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 700;
+    font-family: 'Fredoka', sans-serif;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s;
+    border-radius: 2px;
+    text-decoration: none;
+    text-align: center;
   }
 
-  button:hover {
-    background: #1d4ed8;
+  .contact-button:hover,
+  .login-button:hover,
+  .edit-button:hover,
+  .edit-button-full:hover {
+    background: #c85a54;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   }
 
-  .cancel-button {
-    width: 100%;
-    background: #fee2e2;
-    color: #7f1d1d;
-    border: none;
-    padding: 16px;
-    font-size: 18px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background 0.2s;  
-    border-radius: 0.5rem;
-  }
-
-  .cancel-button:hover {
-    background: #fecaca;
+  .contact-button:active,
+  .login-button:active,
+  .edit-button:active,
+  .edit-button-full:active {
+    transform: translateY(0);
   }
 
   .top-nav {
@@ -279,17 +304,19 @@
   }
 
   .edit-button {
-    background-color: #2563eb; 
+    background-color: #d9a574;
     color: white;
     padding: 10px 20px;
     text-decoration: none;
     font-size: 14px;
     font-weight: 600;
-    transition: background-color 0.2s;
+    border: 2px solid #8b7355;
+    border-radius: 2px;
+    transition: all 0.2s;
   }
 
   .edit-button:hover {
-    background-color: #1d4ed8;
+    background-color: #c85a54;
   }
 
   .modal-backdrop {
@@ -306,113 +333,178 @@
   }
   
   .modal-content {
-    background: white;
-    border-radius: 12px;
-    padding: 40px 60px;
+    background: #e8dcc8;
+    border: 2px solid #8b7355;
+    border-radius: 2px;
     width: 90%;
     max-width: 500px;
-    position: relative;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     max-height: 90vh;
     overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px;
+    border-bottom: 2px solid #d4c4b0;
+  }
+
+  .modal-header h2 {
+    margin: 0;
+    font-size: 24px;
+    color: #5a4a3a;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    color: #8b7355;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+  }
+
+  .modal-close:hover {
+    color: #5a4a3a;
   }
   
-  .modal-content h2 {
-    margin-top: 0;
-    margin-bottom: 24px;
-    font-size: 24px;
-    color: #1a1a1a;
+  .modal-body {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    flex: 1;
   }
   
   .form-group {
-    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
   
   .form-group label {
     display: block;
-    margin-bottom: 8px;
     font-weight: 600;
-    color: #333;
+    color: #5a4a3a;
+    font-size: 14px;
   }
   
   .form-group input,
   .form-group textarea {
     width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 16px;
-    font-family: inherit;
+    padding: 12px 16px;
+    border: 2px solid #d4c4b0;
+    border-radius: 2px;
+    font-size: 15px;
+    font-family: 'Fredoka', sans-serif;
+    background: #faf6f0;
+    color: #5a4a3a;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+  }
+
+  .form-group input::placeholder,
+  .form-group textarea::placeholder {
+    color: #a0937f;
+  }
+  
+  .form-group input:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: #c85a54;
+    box-shadow: 0 0 0 3px rgba(200, 90, 84, 0.1);
+    background: #fff;
   }
   
   .form-group textarea {
     resize: vertical;
   }
-  
-  .form-actions {
+
+  .modal-footer {
     display: flex;
     justify-content: flex-end;
     gap: 12px;
-    margin-top: 24px;
+    padding: 16px 24px;
+    border-top: 2px solid #d4c4b0;
+  }
+  
+  .submit-button,
+  .cancel-button {
+    padding: 10px 20px;
+    border-radius: 2px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 2px solid #8b7355;
+    font-family: 'Fredoka', sans-serif;
+    transition: all 0.2s;
   }
   
   .submit-button {
-    padding: 10px 20px;
-    background: #2563eb;
+    background: #d9a574;
     color: white;
-    border: none;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
   }
   
   .submit-button:hover:not(:disabled) {
-    background: #1d4ed8;
+    background: #c85a54;
   }
   
   .submit-button:disabled {
-    opacity: 0.7;
+    opacity: 0.6;
     cursor: not-allowed;
+  }
+
+  .cancel-button {
+    background: #d4c4b0;
+    color: #5a4a3a;
+  }
+
+  .cancel-button:hover {
+    background: #c85a54;
+    color: white;
   }
   
   .success-message {
-    text-align: center;
     padding: 40px;
-    background: #d1fae5;
-    border-radius: 8px;
-    margin: 24px 0;
+    background: rgba(139, 168, 129, 0.1);
+    border-radius: 2px;
+    margin: 24px;
+    text-align: center;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
 
   .success-message p {
-    color: #065f46;
-    margin: 0 0 24px 0;
+    color: #5a7a4a;
     font-size: 16px;
     line-height: 1.6;
+    margin: 0 0 24px 0;
   }
 
   .close-button {
-    background: #10b981;
+    background: #8fa881;
     color: white;
-    border: none;
+    border: 2px solid #6b7d60;
     padding: 12px 32px;
-    border-radius: 6px;
-    font-size: 16px;
+    border-radius: 2px;
+    font-size: 14px;
     font-weight: 600;
+    font-family: 'Fredoka', sans-serif;
     cursor: pointer;
-    transition: background 0.2s;
-    width: auto;
-    display: inline-block;
+    transition: all 0.2s;
+    margin: 0 auto;
   }
 
   .close-button:hover {
-    background: #059669;
-  }
-
-  .contact-button:hover,
-  .login-button:hover {
-    background: #1d4ed8;
-    color: white !important;
+    background: #7a8a6f;
   }
 
   @media (max-width: 968px) {
@@ -423,6 +515,34 @@
 
     .booking {
       position: static;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .info h1 {
+      font-size: 32px;
+    }
+
+    .owner {
+      font-size: 16px;
+    }
+
+    .section h2 {
+      font-size: 20px;
+    }
+
+    .section p {
+      font-size: 16px;
+    }
+
+    .modal-content {
+      width: 95%;
+    }
+
+    .modal-header,
+    .modal-body,
+    .modal-footer {
+      padding: 16px;
     }
   }
 </style>
