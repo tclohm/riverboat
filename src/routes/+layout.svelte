@@ -425,20 +425,20 @@
   .admin-layout {
     display: flex;
     min-height: 100vh;
-    background: #f9fafb;
+    background: #faf6f0;
   }
 
   /* ===== SIDEBAR ===== */
   .sidebar {
     width: 260px;
-    background: white;
-    border-right: 1px solid #e5e7eb;
+    background: #e8dcc8;
+    border-right: 2px solid #8b7355;
     display: flex;
     flex-direction: column;
     height: 100vh;
     position: sticky;
     top: 0;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.08);
   }
 
   /* Logo Section */
@@ -447,7 +447,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    border-bottom: 1px solid #f3f4f6;
+    border-bottom: 2px solid #d4c4b0;
   }
 
   .logo-icon {
@@ -457,15 +457,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 10px;
+    background: #d9a574;
+    border: 2px solid #8b7355;
+    border-radius: 3px;
+    color: white;
   }
 
   .logo-text h1 {
     margin: 0;
     font-size: 16px;
     font-weight: 700;
-    color: #1f2937;
+    color: #5a4a3a;
   }
 
   /* Navigation */
@@ -481,28 +483,30 @@
     align-items: center;
     gap: 12px;
     padding: 10px 12px;
-    color: #6b7280;
+    color: #8b7355;
     text-decoration: none;
-    border-radius: 6px;
+    border-radius: 2px;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
     position: relative;
+    border: 1px solid transparent;
   }
 
   .nav-item:hover {
-    background: #f3f4f6;
-    color: #1f2937;
+    background: rgba(212, 196, 176, 0.5);
+    color: #5a4a3a;
   }
 
   .nav-item.active {
-    background: #eff6ff;
-    color: #2563eb;
+    background: #d9a574;
+    color: white;
+    border: 1px solid #8b7355;
   }
 
   .notification-badge {
-    background: #ef4444;
+    background: #c85a54;
     color: white;
     font-size: 10px;
     font-weight: 700;
@@ -526,24 +530,24 @@
   /* Divider */
   .nav-divider {
     height: 1px;
-    background: #f3f4f6;
+    background: linear-gradient(90deg, transparent, #d4c4b0, transparent);
     margin: 4px 0;
+    opacity: 0.6;
   }
 
   /* Action Items */
   .action-item {
-    background: #fef3c7;
-    color: #92400e;
+    background: #d9a574;
+    color: white;
+    border: 1px solid #8b7355;
   }
 
   .action-item:hover {
-    background: #fde68a;
-    color: #78350f;
+    filter: brightness(1.1);
   }
 
   .action-item.active {
-    background: #fcd34d;
-    color: #451a03;
+    filter: brightness(0.95);
   }
 
   /* Spacer */
@@ -554,10 +558,11 @@
   /* User Section */
   .user-section {
     padding: 16px 8px;
-    border-top: 1px solid #f3f4f6;
+    border-top: 2px solid #d4c4b0;
     display: flex;
     flex-direction: column;
     gap: 12px;
+    background: rgba(212, 196, 176, 0.3);
   }
 
   .user-info {
@@ -570,8 +575,8 @@
   .user-avatar {
     width: 40px;
     height: 40px;
-    border-radius: 8px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 2px;
+    background: #d9a574;
     color: white;
     display: flex;
     align-items: center;
@@ -579,6 +584,7 @@
     font-weight: 600;
     font-size: 16px;
     flex-shrink: 0;
+    border: 2px solid #8b7355;
   }
 
   .user-details {
@@ -589,7 +595,7 @@
     margin: 0;
     font-size: 14px;
     font-weight: 600;
-    color: #1f2937;
+    color: #5a4a3a;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -598,7 +604,7 @@
   .user-email {
     margin: 0;
     font-size: 12px;
-    color: #9ca3af;
+    color: #8b7355;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -614,10 +620,10 @@
     align-items: center;
     gap: 12px;
     padding: 10px 12px;
-    background: #fee2e2;
-    color: #991b1b;
-    border: none;
-    border-radius: 6px;
+    background: #c85a54;
+    color: white;
+    border: 2px solid #8b7355;
+    border-radius: 2px;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
@@ -625,8 +631,7 @@
   }
 
   .logout-button:hover {
-    background: #fecaca;
-    color: #7f1d1d;
+    filter: brightness(1.1);
   }
 
   .logout-label {
@@ -638,23 +643,25 @@
   /* Login Prompt Section (Logged Out) */
   .login-prompt-section {
     padding: 16px 12px;
-    border-top: 1px solid #f3f4f6;
+    border-top: 2px solid #d4c4b0;
     display: flex;
     flex-direction: column;
     gap: 12px;
+    background: rgba(217, 165, 116, 0.2);
   }
 
   .login-prompt-content {
-    background: #fef3c7;
-    border-radius: 8px;
+    background: #d9a574;
+    border-radius: 2px;
     padding: 12px;
+    border: 1px solid #8b7355;
   }
 
   .login-prompt-text {
     margin: 0;
     font-size: 13px;
     font-weight: 500;
-    color: #92400e;
+    color: white;
     line-height: 1.4;
   }
 
@@ -664,10 +671,10 @@
     justify-content: center;
     gap: 8px;
     padding: 10px 12px;
-    background: #2563eb;
+    background: #d9a574;
     color: white;
-    border: none;
-    border-radius: 6px;
+    border: 2px solid #8b7355;
+    border-radius: 2px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
@@ -676,7 +683,7 @@
   }
 
   .login-button:hover {
-    background: #1d4ed8;
+    filter: brightness(1.1);
   }
 
   .signup-button {
@@ -684,10 +691,10 @@
     align-items: center;
     justify-content: center;
     padding: 10px 12px;
-    background: white;
-    color: #2563eb;
-    border: 1px solid #2563eb;
-    border-radius: 6px;
+    background: #faf6f0;
+    color: #8b7355;
+    border: 2px solid #d4c4b0;
+    border-radius: 2px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
@@ -696,7 +703,8 @@
   }
 
   .signup-button:hover {
-    background: #eff6ff;
+    background: #e8dcc8;
+    border-color: #8b7355;
   }
 
   /* Main Content */
@@ -707,6 +715,7 @@
     overflow: auto;
     position: relative;
     padding: 60px 32px;
+    background: #faf6f0;
   }
 
   /* Mobile Header */
@@ -716,21 +725,21 @@
     justify-content: space-between;
     gap: 16px;
     padding: 16px;
-    background: white;
-    border-bottom: 1px solid #e5e7eb;
+    background: #e8dcc8;
+    border-bottom: 2px solid #d4c4b0;
   }
 
   .mobile-header h2 {
     margin: 0;
     font-size: 16px;
-    color: #1f2937;
+    color: #5a4a3a;
     flex: 1;
   }
 
   .mobile-menu-toggle {
     background: none;
     border: none;
-    color: #6b7280;
+    color: #8b7355;
     cursor: pointer;
     padding: 8px;
     display: flex;
@@ -739,8 +748,8 @@
   }
 
   .mobile-menu-toggle:hover {
-    background: #f3f4f6;
-    color: #1f2937;
+    background: rgba(212, 196, 176, 0.5);
+    color: #5a4a3a;
   }
 
   /* Header Notifications (Desktop + Mobile) */
@@ -755,27 +764,27 @@
   .notifications-bell {
     background: none;
     border: none;
-    color: #6b7280;
+    color: #8b7355;
     cursor: pointer;
     padding: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
-    border-radius: 6px;
+    border-radius: 2px;
     transition: all 0.2s;
   }
 
   .notifications-bell:hover {
-    background: #f3f4f6;
-    color: #1f2937;
+    background: rgba(212, 196, 176, 0.5);
+    color: #5a4a3a;
   }
 
   .bell-badge {
     position: absolute;
     top: 2px;
     right: 2px;
-    background: #ef4444;
+    background: #c85a54;
     color: white;
     font-size: 10px;
     font-weight: 700;
@@ -793,9 +802,10 @@
     top: calc(100% + 8px);
     right: 0;
     width: 360px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    background: #e8dcc8;
+    border: 2px solid #8b7355;
+    border-radius: 2px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     z-index: 1001;
     max-height: 500px;
     display: flex;
@@ -804,14 +814,14 @@
 
   .dropdown-header {
     padding: 16px;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 2px solid #d4c4b0;
   }
 
   .dropdown-header h3 {
     margin: 0;
     font-size: 16px;
     font-weight: 600;
-    color: #1f2937;
+    color: #5a4a3a;
   }
 
   .notifications-list-dropdown {
@@ -822,13 +832,13 @@
   .empty-notifications {
     padding: 48px 24px;
     text-align: center;
-    color: #9ca3af;
+    color: #8b7355;
     font-size: 14px;
   }
 
   .notification-item {
     padding: 16px;
-    border-bottom: 1px solid #f3f4f6;
+    border-bottom: 1px solid #d4c4b0;
     display: flex;
     gap: 12px;
     align-items: start;
@@ -839,7 +849,7 @@
   }
 
   .notification-item:hover {
-    background: #f9fafb;
+    background: rgba(212, 196, 176, 0.3);
   }
 
   .notification-item:last-child {
@@ -855,25 +865,25 @@
     margin: 0 0 4px 0;
     font-size: 14px;
     font-weight: 600;
-    color: #1f2937;
+    color: #5a4a3a;
   }
 
   .notification-content p {
     margin: 0 0 6px 0;
     font-size: 13px;
-    color: #6b7280;
+    color: #8b7355;
     line-height: 1.4;
   }
 
   .notification-time {
     font-size: 12px;
-    color: #9ca3af;
+    color: #a0937f;
   }
 
   .dismiss-btn {
     background: none;
     border: none;
-    color: #9ca3af;
+    color: #a0937f;
     font-size: 24px;
     cursor: pointer;
     padding: 0;
@@ -882,15 +892,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 4px;
+    border-radius: 2px;
     transition: all 0.2s;
     flex-shrink: 0;
     line-height: 1;
   }
 
   .dismiss-btn:hover {
-    background: #fee2e2;
-    color: #ef4444;
+    background: rgba(200, 90, 84, 0.2);
+    color: #c85a54;
   }
 
   .notifications-overlay {
@@ -925,24 +935,25 @@
     width: 100%;
     max-width: 260px;
     height: 100vh;
-    background: white;
+    background: #e8dcc8;
     display: flex;
     flex-direction: column;
     z-index: 50;
     overflow-y: auto;
     overflow-x: hidden;
+    border-right: 2px solid #8b7355;
   }
 
   .mobile-logo {
     padding: 25px;
-    border-bottom: 1px solid #f3f4f6;
+    border-bottom: 2px solid #d4c4b0;
   }
 
   .mobile-logo h2 {
     margin: 0;
     font-size: 16px;
     font-weight: 700;
-    color: #1f2937;
+    color: #5a4a3a;
   }
 
   .mobile-nav {
@@ -955,7 +966,7 @@
 
   .mobile-auth-buttons {
     padding: 16px 12px;
-    border-top: 1px solid #f3f4f6;
+    border-top: 2px solid #d4c4b0;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -963,7 +974,7 @@
 
   .mobile-logout {
     padding: 16px 12px;
-    border-top: 1px solid #f3f4f6;
+    border-top: 2px solid #d4c4b0;
   }
 
   /* Responsive */
@@ -978,7 +989,7 @@
 
     .mobile-header {
       padding: 16px;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 2px solid #d4c4b0;
       display: flex;
     }
 
@@ -1000,6 +1011,5 @@
       left: 8px;
       width: auto;
     }
-
   }
 </style>

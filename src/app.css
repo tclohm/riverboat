@@ -4,3 +4,159 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    /* Warm, earthy color palette */
+    --color-cream: #faf6f0;
+    --color-tan: #e8dcc8;
+    --color-cardboard: #d4c4b0;
+    --color-brown: #8b7355;
+    --color-dark-brown: #5a4a3a;
+    --color-rust: #c85a54;
+    --color-ochre: #d9a574;
+    --color-sage: #8fa881;
+    --color-terracotta: #b8704c;
+    --color-beige: #e3d5c6;
+  }
+
+  body {
+    background-color: var(--color-cream);
+    font-family: 'Fredoka', sans-serif;
+    color: var(--color-dark-brown);
+    /* Subtle paper texture */
+    background-image: 
+      repeating-linear-gradient(
+        0deg,
+        rgba(139, 115, 85, 0.03) 0px,
+        rgba(139, 115, 85, 0.03) 1px,
+        transparent 1px,
+        transparent 2px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        rgba(139, 115, 85, 0.02) 0px,
+        rgba(139, 115, 85, 0.02) 1px,
+        transparent 1px,
+        transparent 2px
+      );
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Fredoka', sans-serif;
+    color: var(--color-dark-brown);
+  }
+}
+
+@layer components {
+  /* Rough border style - slightly imperfect */
+  .rough-border {
+    border: 2px solid var(--color-brown);
+    border-radius: 4px;
+    /* Slight rotation for DIY feel */
+    transform: rotate(0.5deg);
+  }
+
+  /* Cardboard card base */
+  .cardboard-card {
+    background: linear-gradient(135deg, var(--color-tan) 0%, var(--color-beige) 100%);
+    border: 2px solid var(--color-brown);
+    border-radius: 2px;
+    box-shadow: 
+      0 2px 4px rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    position: relative;
+  }
+
+  /* Tape effect - decorative element */
+  .tape-effect::before {
+    content: '';
+    position: absolute;
+    background: linear-gradient(90deg, rgba(255, 200, 120, 0.4) 0%, rgba(255, 220, 150, 0.3) 50%, rgba(255, 200, 120, 0.4) 100%);
+    border: 1px solid rgba(180, 140, 90, 0.3);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Worn/aged effect */
+  .worn-effect {
+    background-image: 
+      radial-gradient(circle at 20% 50%, rgba(139, 115, 85, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(180, 140, 90, 0.05) 0%, transparent 50%);
+  }
+
+  /* Buttons with cardboard feel */
+  .btn-cardboard {
+    background: linear-gradient(135deg, var(--color-ochre) 0%, var(--color-terracotta) 100%);
+    color: white;
+    border: 2px solid var(--color-brown);
+    border-radius: 3px;
+    padding: 10px 20px;
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: relative;
+  }
+
+  .btn-cardboard:hover {
+    transform: translate(0, -2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .btn-cardboard:active {
+    transform: translate(0, 0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Input fields with cardboard aesthetic */
+  input, textarea, select {
+    background: var(--color-cream);
+    border: 2px solid var(--color-cardboard);
+    border-radius: 2px;
+    padding: 10px;
+    font-family: 'Fredoka', sans-serif;
+    color: var(--color-dark-brown);
+    transition: all 0.2s ease;
+  }
+
+  input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--color-rust);
+    box-shadow: 0 0 0 3px rgba(200, 90, 84, 0.1);
+  }
+
+  /* Badge/label elements */
+  .badge-cardboard {
+    background: var(--color-tan);
+    border: 1px solid var(--color-brown);
+    border-radius: 2px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-dark-brown);
+  }
+
+  /* Divider with worn feel */
+  .divider-cardboard {
+    border: none;
+    border-top: 2px solid var(--color-cardboard);
+    opacity: 0.6;
+  }
+}
+
+/* Stagger slight rotations for DIY feel */
+.card-rotate-1 {
+  transform: rotate(-0.8deg);
+}
+
+.card-rotate-2 {
+  transform: rotate(0.5deg);
+}
+
+.card-rotate-3 {
+  transform: rotate(-0.3deg);
+}
+
+.card-rotate-4 {
+  transform: rotate(0.7deg);
+}

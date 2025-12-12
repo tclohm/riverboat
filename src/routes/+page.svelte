@@ -10,7 +10,9 @@
 <div class="container">
 
   <!-- Search Bar -->
+  <div class="w-full flex justify-center align-items">
   <SearchBar />
+  </div>
 
   <!-- Results Info -->
   {#if data.searchDates}
@@ -34,39 +36,39 @@
       {/if}
     </div>
   {:else}
-<div class="passes-grid">
-  {#each data.passes as pass}
-    <a href="/pass/{pass.id}" class="pass-card-link">
-      <!-- Card Container - Two column layout -->
-      <div class="pass-card">
-        
-        <!-- LEFT: Large Illustration Area -->
-        <div class="illustration-section">
-          <div class="illustration-placeholder"></div>
-        </div>
+    <div class="passes-grid">
+      {#each data.passes as pass}
+        <a href="/pass/{pass.id}" class="pass-card-link">
+          <!-- Card Container - Two column layout -->
+          <div class="pass-card">
+            
+            <!-- LEFT: Large Illustration Area -->
+            <div class="illustration-section">
+              <div class="illustration-placeholder"></div>
+            </div>
 
-        <!-- RIGHT: Vertical Sidebar -->
-        <div class="sidebar-section">
-          <!-- Price/Number at top -->
-          <div class="sidebar-number">
-            ${pass.price}
-          </div>
+            <!-- RIGHT: Vertical Sidebar -->
+            <div class="sidebar-section">
+              <!-- Price/Number at top -->
+              <div class="sidebar-number">
+                ${pass.price}
+              </div>
 
-          <!-- Pass Type - vertical text -->
-          <div class="sidebar-text">
-            <h2>{pass.passType}</h2>
-          </div>
+              <!-- Pass Type - vertical text -->
+              <div class="sidebar-text">
+                <h2>{pass.passType}</h2>
+              </div>
 
-          <!-- Dates info -->
-          <div class="sidebar-info">
-            <p class="dates-label">Available</p>
-            <p class="dates-value">{pass.availableDates}</p>
+              <!-- Dates info -->
+              <div class="sidebar-info">
+                <p class="dates-label">Available</p>
+                <p class="dates-value">{pass.availableDates}</p>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-    </a>
-  {/each}
-</div>
+        </a>
+      {/each}
+    </div>
   {/if}
 </div>
 
@@ -83,19 +85,19 @@
     align-items: center;
     margin: 32px 0;
     padding: 16px;
-    background: #f0f7ff;
-    border-radius: 8px;
-    border-left: 4px solid #2563eb;
+    background: #e3d5c6;
+    border-radius: 2px;
+    border-left: 4px solid #c85a54;
   }
 
   .search-info p {
     margin: 0;
     font-size: 16px;
-    color: #1f2937;
+    color: #5a4a3a;
   }
 
   .clear-search {
-    color: #2563eb;
+    color: #c85a54;
     text-decoration: none;
     font-weight: 600;
     transition: color 0.2s;
@@ -108,31 +110,32 @@
   .empty-state {
     text-align: center;
     padding: 80px 32px;
-    background: #f9fafb;
-    border: 2px dashed #e5e7eb;
-    border-radius: 12px;
+    background: #e8dcc8;
+    border: 2px dashed #d4c4b0;
+    border-radius: 2px;
     margin: 48px 0;
   }
 
   .empty-state p {
     font-size: 18px;
-    color: #6b7280;
+    color: #8b7355;
     margin: 0 0 24px 0;
   }
 
   .browse-all {
     display: inline-block;
-    background: #2563eb;
+    background: #d9a574;
     color: white;
     padding: 12px 24px;
-    border-radius: 6px;
+    border-radius: 2px;
     text-decoration: none;
     font-weight: 600;
-    transition: background 0.2s;
+    transition: all 0.2s;
+    border: 2px solid #8b7355;
   }
 
   .browse-all:hover {
-    background: #1d4ed8;
+    background: #c85a54;
   }
 
   .passes-grid {
@@ -150,9 +153,9 @@
   /* Main Card Container */
   .pass-card {
     display: flex;
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
+    background: #e8dcc8;
+    border: 2px solid #8b7355;
+    border-radius: 2px;
     overflow: hidden;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: all 0.2s ease;
@@ -167,7 +170,7 @@
   /* LEFT SECTION: Large Illustration */
   .illustration-section {
     flex: 1;
-    background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 50%, #fce7f3 100%);
+    background: #d4c4b0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -177,19 +180,19 @@
   .illustration-placeholder {
     width: 100%;
     height: 100%;
-    background: linear-gradient(45deg, #f0f9ff 0%, #f0fdf4 100%);
+    background: #d4c4b0;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #cbd5e1;
+    color: #8b7355;
     font-size: 14px;
   }
 
   /* RIGHT SECTION: Vertical Sidebar */
   .sidebar-section {
     width: 120px;
-    background: white;
-    border-left: 1px solid #e5e7eb;
+    background: #e8dcc8;
+    border-left: 2px solid #8b7355;
     padding: 16px 12px;
     display: flex;
     flex-direction: column;
@@ -200,10 +203,10 @@
   .sidebar-number {
     font-size: 28px;
     font-weight: 700;
-    color: #2563eb;
+    color: #c85a54;
     text-align: center;
     padding: 8px 0;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 2px solid #d4c4b0;
   }
 
   /* Vertical text */
@@ -218,7 +221,7 @@
     margin: 0;
     font-size: 13px;
     font-weight: 700;
-    color: #1f2937;
+    color: #5a4a3a;
     writing-mode: vertical-rl;
     text-orientation: mixed;
     transform: rotate(180deg);
@@ -230,7 +233,7 @@
   /* Info at bottom */
   .sidebar-info {
     padding-top: 12px;
-    border-top: 1px solid #e5e7eb;
+    border-top: 2px solid #d4c4b0;
     text-align: center;
   }
 
@@ -238,7 +241,7 @@
     margin: 0 0 4px 0;
     font-size: 10px;
     font-weight: 600;
-    color: #9ca3af;
+    color: #8b7355;
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
@@ -247,7 +250,7 @@
     margin: 0;
     font-size: 11px;
     font-weight: 500;
-    color: #374151;
+    color: #5a4a3a;
     line-height: 1.3;
   }
 
