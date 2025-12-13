@@ -1,18 +1,14 @@
 <script lang="ts">
   import { ChevronLeft, ChevronRight } from '@lucide/svelte';
 
-  // Props
   export let availableDates: number[] = [15, 16, 17, 18, 19, 20, 22, 23, 24, 25, 26, 27];
   export let onDateRangeSelect: (startDate: string, endDate: string) => void = () => {};
 
-  let currentDate = new Date();
-  let currentMonth = currentDate.getMonth();
-  let currentYear = currentDate.getFullYear();
-
-  let selectedStart: Date | null = null;
-  let selectedEnd: Date | null = null;
-  let hoveredDate: Date | null = null;
-  let selectionPhase: 'start' | 'end' = 'start';
+  let currentMonth = new Date().getMonth();
+  let currentYear = new Date().getFullYear();
+  let selectedStart: number | null = null;
+  let selectedEnd: number | null = null;
+  let hoveredDay: number | null = null;
 
   function getDaysInMonth(month: number, year: number): number {
     return new Date(year, month + 1, 0).getDate();
@@ -20,6 +16,87 @@
 
   function getFirstDayOfMonth(month: number, year: number): number {
     return new Date(year, month, 1).getDay();
+  }
+
+  function formatDate(day: number, month: number, year: number): string {
+    const date = new Date(year, month, day);
+    const monthStr = date.toLocaleDateString('en-US', { month: 'short' });
+    return `${monthStr} ${day}, ${year}`;
+  }
+
+  function formatDateRange(): string {
+    if (!selectedStart || !selectedEnd) return '';
+    const start = new Date(currentYear, currentMonth, selectedStart);
+    const end = new Date(currentYear, currentMonth, selectedEnd);
+    
+    const startMonth = start.toLocaleDateString('en-US', { month: 'short' });
+    const endMonth = end.toLocaleDateString('en-US', { month: 'short' });
+    const startDay = start.getDate();
+    const endDay = end.getDate();
+    const year = end.getFullYear();
+
+    if (start.getMonth() === end.getMonth()) {
+      return `${startMonth} ${startDay}-${endDay}, ${year}`;
+    }
+    return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
+  }
+
+  function getDayClass(day: number): string {
+    let classes = 'day';
+    
+    if (!availableDates.includes(day)) {
+      classes += ' unavailable';
+      return classes;
+    }
+    
+    classes += ' available';
+
+    // Confirmed range
+    if (selectedStart !== null && selectedEnd !== null) {
+      if (day >= selectedStart && day <= selectedEnd) {
+        classes += ' in-range';
+      }
+    }
+
+    // Hover preview (only show if start selected but end not selected)
+    if (selectedStart !== null && selectedEnd === null && hoveredDay !== null) {
+      const min = Math.min(selectedStart, hoveredDay);
+      const max = Math.max(selectedStart, hoveredDay);
+      if (day >= min && day <= max && day !== selectedStart) {
+        classes += ' hover-range';
+      }
+    }
+
+    // Selected dates
+    if (day === selectedStart || day === selectedEnd) {
+      classes += ' selected';
+    }
+
+    return classes;
+  }
+
+  function selectDate(day: number) {
+    if (!availableDates.includes(day)) return;
+
+    if (selectedStart === null) {
+      selectedStart = day;
+    } else if (selectedEnd === null) {
+      if (day < selectedStart) {
+        selectedEnd = selectedStart;
+        selectedStart = day;
+      } else {
+        selectedEnd = day;
+      }
+      // Emit the range
+      const startStr = formatDate(selectedStart, currentMonth, currentYear);
+      const endStr = formatDate(selectedEnd, currentMonth, currentYear);
+      onDateRangeSelect(startStr, endStr);
+    }
+  }
+
+  function resetSelection() {
+    selectedStart = null;
+    selectedEnd = null;
   }
 
   function previousMonth() {
@@ -40,88 +117,22 @@
     }
   }
 
-  function isDateAvailable(day: number): boolean {
-    return availableDates.includes(day);
-  }
-
-  function isDateInRange(day: number): boolean {
-    if (!selectedStart || !selectedEnd) return false;
-    const date = new Date(currentYear, currentMonth, day);
-    return date >= selectedStart && date <= selectedEnd;
-  }
-
-  function isDateInHoverRange(day: number): boolean {
-    if (!selectedStart || !hoveredDate || selectedEnd) return false;
-    const date = new Date(currentYear, currentMonth, day);
-    const start = selectedStart;
-    const end = hoveredDate;
-    const minDate = start < end ? start : end;
-    const maxDate = start < end ? end : start;
-    return date >= minDate && date <= maxDate;
-  }
-
-  function isDateSelected(day: number): boolean {
-    if (!selectedStart) return false;
-    const date = new Date(currentYear, currentMonth, day);
-    if (selectedStart.toDateString() === date.toDateString()) return true;
-    if (selectedEnd && selectedEnd.toDateString() === date.toDateString()) return true;
-    return false;
-  }
-
-  function selectDate(day: number) {
-    const date = new Date(currentYear, currentMonth, day);
-
-    if (selectionPhase === 'start') {
-      selectedStart = date;
-      selectionPhase = 'end';
-    } else {
-      if (date < selectedStart!) {
-        selectedEnd = selectedStart;
-        selectedStart = date;
-      } else {
-        selectedEnd = date;
-      }
-      // Format and emit the date range
-      const startStr = formatDateForInput(selectedStart!);
-      const endStr = formatDateForInput(selectedEnd);
-      onDateRangeSelect(startStr, endStr);
-    }
-  }
-
-  function formatDateForInput(date: Date): string {
-    const month = date.toLocaleDateString('en-US', { month: 'short' });
-    const day = date.getDate();
-    const year = date.getFullYear();
-    return `${month} ${day}, ${year}`;
-  }
-
-  function formatDateRange(): string {
-    if (!selectedStart || !selectedEnd) return '';
-
-    const startMonth = selectedStart.toLocaleDateString('en-US', { month: 'short' });
-    const startDay = selectedStart.getDate();
-    const endMonth = selectedEnd.toLocaleDateString('en-US', { month: 'short' });
-    const endDay = selectedEnd.getDate();
-    const year = selectedEnd.getFullYear();
-
-    if (selectedStart.getMonth() === selectedEnd.getMonth() && selectedStart.getFullYear() === selectedEnd.getFullYear()) {
-      return `${startMonth} ${startDay}-${endDay}, ${year}`;
-    }
-
-    return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
-  }
-
-  function resetSelection() {
-    selectedStart = null;
-    selectedEnd = null;
-    selectionPhase = 'start';
-  }
-
+  // REACTIVE DECLARATIONS - These update when dependencies change
   $: daysInMonth = getDaysInMonth(currentMonth, currentYear);
   $: firstDay = getFirstDayOfMonth(currentMonth, currentYear);
   $: monthName = new Date(currentYear, currentMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   $: days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
   $: emptyDays = Array.from({ length: firstDay }, (_, i) => i);
+  $: displayRange = (selectedStart !== null && selectedEnd !== null) ? formatDateRange() : '';
+  
+  // KEY REACTIVE STATEMENT - Recalculate classes when any of these change:
+  // hoveredDay, selectedStart, selectedEnd, availableDates
+  $: classMap = {
+    hoveredDay,
+    selectedStart,
+    selectedEnd,
+    days: days.map(day => ({ day, class: getDayClass(day) }))
+  };
 </script>
 
 <div class="calendar">
@@ -146,12 +157,12 @@
   </div>
 
   <div class="selection-status">
-    {#if selectedStart && !selectedEnd}
-      <p class="status-text">Tap end date</p>
-    {:else if selectedStart && selectedEnd}
-      <p class="status-text selected">{formatDateRange()}</p>
-    {:else}
+    {#if selectedStart === null}
       <p class="status-text">Tap start date</p>
+    {:else if selectedEnd === null}
+      <p class="status-text">Tap end date</p>
+    {:else}
+      <p class="status-text selected">{displayRange}</p>
     {/if}
   </div>
 
@@ -170,15 +181,14 @@
       <div class="empty-day"></div>
     {/each}
 
-    {#each days as day}
+    {#each classMap.days as { day, class: dayClass } (day)}
       <button
         type="button"
-        class="day {isDateAvailable(day) ? 'available' : 'unavailable'} {isDateInRange(day) ? 'in-range' : ''} {isDateInHoverRange(day) ? 'hover-range' : ''} {isDateSelected(day) ? 'selected' : ''}"
-        on:click={() => isDateAvailable(day) && selectDate(day)}
-        on:mouseenter={() => { if (isDateAvailable(day)) hoveredDate = new Date(currentYear, currentMonth, day); }}
-        on:mouseleave={() => { hoveredDate = null; }}
-        disabled={!isDateAvailable(day)}
-        aria-label="Select {monthName} {day}"
+        class={dayClass}
+        on:click={() => selectDate(day)}
+        on:mouseenter={() => { hoveredDay = day; }}
+        on:mouseleave={() => { hoveredDay = null; }}
+        disabled={!availableDates.includes(day)}
       >
         {day}
       </button>
@@ -190,7 +200,7 @@
       type="button"
       class="reset-btn"
       on:click={resetSelection}
-      disabled={!selectedStart}
+      disabled={selectedStart === null}
     >
       Reset
     </button>
@@ -318,6 +328,7 @@
     background: white;
     color: #5a4a3a;
     font-family: 'Fredoka', sans-serif;
+    padding: 0;
   }
 
   .day.available:not(:disabled) {
