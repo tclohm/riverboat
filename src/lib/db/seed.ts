@@ -26,7 +26,46 @@ const bios = [
 ];
 
 const passTypes = ['Believe Key', 'Enchant Key', 'Inspire Key', 'Dream Key'];
-const dateOptions = ['Nov 10-15', 'Nov 15-20', 'Nov 20-25', 'Dec 1-5', 'Dec 5-10', 'Dec 10-15', 'Weekdays only'];
+
+// Sample booked dates - some passes have bookings, some don't
+// Format: JSON array of {start, end} date ranges in YYYY-MM-DD format
+function generateBookedDates(): string {
+  const bookedRanges = [];
+  const now = new Date();
+  const year = now.getFullYear();
+  
+  // 30% chance a pass has bookings
+  if (Math.random() < 0.3) {
+    // Generate 1-3 booked date ranges
+    const numRanges = Math.floor(Math.random() * 3) + 1;
+    
+    for (let i = 0; i < numRanges; i++) {
+      // Random dates in next 2 months
+      const startDay = Math.floor(Math.random() * 45) + 1;
+      const endDay = startDay + Math.floor(Math.random() * 7) + 1;
+      
+      const startMonth = Math.floor(Math.random() * 2);
+      const endMonth = startMonth + (endDay > 28 ? 1 : 0);
+      
+      const startDate = new Date(year, now.getMonth() + startMonth, startDay);
+      const endDate = new Date(year, now.getMonth() + endMonth, Math.min(endDay, 28));
+      
+      const formatDate = (date: Date): string => {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+      };
+      
+      bookedRanges.push({
+        start: formatDate(startDate),
+        end: formatDate(endDate)
+      });
+    }
+  }
+  
+  return JSON.stringify(bookedRanges);
+}
 
 async function seedDatabase() {
   const sqlite = new Database('local.db');
@@ -70,26 +109,33 @@ async function seedDatabase() {
     }
     console.log(`✓ Inserted ${userIds.length} accounts`);
     
-    // Insert passes with raw SQL
+    // Insert passes with raw SQL - UPDATED FOR bookedDates
     console.log('Inserting passes...');
     const insertPassStmt = sqlite.prepare(`
-      INSERT INTO passes (title, pass_type, price, available_dates, user_id)
+      INSERT INTO passes (title, pass_type, price, booked_dates, user_id)
       VALUES (?, ?, ?, ?, ?)
     `);
     
     for (let i = 0; i < 50; i++) {
       const userId = userIds[Math.floor(Math.random() * userIds.length)];
       const passType = passTypes[Math.floor(Math.random() * passTypes.length)];
-      const dates = dateOptions[Math.floor(Math.random() * dateOptions.length)];
       let price = 50;
       if (passType === 'Dream Key') price = 110 + Math.floor(Math.random() * 30);
       else if (passType === 'Inspire Key') price = 80 + Math.floor(Math.random() * 20);
       else if (passType === 'Enchant Key') price = 60 + Math.floor(Math.random() * 20);
       else price = 40 + Math.floor(Math.random() * 20);
       
-      insertPassStmt.run(`Magic Key - ${passType}`, passType, price, dates, userId);
+      const bookedDates = generateBookedDates();
+      
+      insertPassStmt.run(
+        `Magic Key - ${passType}`,
+        passType,
+        price,
+        bookedDates,  // JSON string of booked date ranges
+        userId
+      );
     }
-    console.log('✓ Inserted 50 passes');
+    console.log('✓ Inserted 50 passes with realistic booking data');
     
     console.log('\n✅ Seeding complete!');
     return true;
