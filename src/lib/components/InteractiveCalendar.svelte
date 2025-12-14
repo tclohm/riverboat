@@ -6,9 +6,12 @@
 
   let currentMonth = new Date().getMonth();
   let currentYear = new Date().getFullYear();
-  let selectedStart: number | null = null;
-  let selectedEnd: number | null = null;
-  let hoveredDay: number | null = null;
+  
+  // Store selected dates as full date objects, not just day numbers
+  let selectedStartDate: Date | null = null;
+  let selectedEndDate: Date | null = null;
+  let hoveredDate: Date | null = null;
+  
   let bookedDates: {start: string, end: string}[] = [];
   let loading = true;
 
@@ -33,15 +36,15 @@
   }
 
   // Check if a specific date falls within any booked range
-  function isDateBooked(day: number, month: number, year: number): boolean {
-    const dateStr = formatDateForComparison(day, month, year);
+  function isDateBooked(date: Date): boolean {
+    const dateStr = formatDateForComparison(date);
     return bookedDates.some(range => dateStr >= range.start && dateStr <= range.end);
   }
 
-  function formatDateForComparison(day: number, month: number, year: number): string {
-    const m = String(month + 1).padStart(2, '0');
-    const d = String(day).padStart(2, '0');
-    return `${year}-${m}-${d}`;
+  function formatDateForComparison(date: Date): string {
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${date.getFullYear()}-${m}-${d}`;
   }
 
   function getDaysInMonth(month: number, year: number): number {
@@ -52,58 +55,65 @@
     return new Date(year, month, 1).getDay();
   }
 
-  function formatDate(day: number, month: number, year: number): string {
-    const date = new Date(year, month, day);
-    const monthStr = date.toLocaleDateString('en-US', { month: 'short' });
-    return `${monthStr} ${day}, ${year}`;
-  }
-
   function formatDateRange(): string {
-    if (!selectedStart || !selectedEnd) return '';
-    const start = new Date(currentYear, currentMonth, selectedStart);
-    const end = new Date(currentYear, currentMonth, selectedEnd);
+    if (!selectedStartDate || !selectedEndDate) return '';
     
-    const startMonth = start.toLocaleDateString('en-US', { month: 'short' });
-    const endMonth = end.toLocaleDateString('en-US', { month: 'short' });
-    const startDay = start.getDate();
-    const endDay = end.getDate();
-    const year = end.getFullYear();
+    const startMonth = selectedStartDate.toLocaleDateString('en-US', { month: 'short' });
+    const endMonth = selectedEndDate.toLocaleDateString('en-US', { month: 'short' });
+    const startDay = selectedStartDate.getDate();
+    const endDay = selectedEndDate.getDate();
+    const year = selectedEndDate.getFullYear();
 
-    if (start.getMonth() === end.getMonth()) {
+    if (selectedStartDate.getMonth() === selectedEndDate.getMonth() && 
+        selectedStartDate.getFullYear() === selectedEndDate.getFullYear()) {
       return `${startMonth} ${startDay}-${endDay}, ${year}`;
     }
     return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
   }
 
   function getDayClass(day: number): string {
+    const date = new Date(currentYear, currentMonth, day);
     let classes = 'day';
     
     // Check if date is booked
-    if (isDateBooked(day, currentMonth, currentYear)) {
+    if (isDateBooked(date)) {
       classes += ' booked';
       return classes;
     }
     
     classes += ' available';
 
-    // Confirmed range
-    if (selectedStart !== null && selectedEnd !== null) {
-      if (day >= selectedStart && day <= selectedEnd) {
+    // Confirmed range - check if date falls within selected range
+    if (selectedStartDate !== null && selectedEndDate !== null) {
+      // Ensure start is before end
+      const start = selectedStartDate <= selectedEndDate ? selectedStartDate : selectedEndDate;
+      const end = selectedStartDate <= selectedEndDate ? selectedEndDate : selectedStartDate;
+      
+      if (date >= start && date <= end) {
         classes += ' in-range';
+        // Mark endpoints as selected
+        if (date.getTime() === start.getTime() || date.getTime() === end.getTime()) {
+          classes += ' selected';
+        }
       }
     }
 
     // Hover preview (only show if start selected but end not selected)
-    if (selectedStart !== null && selectedEnd === null && hoveredDay !== null) {
-      const min = Math.min(selectedStart, hoveredDay);
-      const max = Math.max(selectedStart, hoveredDay);
-      if (day >= min && day <= max && day !== selectedStart) {
+    if (selectedStartDate !== null && selectedEndDate === null && hoveredDate !== null) {
+      const start = selectedStartDate <= hoveredDate ? selectedStartDate : hoveredDate;
+      const end = selectedStartDate <= hoveredDate ? hoveredDate : selectedStartDate;
+      
+      if (date >= start && date <= end) {
         classes += ' hover-range';
+        // Mark endpoints as selected
+        if (date.getTime() === start.getTime() || date.getTime() === end.getTime()) {
+          classes += ' selected';
+        }
       }
     }
 
-    // Selected dates
-    if (day === selectedStart || day === selectedEnd) {
+    // Only mark as selected if no range is selected yet
+    if (selectedStartDate && !selectedEndDate && date.getTime() === selectedStartDate.getTime()) {
       classes += ' selected';
     }
 
@@ -111,28 +121,56 @@
   }
 
   function selectDate(day: number) {
-    // Can't select booked dates
-    if (isDateBooked(day, currentMonth, currentYear)) return;
+    const date = new Date(currentYear, currentMonth, day);
+    
+    if (isDateBooked(date)) return;
 
-    if (selectedStart === null) {
-      selectedStart = day;
-    } else if (selectedEnd === null) {
-      if (day < selectedStart) {
-        selectedEnd = selectedStart;
-        selectedStart = day;
+    if (selectedStartDate === null) {
+      selectedStartDate = date;
+    } else if (selectedEndDate === null) {
+      // If clicked date is before start date, swap them
+      if (date < selectedStartDate) {
+        selectedEndDate = selectedStartDate;
+        selectedStartDate = date;
       } else {
-        selectedEnd = day;
+        selectedEndDate = date;
       }
       // Emit the range
-      const startStr = formatDate(selectedStart, currentMonth, currentYear);
-      const endStr = formatDate(selectedEnd, currentMonth, currentYear);
-      onDateRangeSelect(startStr, endStr);
+      const startStr = formatDateForComparison(selectedStartDate);
+      const endStr = formatDateForComparison(selectedEndDate);
+      
+      // Format for display
+      const displayStart = formatDateForDisplay(selectedStartDate);
+      const displayEnd = formatDateForDisplay(selectedEndDate);
+      onDateRangeSelect(displayStart, displayEnd);
     }
   }
 
+  function formatDateForDisplay(date: Date): string {
+    const month = date.toLocaleDateString('en-US', { month: 'short' });
+    const day = date.getDate();
+    const year = date.getFullYear();
+    
+    // Check if we need to show year (different year) or just month/day
+    if (selectedStartDate && selectedEndDate) {
+      const sameYear = selectedStartDate.getFullYear() === selectedEndDate.getFullYear();
+      const sameMonth = selectedStartDate.getMonth() === selectedEndDate.getMonth();
+      
+      if (sameYear && sameMonth) {
+        // Same month: "Dec 15-17, 2025"
+        return `${month} ${selectedStartDate.getDate()}-${selectedEndDate.getDate()}, ${year}`;
+      } else if (sameYear) {
+        // Different month, same year: "Dec 15 - Jan 5, 2025"
+        return `${date === selectedStartDate ? month + ' ' + day : month + ' ' + day}, ${year}`;
+      }
+    }
+    
+    return `${month} ${day}, ${year}`;
+  }
+
   function resetSelection() {
-    selectedStart = null;
-    selectedEnd = null;
+    selectedStartDate = null;
+    selectedEndDate = null;
   }
 
   function previousMonth() {
@@ -153,117 +191,99 @@
     }
   }
 
-  // Reactive declarations
   $: daysInMonth = getDaysInMonth(currentMonth, currentYear);
   $: firstDay = getFirstDayOfMonth(currentMonth, currentYear);
   $: monthName = new Date(currentYear, currentMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   $: days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
   $: emptyDays = Array.from({ length: firstDay }, (_, i) => i);
-  $: displayRange = (selectedStart !== null && selectedEnd !== null) ? formatDateRange() : '';
-  
-  // Recalculate classes when dates change
-  $: classMap = {
-    hoveredDay,
-    selectedStart,
-    selectedEnd,
-    days: days.map(day => ({ day, class: getDayClass(day) }))
-  };
-
-  // Fetch booked dates when component mounts
-  $: if (passId !== null) {
-    fetchBookedDates();
-  }
+  $: displayRange = (selectedStartDate !== null && selectedEndDate !== null) ? formatDateRange() : '';
 </script>
 
 <div class="calendar">
-  {#if loading}
-    <div class="loading">Loading availability...</div>
-  {:else}
-    <div class="calendar-header">
-      <button 
+  <div class="calendar-header">
+    <button 
+      type="button"
+      class="nav-btn"
+      on:click={previousMonth}
+      aria-label="Previous month"
+    >
+      <ChevronLeft size={20} />
+    </button>
+    <h3>{monthName}</h3>
+    <button 
+      type="button"
+      class="nav-btn"
+      on:click={nextMonth}
+      aria-label="Next month"
+    >
+      <ChevronRight size={20} />
+    </button>
+  </div>
+
+  <div class="selection-status">
+    {#if selectedStartDate === null}
+      <p class="status-text">Tap start date</p>
+    {:else if selectedEndDate === null}
+      <p class="status-text">Tap end date</p>
+    {:else}
+      <p class="status-text selected">{displayRange}</p>
+    {/if}
+  </div>
+
+  <div class="weekdays">
+    <div class="weekday">Sun</div>
+    <div class="weekday">Mon</div>
+    <div class="weekday">Tue</div>
+    <div class="weekday">Wed</div>
+    <div class="weekday">Thu</div>
+    <div class="weekday">Fri</div>
+    <div class="weekday">Sat</div>
+  </div>
+
+  <div class="days-grid">
+    {#each emptyDays as _}
+      <div class="empty-day"></div>
+    {/each}
+
+    {#each days as day (day)}
+      <button
         type="button"
-        class="nav-btn"
-        on:click={previousMonth}
-        aria-label="Previous month"
+        class={getDayClass(day)}
+        on:click={() => selectDate(day)}
+        on:mouseenter={() => { hoveredDate = new Date(currentYear, currentMonth, day); }}
+        on:mouseleave={() => { hoveredDate = null; }}
+        disabled={isDateBooked(new Date(currentYear, currentMonth, day))}
       >
-        <ChevronLeft size={20} />
+        {day}
       </button>
-      <h3>{monthName}</h3>
-      <button 
-        type="button"
-        class="nav-btn"
-        on:click={nextMonth}
-        aria-label="Next month"
-      >
-        <ChevronRight size={20} />
-      </button>
-    </div>
+    {/each}
+  </div>
 
-    <div class="selection-status">
-      {#if selectedStart === null}
-        <p class="status-text">Tap start date</p>
-      {:else if selectedEnd === null}
-        <p class="status-text">Tap end date</p>
-      {:else}
-        <p class="status-text selected">{displayRange}</p>
-      {/if}
-    </div>
+  <div class="calendar-actions">
+    <button 
+      type="button"
+      class="reset-btn"
+      on:click={resetSelection}
+      disabled={selectedStartDate === null}
+    >
+      Reset
+    </button>
+  </div>
 
-    <div class="weekdays">
-      <div class="weekday">Sun</div>
-      <div class="weekday">Mon</div>
-      <div class="weekday">Tue</div>
-      <div class="weekday">Wed</div>
-      <div class="weekday">Thu</div>
-      <div class="weekday">Fri</div>
-      <div class="weekday">Sat</div>
+  <div class="calendar-legend">
+    <div class="legend-item">
+      <div class="legend-color available"></div>
+      <span>Available</span>
     </div>
-
-    <div class="days-grid">
-      {#each emptyDays as _}
-        <div class="empty-day"></div>
-      {/each}
-
-      {#each classMap.days as { day, class: dayClass } (day)}
-        <button
-          type="button"
-          class={dayClass}
-          on:click={() => selectDate(day)}
-          on:mouseenter={() => { hoveredDay = day; }}
-          on:mouseleave={() => { hoveredDay = null; }}
-          disabled={isDateBooked(day, currentMonth, currentYear)}
-        >
-          {day}
-        </button>
-      {/each}
+    <div class="legend-item">
+      <div class="legend-color booked"></div>
+      <span>Booked</span>
     </div>
-
-    <div class="calendar-actions">
-      <button 
-        type="button"
-        class="reset-btn"
-        on:click={resetSelection}
-        disabled={selectedStart === null}
-      >
-        Reset
-      </button>
+    <div class="legend-item">
+      <div class="legend-color selected"></div>
+      <span>Selected</span>
     </div>
-
-    <div class="calendar-legend">
-      <div class="legend-item">
-        <div class="legend-color available"></div>
-        <span>Available</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color booked"></div>
-        <span>Booked</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color selected"></div>
-        <span>Selected</span>
-      </div>
-    </div>
-  {/if}
+  </div>
 </div>
 
 <style>
@@ -273,13 +293,6 @@
     border-radius: 2px;
     padding: 16px;
     margin-top: 24px;
-  }
-
-  .loading {
-    padding: 32px;
-    text-align: center;
-    color: #8b7355;
-    font-size: 14px;
   }
 
   .calendar-header {
@@ -401,20 +414,31 @@
   }
 
   .day.in-range {
-    background: rgba(217, 165, 116, 0.2);
+    background: rgba(217, 165, 116, 0.25);
     border-color: #d9a574;
+    color: #5a4a3a;
   }
 
-  .day.hover-range {
-    background: rgba(217, 165, 116, 0.15);
-    border-color: #d9a574;
-  }
-
-  .day.selected {
+  .day.in-range.selected {
     background: #d9a574;
     color: white;
     border-color: #8b7355;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-weight: 700;
+  }
+
+  .day.hover-range {
+    background: rgba(217, 165, 116, 0.2);
+    border-color: #d9a574;
+    color: #5a4a3a;
+  }
+
+  .day.hover-range.selected {
+    background: #d9a574;
+    color: white;
+    border-color: #8b7355;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-weight: 700;
   }
 
   .day:disabled {
