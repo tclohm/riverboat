@@ -7,7 +7,7 @@
   let currentMonth = new Date().getMonth();
   let currentYear = new Date().getFullYear();
   
-  // Store selected dates as full date objects, not just day numbers
+  // Store full Date objects for multi-month selection
   let selectedStartDate: Date | null = null;
   let selectedEndDate: Date | null = null;
   let hoveredDate: Date | null = null;
@@ -15,7 +15,7 @@
   let bookedDates: {start: string, end: string}[] = [];
   let loading = true;
 
-  // Fetch booked dates for this pass on mount
+  // ===== FETCH DATA =====
   async function fetchBookedDates() {
     if (!passId) {
       loading = false;
@@ -35,16 +35,27 @@
     }
   }
 
-  // Check if a specific date falls within any booked range
-  function isDateBooked(date: Date): boolean {
-    const dateStr = formatDateForComparison(date);
-    return bookedDates.some(range => dateStr >= range.start && dateStr <= range.end);
+  $: if (passId) {
+    fetchBookedDates();
   }
 
+  // ===== DATE UTILITIES =====
   function formatDateForComparison(date: Date): string {
     const m = String(date.getMonth() + 1).padStart(2, '0');
     const d = String(date.getDate()).padStart(2, '0');
     return `${date.getFullYear()}-${m}-${d}`;
+  }
+
+  function formatDateForDisplay(date: Date): string {
+    const month = date.toLocaleDateString('en-US', { month: 'short' });
+    const day = date.getDate();
+    const year = date.getFullYear();
+    return `${month} ${day}, ${year}`;
+  }
+
+  function isDateBooked(date: Date): boolean {
+    const dateStr = formatDateForComparison(date);
+    return bookedDates.some(range => dateStr >= range.start && dateStr <= range.end);
   }
 
   function getDaysInMonth(month: number, year: number): number {
@@ -55,124 +66,7 @@
     return new Date(year, month, 1).getDay();
   }
 
-  function formatDateRange(): string {
-    if (!selectedStartDate || !selectedEndDate) return '';
-    
-    const startMonth = selectedStartDate.toLocaleDateString('en-US', { month: 'short' });
-    const endMonth = selectedEndDate.toLocaleDateString('en-US', { month: 'short' });
-    const startDay = selectedStartDate.getDate();
-    const endDay = selectedEndDate.getDate();
-    const year = selectedEndDate.getFullYear();
-
-    if (selectedStartDate.getMonth() === selectedEndDate.getMonth() && 
-        selectedStartDate.getFullYear() === selectedEndDate.getFullYear()) {
-      return `${startMonth} ${startDay}-${endDay}, ${year}`;
-    }
-    return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
-  }
-
-  function getDayClass(day: number): string {
-    const date = new Date(currentYear, currentMonth, day);
-    let classes = 'day';
-    
-    // Check if date is booked
-    if (isDateBooked(date)) {
-      classes += ' booked';
-      return classes;
-    }
-    
-    classes += ' available';
-
-    // Confirmed range - check if date falls within selected range
-    if (selectedStartDate !== null && selectedEndDate !== null) {
-      // Ensure start is before end
-      const start = selectedStartDate <= selectedEndDate ? selectedStartDate : selectedEndDate;
-      const end = selectedStartDate <= selectedEndDate ? selectedEndDate : selectedStartDate;
-      
-      if (date >= start && date <= end) {
-        classes += ' in-range';
-        // Mark endpoints as selected
-        if (date.getTime() === start.getTime() || date.getTime() === end.getTime()) {
-          classes += ' selected';
-        }
-      }
-    }
-
-    // Hover preview (only show if start selected but end not selected)
-    if (selectedStartDate !== null && selectedEndDate === null && hoveredDate !== null) {
-      const start = selectedStartDate <= hoveredDate ? selectedStartDate : hoveredDate;
-      const end = selectedStartDate <= hoveredDate ? hoveredDate : selectedStartDate;
-      
-      if (date >= start && date <= end) {
-        classes += ' hover-range';
-        // Mark endpoints as selected
-        if (date.getTime() === start.getTime() || date.getTime() === end.getTime()) {
-          classes += ' selected';
-        }
-      }
-    }
-
-    // Only mark as selected if no range is selected yet
-    if (selectedStartDate && !selectedEndDate && date.getTime() === selectedStartDate.getTime()) {
-      classes += ' selected';
-    }
-
-    return classes;
-  }
-
-  function selectDate(day: number) {
-    const date = new Date(currentYear, currentMonth, day);
-    
-    if (isDateBooked(date)) return;
-
-    if (selectedStartDate === null) {
-      selectedStartDate = date;
-    } else if (selectedEndDate === null) {
-      // If clicked date is before start date, swap them
-      if (date < selectedStartDate) {
-        selectedEndDate = selectedStartDate;
-        selectedStartDate = date;
-      } else {
-        selectedEndDate = date;
-      }
-      // Emit the range
-      const startStr = formatDateForComparison(selectedStartDate);
-      const endStr = formatDateForComparison(selectedEndDate);
-      
-      // Format for display
-      const displayStart = formatDateForDisplay(selectedStartDate);
-      const displayEnd = formatDateForDisplay(selectedEndDate);
-      onDateRangeSelect(displayStart, displayEnd);
-    }
-  }
-
-  function formatDateForDisplay(date: Date): string {
-    const month = date.toLocaleDateString('en-US', { month: 'short' });
-    const day = date.getDate();
-    const year = date.getFullYear();
-    
-    // Check if we need to show year (different year) or just month/day
-    if (selectedStartDate && selectedEndDate) {
-      const sameYear = selectedStartDate.getFullYear() === selectedEndDate.getFullYear();
-      const sameMonth = selectedStartDate.getMonth() === selectedEndDate.getMonth();
-      
-      if (sameYear && sameMonth) {
-        // Same month: "Dec 15-17, 2025"
-        return `${month} ${selectedStartDate.getDate()}-${selectedEndDate.getDate()}, ${year}`;
-      } else if (sameYear) {
-        // Different month, same year: "Dec 15 - Jan 5, 2025"
-        return `${date === selectedStartDate ? month + ' ' + day : month + ' ' + day}, ${year}`;
-      }
-    }
-    
-    return `${month} ${day}, ${year}`;
-  }
-
-  function resetSelection() {
-    selectedStartDate = null;
-    selectedEndDate = null;
-  }
-
+  // ===== NAVIGATION =====
   function previousMonth() {
     if (currentMonth === 0) {
       currentMonth = 11;
@@ -191,99 +85,254 @@
     }
   }
 
+  // ===== SELECTION LOGIC =====
+  function selectDate(day: number) {
+    const date = new Date(currentYear, currentMonth, day);
+    
+    // Can't select booked dates
+    if (isDateBooked(date)) return;
+
+    if (selectedStartDate === null) {
+      // First selection
+      selectedStartDate = date;
+      console.log('Start date selected:', selectedStartDate);
+    } else if (selectedEndDate === null) {
+      // Second selection - auto-sort
+      if (date < selectedStartDate) {
+        selectedEndDate = selectedStartDate;
+        selectedStartDate = date;
+      } else {
+        selectedEndDate = date;
+      }
+      
+      console.log('End date selected:', selectedEndDate);
+      console.log('Ordered range:', {
+        start: selectedStartDate,
+        end: selectedEndDate
+      });
+      
+      // Emit the range
+      const startDisplay = formatDateForDisplay(selectedStartDate);
+      const endDisplay = formatDateForDisplay(selectedEndDate);
+      onDateRangeSelect(startDisplay, endDisplay);
+    }
+  }
+
+  // Debug reactive ranges
+  $: if (orderedRange) {
+    console.log('Ordered range updated:', {
+      start: orderedRange.start,
+      end: orderedRange.end
+    });
+  }
+
+  function resetSelection() {
+    selectedStartDate = null;
+    selectedEndDate = null;
+  }
+
+  // ===== REACTIVE CALCULATIONS =====
+  
+  // Normalize selected range (ensure start < end)
+  $: orderedRange = selectedStartDate && selectedEndDate
+    ? {
+        start: selectedStartDate < selectedEndDate ? selectedStartDate : selectedEndDate,
+        end: selectedStartDate < selectedEndDate ? selectedEndDate : selectedStartDate
+      }
+    : null;
+
+  // Normalize hover range (for preview when start is selected but end is not)
+  $: hoverRange = selectedStartDate && !selectedEndDate && hoveredDate
+    ? {
+        start: selectedStartDate < hoveredDate ? selectedStartDate : hoveredDate,
+        end: selectedStartDate < hoveredDate ? hoveredDate : selectedStartDate
+      }
+    : null;
+
+  // Display range text
+  $: displayRangeText = selectedStartDate && selectedEndDate
+    ? `${formatDateForDisplay(orderedRange!.start)} - ${formatDateForDisplay(orderedRange!.end)}`
+    : '';
+
+  // Calendar display values
   $: daysInMonth = getDaysInMonth(currentMonth, currentYear);
   $: firstDay = getFirstDayOfMonth(currentMonth, currentYear);
   $: monthName = new Date(currentYear, currentMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   $: days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
   $: emptyDays = Array.from({ length: firstDay }, (_, i) => i);
-  $: displayRange = (selectedStartDate !== null && selectedEndDate !== null) ? formatDateRange() : '';
+
+  // Helper to normalize date to midnight (remove time component)
+  function getNormalizedDate(date: Date): Date {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  }
+
+  // ===== DAY CLASSIFICATION =====
+  function getDayClass(day: number): string {
+    const date = getNormalizedDate(new Date(currentYear, currentMonth, day));
+    const classes: string[] = ['day'];
+
+    // Check if booked
+    if (isDateBooked(getNormalizedDate(date))) {
+      return 'day booked';
+    }
+
+    classes.push('available');
+
+    // Check if in confirmed selected range
+    if (orderedRange) {
+      const rangeStart = getNormalizedDate(orderedRange.start);
+      const rangeEnd = getNormalizedDate(orderedRange.end);
+      
+      const inRange = date >= rangeStart && date <= rangeEnd;
+      
+      if (inRange) {
+        classes.push('in-range');
+        
+        // Check if it's an endpoint
+        if (date.getTime() === rangeStart.getTime() || date.getTime() === rangeEnd.getTime()) {
+          classes.push('endpoint');
+        }
+        
+        return classes.join(' ');
+      }
+    }
+
+    // Check if in hover preview range (only if start selected but end not selected)
+    if (hoverRange) {
+      const rangeStart = getNormalizedDate(hoverRange.start);
+      const rangeEnd = getNormalizedDate(hoverRange.end);
+      
+      const inRange = date >= rangeStart && date <= rangeEnd;
+      
+      if (inRange) {
+        classes.push('hover-range');
+        
+        // Check if it's an endpoint of hover range
+        if (date.getTime() === rangeStart.getTime() || date.getTime() === rangeEnd.getTime()) {
+          classes.push('endpoint');
+        }
+        
+        return classes.join(' ');
+      }
+    }
+
+    // Check if it's the start selection (before end is selected)
+    if (selectedStartDate && !selectedEndDate && date.getTime() === getNormalizedDate(selectedStartDate).getTime()) {
+      classes.push('selected');
+    }
+
+    return classes.join(' ');
+  }
+
+  // FORCE recalculation of all day classes when:
+  // - orderedRange changes (selection made)
+  // - hoveredDate changes (hover preview)
+  // - currentMonth/currentYear changes (month navigation)
+  // - days changes (derived from month change)
+  $: dayClassMap = (orderedRange, hoveredDate, hoverRange, selectedStartDate, selectedEndDate, currentMonth, currentYear, days) && days.map(day => ({
+    day,
+    class: getDayClass(day)
+  }));
 </script>
 
 <div class="calendar">
-  <div class="calendar-header">
-    <button 
-      type="button"
-      class="nav-btn"
-      on:click={previousMonth}
-      aria-label="Previous month"
-    >
-      <ChevronLeft size={20} />
-    </button>
-    <h3>{monthName}</h3>
-    <button 
-      type="button"
-      class="nav-btn"
-      on:click={nextMonth}
-      aria-label="Next month"
-    >
-      <ChevronRight size={20} />
-    </button>
-  </div>
-
-  <div class="selection-status">
-    {#if selectedStartDate === null}
-      <p class="status-text">Tap start date</p>
-    {:else if selectedEndDate === null}
-      <p class="status-text">Tap end date</p>
-    {:else}
-      <p class="status-text selected">{displayRange}</p>
-    {/if}
-  </div>
-
-  <div class="weekdays">
-    <div class="weekday">Sun</div>
-    <div class="weekday">Mon</div>
-    <div class="weekday">Tue</div>
-    <div class="weekday">Wed</div>
-    <div class="weekday">Thu</div>
-    <div class="weekday">Fri</div>
-    <div class="weekday">Sat</div>
-  </div>
-
-  <div class="days-grid">
-    {#each emptyDays as _}
-      <div class="empty-day"></div>
-    {/each}
-
-    {#each days as day (day)}
-      <button
+  {#if loading}
+    <div class="loading">Loading availability...</div>
+  {:else}
+    <!-- Header with month navigation -->
+    <div class="calendar-header">
+      <button 
         type="button"
-        class={getDayClass(day)}
-        on:click={() => selectDate(day)}
-        on:mouseenter={() => { hoveredDate = new Date(currentYear, currentMonth, day); }}
-        on:mouseleave={() => { hoveredDate = null; }}
-        disabled={isDateBooked(new Date(currentYear, currentMonth, day))}
+        class="nav-btn"
+        on:click={previousMonth}
+        aria-label="Previous month"
       >
-        {day}
+        <ChevronLeft size={20} />
       </button>
-    {/each}
-  </div>
+      <h3>{monthName}</h3>
+      <button 
+        type="button"
+        class="nav-btn"
+        on:click={nextMonth}
+        aria-label="Next month"
+      >
+        <ChevronRight size={20} />
+      </button>
+    </div>
 
-  <div class="calendar-actions">
-    <button 
-      type="button"
-      class="reset-btn"
-      on:click={resetSelection}
-      disabled={selectedStartDate === null}
-    >
-      Reset
-    </button>
-  </div>
+    <!-- Selection status -->
+    <div class="selection-status">
+      {#if selectedStartDate === null}
+        <p class="status-text">Tap start date</p>
+      {:else if selectedEndDate === null}
+        <p class="status-text">Tap end date</p>
+      {:else}
+        <p class="status-text selected">{displayRangeText}</p>
+      {/if}
+    </div>
 
-  <div class="calendar-legend">
-    <div class="legend-item">
-      <div class="legend-color available"></div>
-      <span>Available</span>
+    <!-- Weekday headers -->
+    <div class="weekdays">
+      <div class="weekday">Sun</div>
+      <div class="weekday">Mon</div>
+      <div class="weekday">Tue</div>
+      <div class="weekday">Wed</div>
+      <div class="weekday">Thu</div>
+      <div class="weekday">Fri</div>
+      <div class="weekday">Sat</div>
     </div>
-    <div class="legend-item">
-      <div class="legend-color booked"></div>
-      <span>Booked</span>
+
+    <!-- Days grid -->
+    <div class="days-grid">
+      {#each emptyDays as _}
+        <div class="empty-day"></div>
+      {/each}
+
+      {#each dayClassMap as { day, class: dayClass } (day)}
+        {@const date = new Date(currentYear, currentMonth, day)}
+        {@const isBooked = isDateBooked(date)}
+        
+        <button
+          type="button"
+          class={dayClass}
+          on:click={() => selectDate(day)}
+          on:mouseenter={() => { hoveredDate = date; }}
+          on:mouseleave={() => { hoveredDate = null; }}
+          disabled={isBooked}
+        >
+          {day}
+        </button>
+      {/each}
     </div>
-    <div class="legend-item">
-      <div class="legend-color selected"></div>
-      <span>Selected</span>
+
+    <!-- Reset button -->
+    <div class="calendar-actions">
+      <button 
+        type="button"
+        class="reset-btn"
+        on:click={resetSelection}
+        disabled={selectedStartDate === null}
+      >
+        Reset
+      </button>
     </div>
-  </div>
+
+    <!-- Legend -->
+    <div class="calendar-legend">
+      <div class="legend-item">
+        <div class="legend-color available"></div>
+        <span>Available</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color booked"></div>
+        <span>Booked</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color selected"></div>
+        <span>Selected</span>
+      </div>
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -293,6 +342,13 @@
     border-radius: 2px;
     padding: 16px;
     margin-top: 24px;
+  }
+
+  .loading {
+    padding: 32px;
+    text-align: center;
+    color: #8b7355;
+    font-size: 14px;
   }
 
   .calendar-header {
@@ -348,6 +404,7 @@
   .status-text.selected {
     color: #d9a574;
     font-size: 14px;
+    font-weight: 700;
   }
 
   .weekdays {
@@ -388,23 +445,25 @@
     border-radius: 2px;
     cursor: pointer;
     transition: all 0.2s;
-    border: 1px solid transparent;
+    border: 1px solid #d4c4b0;
     background: white;
     color: #5a4a3a;
     font-family: 'Fredoka', sans-serif;
     padding: 0;
   }
 
-  .day.available:not(:disabled) {
-    border-color: #d4c4b0;
-  }
-
-  .day.available:not(:disabled):hover {
+  .day:hover:not(:disabled) {
     background: #e8dcc8;
     border-color: #8b7355;
     transform: scale(1.08);
   }
 
+  .day.available {
+    border-color: #d4c4b0;
+    background: white;
+  }
+
+  /* Booked dates - disabled */
   .day.booked {
     background: #d4c4b0;
     color: #8b7355;
@@ -413,32 +472,67 @@
     opacity: 0.5;
   }
 
+  .day.booked:hover {
+    transform: none;
+  }
+
+  /* Confirmed selected range - light highlight for middle dates */
   .day.in-range {
-    background: rgba(217, 165, 116, 0.25);
+    background: rgba(217, 165, 116, 0.3);
     border-color: #d9a574;
     color: #5a4a3a;
   }
 
-  .day.in-range.selected {
+  .day.in-range:hover:not(:disabled) {
+    background: rgba(217, 165, 116, 0.4);
+    transform: scale(1.05);
+  }
+
+  /* Endpoints of confirmed range - dark highlight */
+  .day.in-range.endpoint {
     background: #d9a574;
     color: white;
     border-color: #8b7355;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     font-weight: 700;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
   }
 
+  .day.in-range.endpoint:hover:not(:disabled) {
+    background: #c85a54;
+  }
+
+  /* Hover preview range - very light highlight */
   .day.hover-range {
     background: rgba(217, 165, 116, 0.2);
     border-color: #d9a574;
     color: #5a4a3a;
   }
 
-  .day.hover-range.selected {
+  .day.hover-range:hover:not(:disabled) {
+    background: rgba(217, 165, 116, 0.3);
+    transform: scale(1.05);
+  }
+
+  /* Endpoints during hover preview */
+  .day.hover-range.endpoint {
     background: #d9a574;
     color: white;
     border-color: #8b7355;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     font-weight: 700;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Initial start selection (before end date selected) */
+  .day.selected {
+    background: #d9a574;
+    color: white;
+    border-color: #8b7355;
+    font-weight: 700;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  }
+
+  .day.selected:hover:not(:disabled) {
+    background: #c85a54;
   }
 
   .day:disabled {
