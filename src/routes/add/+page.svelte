@@ -82,19 +82,6 @@
         />
         <p class="field-hint">Auto-filled from your profile</p>
       </div>
-
-      <!-- Available Dates -->
-      <div class="form-group full-width">
-        <label for="availableDates">Available Dates</label>
-        <input 
-          type="text" 
-          id="availableDates" 
-          name="availableDates" 
-          placeholder="e.g., Nov 15-20, Dec 5-10 or Weekdays only"
-          required
-        />
-        <p class="field-hint">Let guests know when your pass is available</p>
-      </div>
     </div>
 
     <!-- Info Box -->
@@ -103,7 +90,6 @@
       <ul>
         <li>Choose a descriptive title that highlights what makes your pass special</li>
         <li>Set a competitive price based on similar passes in your area</li>
-        <li>Be specific about availability - guests appreciate clear dates</li>
       </ul>
     </div>
 
