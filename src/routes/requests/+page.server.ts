@@ -2,6 +2,7 @@ import { getDb } from '$lib/db';
 import { inquiries, passes, user, notifications } from '$lib/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { redirect } from '@sveltejs/kit';
+import { parseRequestedDatesToRange, addBookedDateRange } from '$lib/server/dateUtils';
 
 export async function load({ platform, locals }) {
   // Check if user is logged in
@@ -103,6 +104,18 @@ export const actions = {
         })
         .where(eq(inquiries.id, inquiryId))
         .run();
+
+      // If approved, add the booked dates to the pass
+      if (status === 'approved' && inquiry.requestedDates) {
+        const dateRange = parseRequestedDatesToRange(inquiry.requestedDates);
+        if (dateRange) {
+          const updatedBookedDates = addBookedDateRange(pass.bookedDates, dateRange.start, dateRange.end);
+          await db.update(passes)
+            .set({ bookedDates: updatedBookedDates })
+            .where(eq(passes.id, inquiry.passId))
+            .run();
+        }
+      }
 
       // Determine which tab to show based on status
       const tab = status === 'approved' ? 'approved' : 'rejected';

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import Calendar from '$lib/components/Calendar.svelte';
   import InteractiveCalendar from '$lib/components/InteractiveCalendar.svelte';
   import { X } from '@lucide/svelte';
   export let data;
@@ -31,11 +30,6 @@
       <p class="owner">Hosted by {pass.ownerName}</p>
       
       <div class="section">
-        <h2>Available Dates</h2>
-        <p>{pass.availableDates}</p>
-      </div>
-
-      <div class="section">
         <h2>About This Pass</h2>
         <p>This is a wonderful opportunity to experience something special. Contact the host to learn more and discuss your specific needs.</p>
       </div>
@@ -59,7 +53,8 @@
             <a href="/login?returnTo=/pass/{data.pass.id}" class="login-button">Login to Request</a>
           {/if}
         </div>
-        <Calendar />
+        <!-- Pass availability calendar - now shows actual booked dates -->
+        <InteractiveCalendar passId={data.pass.id} onDateRangeSelect={handleDateRangeSelect} />
       </div>
     </div>
   </div>
@@ -130,7 +125,7 @@
           <div class="modal-body">
             <div class="form-group">
               <label for="requestedDates">When would you like to use this pass?</label>
-              <InteractiveCalendar onDateRangeSelect={handleDateRangeSelect} />
+              <InteractiveCalendar passId={data.pass.id} onDateRangeSelect={handleDateRangeSelect} />
             </div>
 
             <div class="form-group">
@@ -262,6 +257,7 @@
   .pass-actions {
     display: flex;
     flex-direction: column;
+    margin-bottom: 24px;
   }
 
   .contact-button,
@@ -508,17 +504,6 @@
 
   .close-button:hover {
     background: #7a8a6f;
-  }
-
-  @media (max-width: 968px) {
-    .detail {
-      grid-template-columns: 1fr;
-      gap: 40px;
-    }
-
-    .booking {
-      position: static;
-    }
   }
 
   @media (max-width: 968px) {

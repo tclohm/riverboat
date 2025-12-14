@@ -78,6 +78,13 @@
       "when": 1764607840602,
       "tag": "0010_magenta_true_believers",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1765687009715,
+      "tag": "0011_sticky_grey_gargoyle",
+      "breakpoints": true
     }
   ]
 }

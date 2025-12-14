@@ -1,149 +1,104 @@
-# Willie's Keys
+# Willie's Keys - Pass Sharing Platform
 
-A marketplace for sharing Disney Magic Key passes, inspired by Steamboat Willie (public domain, 1928).
+A web application that enables pass owners to list their unused passes and renters to book them for specific dates. Built with SvelteKit, TypeScript, Drizzle ORM, and SQLite.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+- [Project Structure](#project-structure)
+- [Core Features](#core-features)
+- [Database Schema](#database-schema)
+- [API Endpoints](#api-endpoints)
+- [Development](#development)
+- [Deployment](#deployment)
+
+## Overview
+
+Willie's Keys is a modern pass-sharing marketplace. Pass owners can create listings for their passes with daily rates, manage booking requests, and track approvals. Renters can search available passes, book specific date ranges, and manage their reservations.
+
+The application implements an intelligent calendar system that dynamically tracks booked dates, preventing double-booking while maintaining data integrity through automatic overlap merging.
 
 ## Features
 
-- **Browse passes** - View all available Magic Key passes from other users
-- **Request passes** - Submit requests to use passes with a date range picker and contact info
-- **Manage passes** - Create, edit, and delete your own pass listings
-- **Notifications** - Receive notifications when others request your passes
-- **Inquiries** - Review and approve/decline pass requests from other users
-- **User profiles** - View and edit your profile with personal information (name, phone, location, bio)
-- **Account stats** - See your pass count, bookings, and rating at a glance
-- **User authentication** - Secure login/registration with session management
-- **Responsive design** - Mobile-friendly interface
-- **Clean aesthetic** - Minimal, Steamboat Willie-inspired design
+### Pass Owners
+- Create and manage pass listings with title, type, and daily pricing
+- View interactive calendar showing real-time booking status
+- Manage incoming booking requests from renters
+- Approve or decline booking requests
+- Receive notifications for new requests and changes
+- Maintain detailed profile with location and contact information
 
-## New Features
+### Renters
+- Browse all available passes with comprehensive search and filtering
+- View interactive calendar with real-time availability
+- Submit booking requests with specific date ranges
+- Receive notifications on request status changes
+- Track all bookings and reservation history
+- Manage personal profile and contact details
 
-### User Profile System
-- Complete profile management with editable fields
-- Profile fields: name, email, phone, location, and bio
-- View account statistics (passes listed, total bookings, rating)
-- Member since date tracking
-- Account deletion with confirmation
-
-### Date Range Picker
-- Users can select pass dates using HTML5 calendar inputs
-- Automatic date formatting (e.g., "Dec 15-17, 2025" or "Dec 15 - Jan 5, 2025")
-- Works across different months and years
-
-### Pass Request System
-- Users can submit requests to use other users' passes
-- Include requested dates, contact info, and a personal message
-- Pass owners receive notifications about new requests
-- Approve or decline requests with one click
-
-### Notification System
-- Real-time notifications for pass requests
-- Auto-archive notifications after requested dates pass (4AM following end date)
-- Mark notifications as read
-- Track notification status (pending, approved, declined)
+### Smart Calendar System
+- Real-time availability tracking based on approved bookings
+- Automatic date blocking upon booking approval
+- Intelligent merging of overlapping date ranges
+- Responsive design for mobile and desktop
+- Support for multi-month date selections
 
 ## Tech Stack
 
-- **SvelteKit** - Full-stack framework with server-side rendering
-- **SQLite** - Local development database
-- **Cloudflare D1** - Production database (serverless)
-- **Drizzle ORM** - Type-safe database queries with migrations
-- **Cloudflare Pages** - Free hosting with auto-deploy on git push
-- **Lucide Icons** - Beautiful SVG icons
-- **HTML5 Date Input** - Native calendar date picker
+- **Frontend**: Svelte 4, SvelteKit 2
+- **Language**: TypeScript 5.0+
+- **Database**: SQLite with better-sqlite3
+- **ORM**: Drizzle ORM
+- **Styling**: Tailwind CSS
+- **Icons**: Lucide Icons
+- **Authentication**: Session-based with bcryptjs
+- **API**: REST with SvelteKit server routes
 
-## Database Architecture
-
-This project uses a robust database connection pattern:
-
-- **Singleton Pattern** - Maintains a single database connection throughout the application
-- **Provider Pattern** - Abstracts database implementations (SQLite for development, D1 for production)
-- **Factory Pattern** - Creates the appropriate database provider based on environment
-
-### Database Schema
-
-- **user** - User profiles with authentication info and profile fields (phone, location, bio)
-- **account** - User account and authentication provider data
-- **session** - Active user sessions with secure tokens
-- **passes** - Magic Key pass listings (title, type, price, available dates)
-- **inquiries** - Pass requests with dates, contact info, and status
-- **notifications** - System notifications for pass activity
-- **verification** - Email verification and password reset tokens
-
-Connections are managed automatically:
-- **Development** (`npm run dev`): Uses local SQLite database (`local.db`)
-- **Production** (`npm run build`): Uses Cloudflare D1 database
-
-## Local Development
+## Getting Started
 
 ### Prerequisites
-- Node.js 18+
-- npm
+- Node.js 18 or higher
+- npm or yarn
+- Git
 
-### Setup
+### Installation
 
-1. Clone the repository
 ```bash
-git clone <your-repo-url>
+# Clone repository
+git clone <repository-url>
 cd willies-keys
-```
 
-2. Install dependencies
-```bash
+# Install dependencies
 npm install
 ```
 
-3. Generate and initialize database
-```bash
-npx drizzle-kit generate
-npx drizzle-kit push
-```
+### Database Setup
 
-4. Seed with sample data
 ```bash
+# Seed database with sample data
 npm run seed
 ```
 
-5. Start development server
+### Development
+
 ```bash
+# Start development server
 npm run dev
 ```
 
-Open http://localhost:5173
+Server runs at http://localhost:5173
 
-### Testing Authentication
+### Build
 
-1. Register a new account through the UI
-2. Create passes and test the full flow
-3. Use multiple browsers/tabs to simulate different users
-4. Visit `/profile` to view and edit your profile
-
-## Database Management
-
-### Migrations
-
-**Create and apply migration locally:**
 ```bash
-npx drizzle-kit generate
-npx drizzle-kit push
-```
+# Build for production
+npm run build
 
-**Apply migration to production D1:**
-```bash
-npx drizzle-kit generate
-npx wrangler d1 execute willies-keys-db --remote --file=./drizzle/[migration-file].sql
-```
-
-### Seeding
-
-**Seed local database:**
-```bash
-npm run seed
-```
-
-**Generate SQL for production:**
-```bash
-npm run seed:sql > seed.sql
-npx wrangler d1 execute willies-keys-db --remote --file=seed.sql
+# Preview production build
+npm run preview
 ```
 
 ## Project Structure
@@ -151,155 +106,313 @@ npx wrangler d1 execute willies-keys-db --remote --file=seed.sql
 ```
 willies-keys/
 ├── src/
+│   ├── app.css              # Global styles
+│   ├── app.d.ts             # TypeScript definitions
+│   ├── app.html             # HTML template
+│   ├── hooks.server.ts       # Server-side hooks
+│   │
 │   ├── lib/
+│   │   ├── components/       # Reusable components
+│   │   │   ├── Calendar.svelte
+│   │   │   ├── InteractiveCalendar.svelte
+│   │   │   ├── DateRangePicker.svelte
+│   │   │   ├── NotificationsMenu.svelte
+│   │   │   └── SearchBar.svelte
+│   │   │
 │   │   ├── db/
-│   │   │   ├── client.ts               # Database client (singleton)
-│   │   │   ├── factory.ts              # Database factory
-│   │   │   ├── index.ts                # Main database API
-│   │   │   ├── schema.ts               # Database schema
-│   │   │   ├── seed.ts                 # Seeding script
-│   │   │   └── providers/              # Database providers
-│   │   │       ├── types.ts            # Provider interfaces
-│   │   │       ├── sqlite-provider.ts  # SQLite (dev)
-│   │   │       └── d1-provider.ts      # Cloudflare D1 (prod)
-│   │   ├── components/
-│   │   │   └── DateRangePicker.svelte  # Date range selector component
+│   │   │   ├── index.ts
+│   │   │   ├── client.ts
+│   │   │   ├── factory.ts
+│   │   │   ├── schema.ts
+│   │   │   ├── seed.ts
+│   │   │   └── providers/
+│   │   │
 │   │   └── server/
-│   │       └── auth.ts                 # Authentication logic
+│   │       ├── auth.ts
+│   │       └── dateUtils.ts
+│   │
 │   └── routes/
-│       ├── +page.svelte                # Homepage (browse passes)
-│       ├── +page.server.ts             # Load passes from DB
-│       ├── add/                        # Create new pass
-│       ├── pass/[id]/                  # Pass details & inquiries
-│       ├── admin/                      # User dashboard
-│       ├── bookings/                   # User's booking requests
-│       ├── requests/                   # Received pass requests
-│       ├── profile/                    # User profile & settings
-│       ├── notifications/              # View notifications & manage requests
-│       ├── login/, signup/             # Auth routes
-│       └── ...
-├── static/                             # Static assets
-├── drizzle/                            # Migrations
-├── wrangler.toml                       # Cloudflare config
-├── drizzle.config.ts                   # Drizzle config
+│       ├── +page.svelte      # Homepage
+│       ├── +layout.svelte    # Main layout
+│       ├── api/              # API endpoints
+│       ├── login/            # Authentication
+│       ├── signup/
+│       ├── logout/
+│       ├── admin/            # Owner dashboard
+│       ├── add/              # Create pass
+│       ├── pass/[id]/        # Pass details
+│       ├── requests/         # Manage requests
+│       ├── bookings/         # View bookings
+│       └── profile/          # User profile
+│
+├── svelte.config.js
+├── tsconfig.json
+├── vite.config.ts
 └── package.json
 ```
 
-## Production Deployment
+## Core Features
 
-### Initial Cloudflare D1 Setup
+### Smart Calendar System
 
-1. Install Wrangler CLI
+The calendar tracks booking availability using a JSON-based date range system:
+
+```typescript
+// Booked dates stored as JSON array
+passes.booked_dates = [
+  {start: "2025-12-15", end: "2025-12-17"},
+  {start: "2025-12-20", end: "2025-12-22"}
+]
+```
+
+Key capabilities:
+- Real-time API fetching of booked dates
+- Automatic merging of overlapping ranges
+- Responsive calendar component
+- Strict date validation
+
+### Authentication
+
+Session-based authentication system:
+- Email/password signup and login
+- Secure password hashing with bcryptjs
+- Session tokens stored in HTTP-only cookies
+- User context loaded on page load
+
+Routes:
+- `/login` - Sign in
+- `/signup` - Create account
+- `/logout` - Sign out
+- `/profile` - Manage profile
+
+### Notifications
+
+System notifications for:
+- New booking requests
+- Request approvals and declines
+- Notification management with read/dismiss actions
+
+### Booking Workflow
+
+```
+1. Owner creates pass (booked_dates = "[]")
+2. Renter submits booking request
+3. Owner reviews requests at /requests
+4. Owner approves/declines
+5. If approved: dates added to booked_dates
+6. Calendar automatically reflects changes
+7. Future users see those dates as unavailable
+```
+
+### Responsive Design
+
+- Mobile-first approach
+- Tailwind CSS utilities
+- Professional design system
+- Breakpoints: 480px, 768px, 968px+
+
+## Database Schema
+
+### passes
+- id: Primary key
+- title: Pass name
+- price: Daily rate
+- passType: Key type (Dream, Inspire, Enchant, Believe)
+- bookedDates: JSON array of date ranges
+- userId: Owner reference
+
+### users
+- id: Primary key
+- name: Full name
+- email: Unique email address
+- password: Hashed (in accounts table)
+- phone: Contact number
+- location: User location
+- bio: Profile bio
+- Timestamps for creation/updates
+
+### inquiries
+- id: Primary key
+- passId: Reference to pass
+- senderUserId: Requester
+- receiverUserId: Pass owner
+- message: Request message
+- contactInfo: Contact details
+- requestedDates: Date range string
+- status: pending, approved, rejected
+- read: Read status
+- Timestamps
+
+### notifications
+- id: Primary key
+- userId: Recipient
+- passId: Related pass
+- type: inquiry, booking
+- title: Notification title
+- message: Notification body
+- read: Read status
+- archived: Archive status
+- metadata: JSON metadata
+
+### sessions
+- id: Primary key
+- userId: Session owner
+- token: Unique session token
+- expiresAt: Expiration date
+- ipAddress: Client IP
+- userAgent: Browser info
+- Timestamps
+
+## API Endpoints
+
+### Passes
+```
+GET /api/passes/[id]/booked-dates
+Returns: { bookedDates: [{start, end}, ...] }
+```
+
+### Notifications
+```
+POST /api/notifications/[id]/read
+POST /api/notifications/[id]/dismiss
+POST /api/notifications/read-all
+```
+
+### Inquiries
+```
+POST /api/inquiries/mark-as-read
+```
+
+## Development
+
+### Commands
+
 ```bash
-npm install -D wrangler
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+
+# Run tests
+npm run test
+
+# Format code
+npm run format
+
+# Lint code
+npm run lint
 ```
 
-2. Login to Cloudflare
-```bash
-npx wrangler login
-```
-
-3. Create D1 database
-```bash
-npx wrangler d1 create willies-keys-db
-```
-
-4. Copy database ID to `wrangler.toml`:
-```toml
-[[d1_databases]]
-binding = "willies_keys_db"
-database_name = "willies-keys-db"
-database_id = "your-database-id-here"
-```
-
-5. Run migrations on D1
-```bash
-npx drizzle-kit generate
-npx wrangler d1 execute willies-keys-db --remote --file=./drizzle/[latest-migration].sql
-```
-
-### Deploy to Cloudflare Pages
-
-1. Push to GitHub
-```bash
-git push
-```
-
-2. Connect at https://dash.cloudflare.com
-   - **Workers & Pages** → **Create application** → **Pages**
-   - Import your GitHub repository
-   - Framework: **SvelteKit**
-   - Build command: `npm run build`
-   - Output directory: `.svelte-kit/cloudflare`
-
-3. Add D1 binding in Cloudflare Pages settings
-   - **Settings** → **Functions** → **D1 database bindings**
-   - Variable: `willies_keys_db`
-   - Database: Select `willies-keys-db`
-
-4. Every push to `main` auto-deploys!
-
-## Scripts
+### Database Commands
 
 ```bash
-npm run dev              # Start dev server (SQLite)
-npm run dev:prod        # Dev server with prod settings
-npm run build           # Build for production (D1)
-npm run build:dev       # Build for dev (SQLite)
-npm run preview         # Preview production build
-npm run seed            # Seed local DB with sample data
-npm run seed:sql        # Generate SQL for production seeding
+# Seed database
+npm run seed
+
+# Fresh seed (reset)
+npm run seed:fresh
 ```
 
-## Authentication System
+### Code Standards
 
-Secure user authentication with:
+- TypeScript for type safety
+- Svelte best practices
+- Drizzle ORM for database access
+- Consistent file structure
+- Comprehensive error handling
 
-- Password hashing (Bcrypt)
-- Session management with secure HttpOnly cookies
-- Protected routes for authenticated users only
-- User registration and login flows
-- Email verification support (framework in place)
+## Deployment
 
-## How It Works
+### Vercel
 
-### Creating a Pass
+```bash
+npm i -g vercel
+vercel
+```
 
-1. Login or create an account
-2. Go to "Add Pass"
-3. Fill in pass details (type, price, available dates)
-4. Pass appears on homepage for others to request
+### Cloudflare Workers + D1
 
-### Requesting a Pass
+The application supports Cloudflare D1 database:
+- D1Provider automatically used in production
+- Environment variables from platform.env
+- Compatible with Workers environment
 
-1. Browse available passes
-2. Click "Request This Pass"
-3. Use the date picker to select your requested dates
-4. Enter contact info and message
-5. Submit request
-6. Pass owner receives notification
+### Environment Variables
 
-### Managing Requests
+```
+VITE_API_URL=https://your-domain.com
+DATABASE_URL=sqlite:./local.db
+SESSION_SECRET=your-secret-key
+```
 
-1. Go to Requests or Bookings page
-2. View pending/approved/declined pass requests
-3. Approve or decline each request
-4. Approved notifications auto-archive after dates pass
+## Browser Support
 
-### Managing Your Profile
+- Chrome 90+
+- Firefox 88+
+- Safari 14+
+- Edge 90+
+- Mobile browsers
 
-1. Click "Profile" in the sidebar
-2. View your profile card with avatar and member since date
-3. Click "Edit Profile" to update your information
-4. Edit: name, phone, location, and bio (max 160 characters)
-5. Save changes or cancel
-6. View account stats: passes listed, total bookings, rating
-7. Optionally delete your account (permanent action)
+## Security
+
+- Secure password hashing with bcryptjs
+- HTTP-only session cookies
+- CSRF protection via SvelteKit
+- Input validation on all forms
+- Server-side authorization checks
+- SQL injection prevention via Drizzle ORM
+
+## Testing
+
+```bash
+# Run test suite
+npm run test
+
+# Watch mode
+npm run test:watch
+
+# Coverage report
+npm run test:coverage
+```
+
+## Data Format
+
+All dates use ISO 8601 format: YYYY-MM-DD
+
+Example:
+- Single date: 2025-12-15
+- Date range: {start: "2025-12-15", end: "2025-12-20"}
+- Display format: "Dec 15-20, 2025"
+
+## Performance Considerations
+
+- Booked dates fetched via API on calendar mount
+- JSON storage keeps data structured and queryable
+- Indexed database queries for speed
+- Component-level caching of availability data
 
 ## License
 
-MIT
+[Add your license here]
 
-## Credits
+## Support
 
-Inspired by Steamboat Willie (1928), now in the public domain.
+For issues or questions:
+1. Check existing GitHub issues
+2. Create detailed issue with reproduction steps
+3. Include environment information (Node version, OS, browser)
+
+## Contributing
+
+1. Create feature branch from main
+2. Implement changes with TypeScript
+3. Test thoroughly with test suite
+4. Submit pull request with detailed description
+
+---
+
+Last updated: December 2025
