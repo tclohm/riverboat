@@ -397,7 +397,7 @@ Example:
 
 ## License
 
-[Add your license here]
+MIT
 
 ## Support
 
