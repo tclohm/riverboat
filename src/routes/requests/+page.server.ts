@@ -108,12 +108,26 @@ export const actions = {
       // If approved, add the booked dates to the pass
       if (status === 'approved' && inquiry.requestedDates) {
         const dateRange = parseRequestedDatesToRange(inquiry.requestedDates);
+        
         if (dateRange) {
-          const updatedBookedDates = addBookedDateRange(pass.bookedDates, dateRange.start, dateRange.end);
+          console.log('Parsed date range:', dateRange);
+          
+          // Add the booked date range to the pass
+          const updatedBookedDates = addBookedDateRange(
+            pass.bookedDates,
+            dateRange.start,
+            dateRange.end
+          );
+          
+          console.log('Updated booked dates:', updatedBookedDates);
+          
+          // Update the pass with new booked dates
           await db.update(passes)
             .set({ bookedDates: updatedBookedDates })
             .where(eq(passes.id, inquiry.passId))
             .run();
+        } else {
+          console.warn('Failed to parse requested dates:', inquiry.requestedDates);
         }
       }
 
