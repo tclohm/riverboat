@@ -25,12 +25,11 @@ export const actions = {
     const title = formData.get('title')?.toString();
     const price = parseInt(formData.get('price')?.toString() || '0');
     const passType = formData.get('passType')?.toString();
-    const availableDates = formData.get('availableDates')?.toString();
 
-    if (!title || !price || !passType || !availableDates) {
+    if (!title || !price || !passType) {
       return fail(400, { 
         error: 'All fields are required',
-        values: { title, price, passType, availableDates }
+        values: { title, price, passType }
       });
     }
 
@@ -41,14 +40,14 @@ export const actions = {
         title,
         price,
         passType,
-        availableDates,
+        bookedDates: '[]',
         userId: locals.user.id
       });
     } catch (error) {
       console.error('Failed to create pass:', error);
       return fail(500, { 
         error: 'Failed to create pass. Please try again.',
-        values: { title, price, passType, availableDates }
+        values: { title, price, passType }
       });
     }
 

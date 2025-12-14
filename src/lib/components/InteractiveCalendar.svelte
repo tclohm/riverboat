@@ -1,7 +1,7 @@
 <script lang="ts">
   import { ChevronLeft, ChevronRight } from '@lucide/svelte';
 
-  export let availableDates: number[] = [15, 16, 17, 18, 19, 20, 22, 23, 24, 25, 26, 27];
+  export let passId: number | null = null;
   export let onDateRangeSelect: (startDate: string, endDate: string) => void = () => {};
 
   let currentMonth = new Date().getMonth();
@@ -9,6 +9,40 @@
   let selectedStart: number | null = null;
   let selectedEnd: number | null = null;
   let hoveredDay: number | null = null;
+  let bookedDates: {start: string, end: string}[] = [];
+  let loading = true;
+
+  // Fetch booked dates for this pass on mount
+  async function fetchBookedDates() {
+    if (!passId) {
+      loading = false;
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/passes/${passId}/booked-dates`);
+      if (response.ok) {
+        const data = await response.json();
+        bookedDates = data.bookedDates || [];
+      }
+    } catch (error) {
+      console.error('Failed to fetch booked dates:', error);
+    } finally {
+      loading = false;
+    }
+  }
+
+  // Check if a specific date falls within any booked range
+  function isDateBooked(day: number, month: number, year: number): boolean {
+    const dateStr = formatDateForComparison(day, month, year);
+    return bookedDates.some(range => dateStr >= range.start && dateStr <= range.end);
+  }
+
+  function formatDateForComparison(day: number, month: number, year: number): string {
+    const m = String(month + 1).padStart(2, '0');
+    const d = String(day).padStart(2, '0');
+    return `${year}-${m}-${d}`;
+  }
 
   function getDaysInMonth(month: number, year: number): number {
     return new Date(year, month + 1, 0).getDate();
@@ -44,8 +78,9 @@
   function getDayClass(day: number): string {
     let classes = 'day';
     
-    if (!availableDates.includes(day)) {
-      classes += ' unavailable';
+    // Check if date is booked
+    if (isDateBooked(day, currentMonth, currentYear)) {
+      classes += ' booked';
       return classes;
     }
     
@@ -76,7 +111,8 @@
   }
 
   function selectDate(day: number) {
-    if (!availableDates.includes(day)) return;
+    // Can't select booked dates
+    if (isDateBooked(day, currentMonth, currentYear)) return;
 
     if (selectedStart === null) {
       selectedStart = day;
@@ -117,7 +153,7 @@
     }
   }
 
-  // REACTIVE DECLARATIONS - These update when dependencies change
+  // Reactive declarations
   $: daysInMonth = getDaysInMonth(currentMonth, currentYear);
   $: firstDay = getFirstDayOfMonth(currentMonth, currentYear);
   $: monthName = new Date(currentYear, currentMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -125,101 +161,109 @@
   $: emptyDays = Array.from({ length: firstDay }, (_, i) => i);
   $: displayRange = (selectedStart !== null && selectedEnd !== null) ? formatDateRange() : '';
   
-  // KEY REACTIVE STATEMENT - Recalculate classes when any of these change:
-  // hoveredDay, selectedStart, selectedEnd, availableDates
+  // Recalculate classes when dates change
   $: classMap = {
     hoveredDay,
     selectedStart,
     selectedEnd,
     days: days.map(day => ({ day, class: getDayClass(day) }))
   };
+
+  // Fetch booked dates when component mounts
+  $: if (passId !== null) {
+    fetchBookedDates();
+  }
 </script>
 
 <div class="calendar">
-  <div class="calendar-header">
-    <button 
-      type="button"
-      class="nav-btn"
-      on:click={previousMonth}
-      aria-label="Previous month"
-    >
-      <ChevronLeft size={20} />
-    </button>
-    <h3>{monthName}</h3>
-    <button 
-      type="button"
-      class="nav-btn"
-      on:click={nextMonth}
-      aria-label="Next month"
-    >
-      <ChevronRight size={20} />
-    </button>
-  </div>
-
-  <div class="selection-status">
-    {#if selectedStart === null}
-      <p class="status-text">Tap start date</p>
-    {:else if selectedEnd === null}
-      <p class="status-text">Tap end date</p>
-    {:else}
-      <p class="status-text selected">{displayRange}</p>
-    {/if}
-  </div>
-
-  <div class="weekdays">
-    <div class="weekday">Sun</div>
-    <div class="weekday">Mon</div>
-    <div class="weekday">Tue</div>
-    <div class="weekday">Wed</div>
-    <div class="weekday">Thu</div>
-    <div class="weekday">Fri</div>
-    <div class="weekday">Sat</div>
-  </div>
-
-  <div class="days-grid">
-    {#each emptyDays as _}
-      <div class="empty-day"></div>
-    {/each}
-
-    {#each classMap.days as { day, class: dayClass } (day)}
-      <button
+  {#if loading}
+    <div class="loading">Loading availability...</div>
+  {:else}
+    <div class="calendar-header">
+      <button 
         type="button"
-        class={dayClass}
-        on:click={() => selectDate(day)}
-        on:mouseenter={() => { hoveredDay = day; }}
-        on:mouseleave={() => { hoveredDay = null; }}
-        disabled={!availableDates.includes(day)}
+        class="nav-btn"
+        on:click={previousMonth}
+        aria-label="Previous month"
       >
-        {day}
+        <ChevronLeft size={20} />
       </button>
-    {/each}
-  </div>
+      <h3>{monthName}</h3>
+      <button 
+        type="button"
+        class="nav-btn"
+        on:click={nextMonth}
+        aria-label="Next month"
+      >
+        <ChevronRight size={20} />
+      </button>
+    </div>
 
-  <div class="calendar-actions">
-    <button 
-      type="button"
-      class="reset-btn"
-      on:click={resetSelection}
-      disabled={selectedStart === null}
-    >
-      Reset
-    </button>
-  </div>
+    <div class="selection-status">
+      {#if selectedStart === null}
+        <p class="status-text">Tap start date</p>
+      {:else if selectedEnd === null}
+        <p class="status-text">Tap end date</p>
+      {:else}
+        <p class="status-text selected">{displayRange}</p>
+      {/if}
+    </div>
 
-  <div class="calendar-legend">
-    <div class="legend-item">
-      <div class="legend-color available"></div>
-      <span>Available</span>
+    <div class="weekdays">
+      <div class="weekday">Sun</div>
+      <div class="weekday">Mon</div>
+      <div class="weekday">Tue</div>
+      <div class="weekday">Wed</div>
+      <div class="weekday">Thu</div>
+      <div class="weekday">Fri</div>
+      <div class="weekday">Sat</div>
     </div>
-    <div class="legend-item">
-      <div class="legend-color unavailable"></div>
-      <span>Booked</span>
+
+    <div class="days-grid">
+      {#each emptyDays as _}
+        <div class="empty-day"></div>
+      {/each}
+
+      {#each classMap.days as { day, class: dayClass } (day)}
+        <button
+          type="button"
+          class={dayClass}
+          on:click={() => selectDate(day)}
+          on:mouseenter={() => { hoveredDay = day; }}
+          on:mouseleave={() => { hoveredDay = null; }}
+          disabled={isDateBooked(day, currentMonth, currentYear)}
+        >
+          {day}
+        </button>
+      {/each}
     </div>
-    <div class="legend-item">
-      <div class="legend-color selected"></div>
-      <span>Selected</span>
+
+    <div class="calendar-actions">
+      <button 
+        type="button"
+        class="reset-btn"
+        on:click={resetSelection}
+        disabled={selectedStart === null}
+      >
+        Reset
+      </button>
     </div>
-  </div>
+
+    <div class="calendar-legend">
+      <div class="legend-item">
+        <div class="legend-color available"></div>
+        <span>Available</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color booked"></div>
+        <span>Booked</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color selected"></div>
+        <span>Selected</span>
+      </div>
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -229,6 +273,13 @@
     border-radius: 2px;
     padding: 16px;
     margin-top: 24px;
+  }
+
+  .loading {
+    padding: 32px;
+    text-align: center;
+    color: #8b7355;
+    font-size: 14px;
   }
 
   .calendar-header {
@@ -341,7 +392,7 @@
     transform: scale(1.08);
   }
 
-  .day.unavailable {
+  .day.booked {
     background: #d4c4b0;
     color: #8b7355;
     border-color: #a0937f;
@@ -426,7 +477,7 @@
     background: white;
   }
 
-  .legend-color.unavailable {
+  .legend-color.booked {
     background: #d4c4b0;
   }
 
