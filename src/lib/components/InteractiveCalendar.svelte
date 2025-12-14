@@ -1,5 +1,6 @@
 <script lang="ts">
   import { ChevronLeft, ChevronRight } from '@lucide/svelte';
+  import { onMount } from 'svelte';
 
   export let passId: number | null = null;
   export let onDateRangeSelect: (startDate: string, endDate: string) => void = () => {};
@@ -15,7 +16,7 @@
   let bookedDates: {start: string, end: string}[] = [];
   let loading = true;
 
-  // ===== FETCH DATA =====
+  // ===== FETCH DATA ===== 
   async function fetchBookedDates() {
     if (!passId) {
       loading = false;
@@ -35,9 +36,12 @@
     }
   }
 
-  $: if (passId) {
-    fetchBookedDates();
-  }
+  onMount(() => {
+    if (passId) {
+      fetchBookedDates()
+    }
+  })
+
 
   // ===== DATE UTILITIES =====
   function formatDateForComparison(date: Date): string {
