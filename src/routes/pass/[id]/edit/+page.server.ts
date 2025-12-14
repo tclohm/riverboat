@@ -46,10 +46,9 @@ export const actions = {
     const title = data.get('title')?.toString();
     const passType = data.get('passType')?.toString();
     const price = parseInt(data.get('price')?.toString() || '0');
-    const availableDates = data.get('availableDates')?.toString();
 
     // Validate - no longer require owner
-    if (!title || !passType || !price || !availableDates) {
+    if (!title || !passType || !price) {
       return fail(400, { error: 'All fields are required' });
     }
 
@@ -59,7 +58,6 @@ export const actions = {
         title,
         passType,
         price,
-        availableDates
       })
       .where(eq(passes.id, parseInt(params.id)))
       .run();

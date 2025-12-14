@@ -65,17 +65,6 @@
           required
         />
       </div>
-
-      <div class="form-group">
-        <label for="availableDates">Available Dates</label>
-        <input 
-          type="text" 
-          id="availableDates" 
-          name="availableDates" 
-          value={pass.availableDates}
-          required
-        />
-      </div>
     </div>
 
     <button type="submit" disabled={loading} class="save-button">
