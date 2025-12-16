@@ -48,24 +48,12 @@ export async function load({ platform, cookies, locals }) {
         .orderBy(desc(notifications.createdAt))
         .all();
       
-      // Get pending requests count (for sidebar badge)
-      const pendingRequests = await db.select()
-        .from(inquiries)
-        .where(
-          and(
-            eq(inquiries.receiverUserId, user.id),
-            eq(inquiries.status, 'pending')
-          )
-        )
-        .all();
-      
       return {
         user,
         userPassCount,
         unreadBookingsCount,
         notifications: unreadNotifications,
-        unreadNotificationCount: unreadNotifications.length,
-        pendingRequestCount: pendingRequests.length
+        unreadNotificationCount: unreadNotifications.length
       };
     } catch (error) {
       console.error('Failed to load layout data:', error);
@@ -74,8 +62,7 @@ export async function load({ platform, cookies, locals }) {
         userPassCount: 0,
         unreadBookingsCount: 0,
         notifications: [],
-        unreadNotificationCount: 0,
-        pendingRequestCount: 0
+        unreadNotificationCount: 0
       };
     }
   }
@@ -85,7 +72,6 @@ export async function load({ platform, cookies, locals }) {
     userPassCount: 0,
     unreadBookingsCount: 0,
     notifications: [],
-    unreadNotificationCount: 0,
-    pendingRequestCount: 0
+    unreadNotificationCount: 0
   };
 }

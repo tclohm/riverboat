@@ -1,7 +1,7 @@
 import { passes, inquiries, notifications, user } from '$lib/db/schema';
 import { getDb } from '$lib/db';
 import { error, fail, redirect } from '@sveltejs/kit';
-import { eq } from 'drizzle-orm';
+import { eq, and, desc } from 'drizzle-orm';
 
 function getMonthIndex(monthStr: string): number | undefined {
   const monthMap: { [key: string]: number } = {
@@ -153,7 +153,11 @@ export const actions = {
     try {
       const db = await getDb(platform);
       
-      // create inquiry - this is the notification for the pass owner
+      // Get the pass and sender user info for notification
+      const pass = await db.select().from(passes).where(eq(passes.id, passId)).get();
+      const senderUser = await db.select().from(user).where(eq(user.id, locals.user.id)).get();
+      
+      // Create inquiry
       await db.insert(inquiries).values({
         passId,
         senderUserId: locals.user.id,
@@ -164,7 +168,40 @@ export const actions = {
         status: 'pending',
         createdAt: new Date(),
         updatedAt: new Date()
-      });
+      }).run();
+      
+      // Get the newly created inquiry (fetch the most recent one for this sender and pass)
+      const newInquiry = await db.select().from(inquiries)
+        .where(
+          and(
+            eq(inquiries.passId, passId),
+            eq(inquiries.senderUserId, locals.user.id),
+            eq(inquiries.receiverUserId, receiverUserId),
+            eq(inquiries.status, 'pending')
+          )
+        )
+        .orderBy(desc(inquiries.createdAt))
+        .get();
+      
+      // Create notification for the pass owner
+      await db.insert(notifications).values({
+        userId: receiverUserId,
+        passId: passId,
+        type: 'request',
+        title: 'New Booking Request',
+        message: `New booking request from ${senderUser?.name || 'A user'} for "${pass?.title || 'a pass'}"`,
+        read: false,
+        archived: false,
+        createdAt: new Date(),
+        metadata: JSON.stringify({
+          inquiryId: newInquiry?.id,
+          senderName: senderUser?.name,
+          senderUserId: locals.user.id,
+          requestedDates: requestedDates,
+          passTitle: pass?.title,
+          tab: 'pending'
+        })
+      }).run();
       
       return { success: true };
     } catch (error) {

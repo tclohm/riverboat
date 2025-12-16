@@ -86,6 +86,10 @@
     const tab = metadata.tab || 'approved';
   
     // Route based on notification type
+    if (notification.type === 'request') {
+      return `/requests`;
+    }
+
     if (notification.type === 'inquiry') {
       return `/bookings?tab=${tab}`;
     }
@@ -107,6 +111,18 @@
       }
     } catch(error) {
       console.error('Failed to dismiss notification:', error);
+    }
+  }
+
+  async function markNotificationAsRead(notificationId) {
+    try {
+      const response = await fetch(`/api/notifications/${notificationId}/read`, { method: 'POST' });
+  
+      if (response.ok) {
+        await invalidateAll();
+      }
+    } catch(error) {
+      console.error('Failed to mark notification as read:', error);
     }
   }
 </script>
@@ -152,9 +168,6 @@
           >
             <svelte:component this={item.icon} size={20} />
             <span class="nav-label">{item.label}</span>
-            {#if item.href === '/requests' && data.pendingRequestCount > 0}
-              <span class="notification-badge">{data.pendingRequestCount}</span>
-            {/if}
           </a>
         {/each}
       </nav>
@@ -313,6 +326,7 @@
                     href={getNotificationLink(notification)}
                     class="notification-item"
                     on:click={() => {
+                      markNotificationAsRead(notification.id);
                       showNotificationsMenu = false;
                     }}
                   >
@@ -367,9 +381,6 @@
               >
                 <svelte:component this={item.icon} size={20} />
                 <span class="nav-label">{item.label}</span>
-                {#if item.href === '/requests' && data.pendingRequestCount > 0}
-                  <span class="notification-badge">{data.pendingRequestCount}</span>
-                {/if}
               </a>
             {/each}
           </nav>
@@ -503,22 +514,6 @@
     background: #d9a574;
     color: white;
     border: 1px solid #8b7355;
-  }
-
-  .notification-badge {
-    background: #c85a54;
-    color: white;
-    font-size: 10px;
-    font-weight: 700;
-    width: 20px;
-    height: 20px;
-    padding: 0;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-left: auto;
-    flex-shrink: 0;
   }
 
   .nav-label {
