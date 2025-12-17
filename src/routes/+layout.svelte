@@ -43,11 +43,6 @@
             href: '/admin',
             label: 'My Passes',
             icon: Tickets
-          },
-          {
-            href: '/requests',
-            label: 'Requests',
-            icon: Inbox
           }
         ]
         : [],
@@ -74,32 +69,41 @@
   $: isLoggedIn = !!data.user;
   
   function getNotificationLink(notification) {
-    // Get tab from metadata if available
+    // Get metadata
     let metadata = {};
-  
     try {
       if (notification.metadata) {
         metadata = JSON.parse(notification.metadata);
       }
-    } catch(e) {} // metadata is not valid JSON
+    } catch(e) {}
   
-    const tab = metadata.tab || 'approved';
-  
-    // Route based on notification type
-    if (notification.type === 'request') {
+    // Inquiry = incoming booking request -> go to /requests (pass owner receiving requests)
+    if (notification.type === 'inquiry') {
       return `/requests`;
     }
-
-    if (notification.type === 'inquiry') {
+  
+    // Request = approval/decline of a booking -> go to /bookings (user who made the request)
+    if (notification.type === 'request') {
+      const tab = metadata.tab || 'approved';
       return `/bookings?tab=${tab}`;
     }
   
+    // Booking notifications -> go to /bookings
     if (notification.type === 'booking') {
+      const tab = metadata.tab || 'approved';
       return `/bookings?tab=${tab}`;
     }
-  
-    // Default to bookings with approved tab
-    return `/bookings?tab=${tab}`;
+
+    // Fallback
+    return `/bookings`;
+  }
+
+  function parseMetadata(metadataStr) {
+    try {
+      return metadataStr ? JSON.parse(metadataStr) : {};
+    } catch {
+      return {};
+    }
   }
   
   async function dismissNotification(notificationId) {
@@ -128,7 +132,6 @@
 
   async function markInquiryAsRead(inquiryId) {
     try {
-      // Mark the inquiry as read via API
       const response = await fetch(`/api/inquiries/${inquiryId}/mark-read`, { 
         method: 'POST' 
       });
@@ -143,7 +146,6 @@
 
   async function dismissInquiry(inquiryId) {
     try {
-      // Could archive or delete inquiry - for now just mark as read
       const response = await fetch(`/api/inquiries/${inquiryId}/mark-read`, { 
         method: 'POST' 
       });
@@ -241,7 +243,7 @@
       <!-- Spacer -->
       <div class="nav-spacer"></div>
 
-      <!-- User Section (NO BELL HERE) -->
+      <!-- User Section -->
       <div class="user-section">
         <div class="user-info">
           <div class="user-avatar">{data.user?.name?.charAt(0) || 'U'}</div>
@@ -337,70 +339,66 @@
         </button>
         
         {#if showNotificationsMenu}
-  <div 
-    class="notifications-dropdown"
-    on:click|stopPropagation
-  >
-    <div class="dropdown-header">
-      <h3>Notifications</h3>
-    </div>
-    
-    <div class="notifications-list-dropdown">
-      {#if data.notifications.length === 0}
-        <div class="empty-notifications">
-          <p>No new notifications</p>
-        </div>
-      {:else}
-        {#each data.notifications as notification}
-          {@const isInquiry = notification.type === 'inquiry'}
-          {@const metadata = (() => {
-            try {
-              return notification.metadata ? JSON.parse(notification.metadata) : {};
-            } catch {
-              return {};
-            }
-          })()}
-          {@const link = isInquiry ? '/requests' : getNotificationLink(notification)}
-          
-          <a 
-            href={link}
-            class="notification-item"
-            on:click={() => {
-              if (isInquiry) {
-                markInquiryAsRead(notification.inquiryId);
-              } else {
-                markNotificationAsRead(notification.id);
-              }
-              showNotificationsMenu = false;
-            }}
+          <div 
+            class="notifications-dropdown"
+            on:click|stopPropagation
           >
-            <div class="notification-content">
-              <h4>{notification.title}</h4>
-              <p>{notification.message}</p>
-              <span class="notification-time">
-                {new Date(notification.createdAt).toLocaleTimeString()}
-              </span>
+            <div class="dropdown-header">
+              <h3>Notifications</h3>
             </div>
-            <button 
-              type="button"
-              class="dismiss-btn"
-              on:click|preventDefault|stopPropagation={() => {
-                if (isInquiry) {
-                  dismissInquiry(notification.inquiryId);
-                } else {
-                  dismissNotification(notification.id);
-                }
-              }}
-              aria-label="Dismiss"
-            >
-              ×
-            </button>
-          </a>
-        {/each}
-      {/if}
-    </div>
-  </div>
-{/if}    
+            
+            <div class="notifications-list-dropdown">
+              {#if data.notifications.length === 0}
+                <div class="empty-notifications">
+                  <p>No new notifications</p>
+                </div>
+              {:else}
+                {#each data.notifications as notification}
+                  {@const isInquiry = notification.type === 'inquiry'}
+                  {@const link = getNotificationLink(notification)}
+                  
+                  <a 
+                    href={link}
+                    class="notification-item"
+                    on:click={() => {
+                      if (isInquiry) {
+                        markInquiryAsRead(notification.inquiryId);
+                      } else {
+                        markNotificationAsRead(notification.id);
+                      }
+                      showNotificationsMenu = false;
+                    }}
+                  >
+                    <div class="notification-content">
+                      <h4>{notification.title}</h4>
+                      <p>{notification.message}</p>
+                      <span class="notification-time">
+                        {new Date(notification.createdAt).toLocaleTimeString()}
+                      </span>
+                    </div>
+                    <button 
+                      type="button"
+                      class="dismiss-btn"
+                      on:click|preventDefault|stopPropagation={() => {
+                        if (isInquiry) {
+                          dismissInquiry(notification.inquiryId);
+                        } else {
+                          dismissNotification(notification.id);
+                        }
+                      }}
+                      aria-label="Dismiss"
+                    >
+                      ×
+                    </button>
+                  </a>
+                {/each}
+              {/if}
+            </div>
+          </div>
+        {/if}
+      </div>
+    {/if}
+    
     <!-- Page content -->
     <slot />
   </main>

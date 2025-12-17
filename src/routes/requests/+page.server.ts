@@ -142,7 +142,7 @@ export const actions = {
       await db.insert(notifications).values({
         userId: inquiry.senderUserId,
         passId: inquiry.passId,
-        type: 'inquiry',
+        type: 'request',
         title: notificationTitle,
         message: notificationMessage,
         read: false,
