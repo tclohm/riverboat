@@ -5,8 +5,11 @@
   export let passId: number | null = null;
   export let onDateRangeSelect: (startDate: string, endDate: string) => void = () => {};
 
-  let currentMonth = new Date().getMonth();
-  let currentYear = new Date().getFullYear();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  let currentMonth = today.getMonth();
+  let currentYear = today.getFullYear();
   
   // Store full Date objects for multi-month selection
   let selectedStartDate: Date | null = null;
@@ -62,6 +65,11 @@
     return bookedDates.some(range => dateStr >= range.start && dateStr <= range.end);
   }
 
+  function isDateInPast(date: Date): boolean {
+    const normalized = getNormalizedDate(date);
+    return normalized < today;
+  }
+
   function getDaysInMonth(month: number, year: number): number {
     return new Date(year, month + 1, 0).getDate();
   }
@@ -72,6 +80,10 @@
 
   // ===== NAVIGATION =====
   function previousMonth() {
+    // Can't go to past months
+    const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+    if (firstDayOfMonth <= today) return;
+    
     if (currentMonth === 0) {
       currentMonth = 11;
       currentYear--;
@@ -89,12 +101,14 @@
     }
   }
 
+  $: canGoPrevious = new Date(currentYear, currentMonth, 1) > today;
+
   // ===== SELECTION LOGIC =====
   function selectDate(day: number) {
     const date = new Date(currentYear, currentMonth, day);
     
-    // Can't select booked dates
-    if (isDateBooked(date)) return;
+    // Can't select booked dates or past dates
+    if (isDateBooked(date) || isDateInPast(date)) return;
 
     if (selectedStartDate === null) {
       // First selection
@@ -175,6 +189,11 @@
     const date = getNormalizedDate(new Date(currentYear, currentMonth, day));
     const classes: string[] = ['day'];
 
+    // Check if past
+    if (isDateInPast(date)) {
+      return 'day past-date';
+    }
+
     // Check if booked
     if (isDateBooked(getNormalizedDate(date))) {
       return 'day booked';
@@ -249,6 +268,7 @@
         type="button"
         class="nav-btn"
         on:click={previousMonth}
+        disabled={!canGoPrevious}
         aria-label="Previous month"
       >
         <ChevronLeft size={20} />
@@ -295,6 +315,7 @@
       {#each dayClassMap as { day, class: dayClass } (day)}
         {@const date = new Date(currentYear, currentMonth, day)}
         {@const isBooked = isDateBooked(date)}
+        {@const isPast = isDateInPast(date)}
         
         <button
           type="button"
@@ -302,7 +323,7 @@
           on:click={() => selectDate(day)}
           on:mouseenter={() => { hoveredDate = date; }}
           on:mouseleave={() => { hoveredDate = null; }}
-          disabled={isBooked}
+          disabled={isBooked || isPast}
         >
           {day}
         </button>
@@ -326,6 +347,10 @@
       <div class="legend-item">
         <div class="legend-color available"></div>
         <span>Available</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color past"></div>
+        <span>Past</span>
       </div>
       <div class="legend-item">
         <div class="legend-color booked"></div>
@@ -387,6 +412,15 @@
   .nav-btn:hover {
     background: rgba(217, 165, 116, 0.2);
     color: #5a4a3a;
+  }
+
+  .nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .nav-btn:disabled:hover {
+    background: none;
   }
 
   .selection-status {
@@ -465,6 +499,19 @@
   .day.available {
     border-color: #d4c4b0;
     background: white;
+  }
+
+  /* Past dates - disabled */
+  .day.past-date {
+    background: #ccc;
+    color: #999;
+    border-color: #bbb;
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
+
+  .day.past-date:hover {
+    transform: none;
   }
 
   /* Booked dates - disabled */
@@ -597,6 +644,10 @@
 
   .legend-color.available {
     background: white;
+  }
+
+  .legend-color.past {
+    background: #ccc;
   }
 
   .legend-color.booked {

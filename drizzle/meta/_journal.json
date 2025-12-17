@@ -85,6 +85,13 @@
       "when": 1765687009715,
       "tag": "0011_sticky_grey_gargoyle",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1765986890846,
+      "tag": "0012_nosy_luckman",
+      "breakpoints": true
     }
   ]
 }
