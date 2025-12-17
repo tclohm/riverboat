@@ -7,4 +7,4 @@ pages_build_output_dir = "svelte-kit/cloudflare"
 [[d1_databases]]
 binding = "willies_keys_db"
 database_name = "willies-keys-db"
-database_id = "ec2afd5f-6c53-4231-bc17-86473f5b60af"
+database_id = "249ec1d9-ac4e-4cb9-aaf9-c5b2b07e4ae2"
