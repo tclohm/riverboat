@@ -62,15 +62,15 @@ export const verification = sqliteTable('verification', {
 export const notifications = sqliteTable('notifications', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   userId: text('user_id').notNull().references(() => user.id),
-  passId: integer('pass_id').references(() => passes.id),
-  type: text('type').notNull(),
+  type: text('type').notNull(), // 'inquiry_new', 'inquiry_approved', 'inquiry_rejected', 'chat_message', etc
   title: text('title').notNull(),
   message: text('message').notNull(),
   read: integer('read', { mode: 'boolean' }).notNull().default(false),
   archived: integer('archived', { mode: 'boolean' }).default(false),
   archivedAt: integer('archived_at', { mode: 'timestamp' }),
+  relatedId: integer('related_id'), // inquiry ID, chat message ID, etc
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
-  metadata: text('metadata')
+  metadata: text('metadata') // JSON for flexible data
 });
 
 export const inquiries = sqliteTable('inquiries', {
@@ -82,7 +82,6 @@ export const inquiries = sqliteTable('inquiries', {
   contactInfo: text('contact_info'),
   requestedDates: text('requested_dates'),
   status: text('status').notNull().default('pending'), // 'pending', 'approved', 'rejected'
-  read: integer('read', { mode: 'boolean' }).notNull().default(false),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`)
 });
