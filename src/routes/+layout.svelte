@@ -68,36 +68,40 @@
   
   $: isLoggedIn = !!data?.user;
   
-  function getNotificationLink(notification) {
-    // Get metadata
-    let metadata = {};
-    try {
-      if (notification?.metadata) {
-        metadata = JSON.parse(notification.metadata);
-      }
-    } catch(e) {}
-  
-    // Inquiry = incoming booking request -> go to /requests (pass owner receiving requests)
-    if (notification?.type === 'inquiry') {
-      return `/requests`;
-    }
+ 
+function getNotificationLink(notification) {
+  let metadata = {};
 
-    // Request = approval/decline of a booking -> go to /bookings (user who made the request)
-    if (notification?.type === 'request') {
-      const tab = metadata.tab || 'approved';
-      return `/bookings?tab=${tab}`;
+  try {
+    if (notification.metadata) {
+      metadata = JSON.parse(notification.metadata);
     }
-
-    // Booking notifications -> go to /bookings
-    if (notification?.type === 'booking') {
-      const tab = metadata.tab || 'approved';
-      return `/bookings?tab=${tab}`;
-    }
-
-    // Fallback
-    return `/bookings`;
+  } catch(e) {
+    console.error('Failed to parse metadata:', e);
   }
 
+  // Route based on notification TYPE
+  switch(notification.type) {
+    // Pass owner sees new inquiries
+    case 'inquiry_new':
+      return `/requests`;
+    
+    // Requester sees approval/rejection
+    case 'inquiry_approved':
+      return `/bookings?tab=approved`;
+    
+    case 'inquiry_rejected':
+      return `/bookings?tab=rejected`;
+    
+    // Future: chat notifications
+    case 'chat_message':
+      return `/messages/${metadata.conversationId || ''}`;
+    
+    // Default fallback
+    default:
+      return `/bookings`;
+  }
+}
   function parseMetadata(metadataStr) {
     try {
       return metadataStr ? JSON.parse(metadataStr) : {};

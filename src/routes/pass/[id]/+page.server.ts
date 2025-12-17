@@ -118,7 +118,7 @@ export const actions = {
     const contactInfo = formData.get('contactInfo')?.toString() || '';
     const requestedDates = formData.get('requestedDates')?.toString() || '';
 
-    console.log('Form data:', { passId, receiverUserId, message, contactInfo, requestedDates });
+    console.log('[createInquiry] Form data:', { passId, receiverUserId, message, contactInfo, requestedDates });
 
     if (!passId || !receiverUserId || !message || !contactInfo || !requestedDates) {
       return fail(400, { error: 'All fields are required' });
@@ -147,7 +147,12 @@ export const actions = {
     try {
       const db = await getDb(platform);
       
-      // Create inquiry ONLY
+      // Get pass and sender user info
+      const pass = await db.select().from(passes).where(eq(passes.id, passId)).get();
+      const senderUser = await db.select().from(user).where(eq(user.id, locals.user.id)).get();
+      
+      // 1. CREATE INQUIRY
+      console.log('[createInquiry] Creating inquiry...');
       await db.insert(inquiries).values({
         passId,
         senderUserId: locals.user.id,
@@ -156,14 +161,50 @@ export const actions = {
         contactInfo,
         requestedDates,
         status: 'pending',
-        read: false,
         createdAt: new Date(),
         updatedAt: new Date()
       }).run();
       
+      // 2. GET THE INQUIRY ID
+      const newInquiry = await db.select().from(inquiries)
+        .where(
+          and(
+            eq(inquiries.passId, passId),
+            eq(inquiries.senderUserId, locals.user.id),
+            eq(inquiries.receiverUserId, receiverUserId),
+            eq(inquiries.status, 'pending')
+          )
+        )
+        .orderBy(desc(inquiries.createdAt))
+        .get();
+      
+      console.log('[createInquiry] Inquiry created with ID:', newInquiry?.id);
+
+      // 3. CREATE NOTIFICATION FOR PASS OWNER
+      console.log('[createInquiry] Creating notification for', receiverUserId);
+      await db.insert(notifications).values({
+        userId: receiverUserId,
+        type: 'inquiry_new',
+        title: 'New Booking Request',
+        message: `New booking request from ${senderUser?.name || 'A user'} for "${pass?.title || 'a pass'}"`,
+        read: false,
+        archived: false,
+        relatedId: newInquiry?.id,
+        createdAt: new Date(),
+        metadata: JSON.stringify({
+          inquiryId: newInquiry?.id,
+          senderName: senderUser?.name,
+          senderUserId: locals.user.id,
+          requestedDates: requestedDates,
+          passTitle: pass?.title,
+          passId: passId
+        })
+      }).run();
+      
+      console.log('[createInquiry] Notification created');
       return { success: true };
     } catch (error) {
-      console.error('Failed to create inquiry:', error);
+      console.error('[createInquiry] Error:', error);
       return fail(500, { error: 'Failed to send request. Please try again.' });
     }
   }

@@ -1,6 +1,6 @@
 import { getDb } from '$lib/db';
-import { inquiries, passes, user } from '$lib/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { inquiries, passes, user, notifications } from '$lib/db/schema';
+import { eq, and, desc } from 'drizzle-orm';
 import { redirect } from '@sveltejs/kit';
 import { parseRequestedDatesToRange, addBookedDateRange } from '$lib/server/dateUtils';
 
@@ -36,16 +36,17 @@ export async function load({ platform, locals }) {
     .orderBy(desc(inquiries.createdAt))
     .all()
 
-    // Mark all inquiries as read (notification seen)
-    const inquiryIds = userInquiries.map(item => item.inquiry.id);
-    if (inquiryIds.length > 0) {
-      for (const id of inquiryIds) {
-        await db.update(inquiries)
-          .set({ read: true })
-          .where(eq(inquiries.id, id))
-          .run();
-      }
-    }
+    // Mark all inquiry_new notifications as read (user is viewing the page)
+    console.log('[requests/load] Marking inquiry notifications as read');
+    await db.update(notifications)
+      .set({ read: true })
+      .where(
+        and(
+          eq(notifications.userId, locals.user.id),
+          eq(notifications.type, 'inquiry_new')
+        )
+      )
+      .run();
 
     // Transform the data
     const transformedInquiries = userInquiries.map(item => ({
@@ -73,7 +74,7 @@ export const actions = {
     const inquiryId = parseInt(formData.get('inquiryId')?.toString() || '0');
     const status = formData.get('status')?.toString();
 
-    console.log('Processing inquiry:', inquiryId, 'with status:', status);
+    console.log('[requests/updateInquiryStatus] Processing inquiry:', inquiryId, 'with status:', status);
     
     if (!inquiryId || !status || !['approved', 'rejected'].includes(status)) {
       return { error: 'Invalid input' };
@@ -82,6 +83,7 @@ export const actions = {
     try {
       const db = await getDb(platform);
       
+      // Get inquiry and related data
       const inquiry = await db.select()
         .from(inquiries)
         .where(eq(inquiries.id, inquiryId))
@@ -100,30 +102,33 @@ export const actions = {
         return { error: 'Unauthorized' };
       }
       
-      // Update inquiry status and mark as read
+      const ownerUser = await db.select()
+        .from(user)
+        .where(eq(user.id, locals.user.id))
+        .get();
+
+      // 1. UPDATE INQUIRY STATUS
+      console.log('[requests/updateInquiryStatus] Updating inquiry status to:', status);
       await db.update(inquiries)
         .set({
           status: status,
-          read: true,
           updatedAt: new Date()
         })
         .where(eq(inquiries.id, inquiryId))
         .run();
 
-      // If approved, add booked dates
+      // 2. IF APPROVED, ADD BOOKED DATES
       if (status === 'approved' && inquiry.requestedDates) {
         const dateRange = parseRequestedDatesToRange(inquiry.requestedDates);
         
         if (dateRange) {
-          console.log('Parsed date range:', dateRange);
+          console.log('[requests/updateInquiryStatus] Parsed date range:', dateRange);
           
           const updatedBookedDates = addBookedDateRange(
             pass.bookedDates,
             dateRange.start,
             dateRange.end
           );
-          
-          console.log('Updated booked dates:', updatedBookedDates);
           
           await db.update(passes)
             .set({ bookedDates: updatedBookedDates })
@@ -132,10 +137,35 @@ export const actions = {
         }
       }
 
-      console.log('Successfully updated inquiry status');
+      // 3. CREATE NOTIFICATION FOR REQUESTER
+      const notificationType = status === 'approved' ? 'inquiry_approved' : 'inquiry_rejected';
+      const titleText = status === 'approved' ? 'Request Approved! ✓' : 'Request Declined';
+      const messageText = `Your request for "${pass?.title || 'a pass'}" has been ${status}.`;
+      
+      console.log('[requests/updateInquiryStatus] Creating notification for', inquiry.senderUserId);
+      
+      await db.insert(notifications).values({
+        userId: inquiry.senderUserId,
+        type: notificationType,
+        title: titleText,
+        message: messageText,
+        read: false,
+        archived: false,
+        relatedId: inquiryId,
+        createdAt: new Date(),
+        metadata: JSON.stringify({
+          inquiryId: inquiryId,
+          ownerName: ownerUser?.name,
+          passTitle: pass?.title,
+          passId: pass?.id,
+          status: status
+        })
+      }).run();
+
+      console.log('[requests/updateInquiryStatus] Successfully updated inquiry and created notification');
       return { success: true };
     } catch (error) {
-      console.error('Failed to update inquiry status:', error);
+      console.error('[requests/updateInquiryStatus] Error:', error);
       return { error: 'Failed to update status' };
     }
   }
