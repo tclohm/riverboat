@@ -19,7 +19,7 @@ A web application that enables pass owners to list their unused passes and rente
 
 Willie's Keys is a modern pass-sharing marketplace. Pass owners can create listings for their passes with daily rates, manage booking requests, and track approvals. Renters can search available passes, book specific date ranges, and manage their reservations.
 
-The application implements an intelligent calendar system that dynamically tracks booked dates, preventing double-booking while maintaining data integrity through automatic overlap merging.
+The application implements an intelligent calendar system that dynamically tracks booked dates, prevents double-booking, blocks past dates from selection, and maintains data integrity through automatic overlap merging.
 
 ## Features
 
@@ -43,8 +43,10 @@ The application implements an intelligent calendar system that dynamically track
 - Real-time availability tracking based on approved bookings
 - Automatic date blocking upon booking approval
 - Intelligent merging of overlapping date ranges
+- Past date blocking (dates before today are disabled and non-selectable)
+- Multi-month date range selection with seamless navigation
 - Responsive design for mobile and desktop
-- Support for multi-month date selections
+- Visual indicators for available, past, booked, and selected dates
 
 ## Tech Stack
 
@@ -116,8 +118,8 @@ willies-keys/
 │   │   │   ├── Calendar.svelte
 │   │   │   ├── InteractiveCalendar.svelte
 │   │   │   ├── DateRangePicker.svelte
-│   │   │   ├── NotificationsMenu.svelte
-│   │   │   └── SearchBar.svelte
+│   │   │   ├── SearchBar.svelte
+│   │   │   └── Other components
 │   │   │
 │   │   ├── db/
 │   │   │   ├── index.ts
@@ -155,7 +157,7 @@ willies-keys/
 
 ### Smart Calendar System
 
-The calendar tracks booking availability using a JSON-based date range system:
+The calendar tracks booking availability using a JSON-based date range system with intelligent date filtering:
 
 ```typescript
 // Booked dates stored as JSON array
@@ -166,10 +168,19 @@ passes.booked_dates = [
 ```
 
 Key capabilities:
-- Real-time API fetching of booked dates
-- Automatic merging of overlapping ranges
-- Responsive calendar component
-- Strict date validation
+- Real-time API fetching of booked dates on component mount
+- Automatic merging of overlapping date ranges
+- Past date blocking (dates before today disabled and non-selectable)
+- Multi-month navigation with disabled previous button in current month
+- Date validation prevents selecting past dates, booked dates, or beyond available range
+- Responsive calendar component works on mobile and desktop
+- Visual feedback with distinct styling for each date state
+
+Date Status Indicators:
+- **Available** (White): Open for booking, can select
+- **Past** (Grey): Date has already passed, cannot select
+- **Booked** (Tan): Already reserved by another user, cannot select
+- **Selected** (Orange): Dates you've chosen for your booking
 
 ### Authentication
 
@@ -178,109 +189,127 @@ Session-based authentication system:
 - Secure password hashing with bcryptjs
 - Session tokens stored in HTTP-only cookies
 - User context loaded on page load
+- Automatic session validation on each request
 
 Routes:
-- `/login` - Sign in
-- `/signup` - Create account
+- `/login` - Sign in to existing account
+- `/signup` - Create new account
 - `/logout` - Sign out
-- `/profile` - Manage profile
+- `/profile` - Manage profile settings
 
 ### Notifications
 
 System notifications for:
-- New booking requests
+- New booking requests from renters
 - Request approvals and declines
-- Notification management with read/dismiss actions
+- Notification management with read and dismiss actions
+- Real-time notification count in header
+- Persistent notification storage with read/archived status
 
 ### Booking Workflow
 
 ```
 1. Owner creates pass (booked_dates = "[]")
-2. Renter submits booking request
-3. Owner reviews requests at /requests
-4. Owner approves/declines
-5. If approved: dates added to booked_dates
-6. Calendar automatically reflects changes
-7. Future users see those dates as unavailable
+2. Renter views pass and selects available dates
+3. Renter submits booking request with message
+4. Owner receives notification of new request
+5. Owner reviews request at /requests page
+6. Owner approves or declines request
+7. If approved: dates added to booked_dates
+8. Calendar automatically reflects changes
+9. Future renters see those dates as booked
+10. Requester receives notification of decision
 ```
 
 ### Responsive Design
 
-- Mobile-first approach
-- Tailwind CSS utilities
-- Professional design system
-- Breakpoints: 480px, 768px, 968px+
+- Mobile-first approach with Tailwind CSS utilities
+- Professional design system with warm, earthy color palette
+- Breakpoints: 480px (mobile), 768px (tablet), 968px+ (desktop)
+- Touch-friendly calendar interface on mobile devices
 
 ## Database Schema
 
 ### passes
-- id: Primary key
-- title: Pass name
-- price: Daily rate
+- id: Primary key (auto-increment)
+- title: Pass name and description
+- price: Daily rental rate in dollars
 - passType: Key type (Dream, Inspire, Enchant, Believe)
-- bookedDates: JSON array of date ranges
-- userId: Owner reference
+- bookedDates: JSON array of {start, end} date ranges
+- userId: Reference to pass owner
 
-### users
-- id: Primary key
+### user
+- id: Primary key (hex string)
 - name: Full name
 - email: Unique email address
-- password: Hashed (in accounts table)
-- phone: Contact number
+- emailVerified: Email verification status
+- phone: Contact phone number
 - location: User location
-- bio: Profile bio
-- Timestamps for creation/updates
+- bio: Profile biography (max 160 chars)
+- createdAt: Account creation timestamp
+- updatedAt: Last update timestamp
 
 ### inquiries
-- id: Primary key
-- passId: Reference to pass
-- senderUserId: Requester
-- receiverUserId: Pass owner
-- message: Request message
-- contactInfo: Contact details
-- requestedDates: Date range string
-- status: pending, approved, rejected
-- read: Read status
-- Timestamps
+- id: Primary key (auto-increment)
+- passId: Reference to pass being booked
+- senderUserId: Reference to renter (user making request)
+- receiverUserId: Reference to pass owner
+- message: Booking request message
+- contactInfo: Contact method provided by renter
+- requestedDates: Date range string (e.g., "Dec 15-20, 2025")
+- status: Request status (pending, approved, rejected)
+- read: Read status for renter
+- createdAt: Request submission timestamp
+- updatedAt: Last status change timestamp
 
 ### notifications
-- id: Primary key
-- userId: Recipient
-- passId: Related pass
-- type: inquiry, booking
+- id: Primary key (auto-increment)
+- userId: Reference to notification recipient
+- passId: Reference to related pass
+- type: Notification type (inquiry_new, inquiry_approved, inquiry_rejected)
 - title: Notification title
-- message: Notification body
+- message: Notification body text
 - read: Read status
 - archived: Archive status
-- metadata: JSON metadata
+- metadata: JSON metadata with contextual data
+- createdAt: Notification creation timestamp
 
 ### sessions
-- id: Primary key
-- userId: Session owner
+- id: Primary key (hex string)
+- userId: Reference to logged-in user
 - token: Unique session token
-- expiresAt: Expiration date
-- ipAddress: Client IP
-- userAgent: Browser info
-- Timestamps
+- expiresAt: Session expiration timestamp
+- ipAddress: Client IP address
+- userAgent: Browser user agent string
+- createdAt: Session creation timestamp
+- updatedAt: Last activity timestamp
 
 ## API Endpoints
 
 ### Passes
 ```
 GET /api/passes/[id]/booked-dates
-Returns: { bookedDates: [{start, end}, ...] }
+Description: Fetch booked dates for a specific pass
+Response: { bookedDates: [{start: "YYYY-MM-DD", end: "YYYY-MM-DD"}, ...] }
 ```
 
 ### Notifications
 ```
 POST /api/notifications/[id]/read
+Description: Mark single notification as read
+
 POST /api/notifications/[id]/dismiss
+Description: Delete/dismiss a notification
+
 POST /api/notifications/read-all
+Description: Mark all unread notifications as read
 ```
 
 ### Inquiries
 ```
 POST /api/inquiries/mark-as-read
+Description: Mark inquiry notifications as read
+Body: { inquiryIds: number[], status: string }
 ```
 
 ## Development
@@ -296,34 +325,23 @@ npm run build
 
 # Preview production build
 npm run preview
-
-# Run tests
-npm run test
-
-# Format code
-npm run format
-
-# Lint code
-npm run lint
 ```
 
 ### Database Commands
 
 ```bash
-# Seed database
+# Seed database with sample data
 npm run seed
-
-# Fresh seed (reset)
-npm run seed:fresh
 ```
 
 ### Code Standards
 
-- TypeScript for type safety
-- Svelte best practices
-- Drizzle ORM for database access
-- Consistent file structure
-- Comprehensive error handling
+- TypeScript for type safety and better IDE support
+- Svelte component best practices
+- Drizzle ORM for type-safe database access
+- Consistent file and folder structure
+- Comprehensive error handling on both client and server
+- Server-side validation for all user inputs
 
 ## Deployment
 
@@ -355,45 +373,51 @@ SESSION_SECRET=your-secret-key
 - Firefox 88+
 - Safari 14+
 - Edge 90+
-- Mobile browsers
+- Mobile browsers (iOS Safari, Chrome Mobile)
 
 ## Security
 
-- Secure password hashing with bcryptjs
-- HTTP-only session cookies
+- Secure password hashing with bcryptjs (10 salt rounds)
+- HTTP-only session cookies prevent XSS attacks
 - CSRF protection via SvelteKit
-- Input validation on all forms
-- Server-side authorization checks
-- SQL injection prevention via Drizzle ORM
-
-## Testing
-
-```bash
-# Run test suite
-npm run test
-
-# Watch mode
-npm run test:watch
-
-# Coverage report
-npm run test:coverage
-```
+- Input validation on all forms and API endpoints
+- Server-side authorization checks on protected routes
+- SQL injection prevention via Drizzle ORM parameterized queries
+- Session expiration after 30 days of inactivity
 
 ## Data Format
 
 All dates use ISO 8601 format: YYYY-MM-DD
 
-Example:
-- Single date: 2025-12-15
-- Date range: {start: "2025-12-15", end: "2025-12-20"}
-- Display format: "Dec 15-20, 2025"
+Examples:
+- Single date: `2025-12-15`
+- Date range: `{start: "2025-12-15", end: "2025-12-20"}`
+- Display format: `"Dec 15-20, 2025"`
 
 ## Performance Considerations
 
-- Booked dates fetched via API on calendar mount
-- JSON storage keeps data structured and queryable
-- Indexed database queries for speed
+- Booked dates fetched via API on calendar mount (not on every render)
+- JSON storage keeps date data structured and queryable
+- Indexed database queries for fast lookups
+- Server-side pagination for large data sets
 - Component-level caching of availability data
+
+## Troubleshooting
+
+### Calendar not showing dates
+- Ensure booked dates API returns valid JSON
+- Check browser console for fetch errors
+- Verify pass ID is being passed correctly to calendar component
+
+### Past dates still selectable
+- Clear browser cache
+- Ensure InteractiveCalendar component is up to date
+- Check that `today` constant is properly initialized
+
+### Notifications not appearing
+- Verify database notifications table has records
+- Check that userId matches authenticated user
+- Ensure notification read status is correct
 
 ## License
 
@@ -402,16 +426,18 @@ MIT
 ## Support
 
 For issues or questions:
-1. Check existing GitHub issues
-2. Create detailed issue with reproduction steps
-3. Include environment information (Node version, OS, browser)
+1. Check existing documentation
+2. Review troubleshooting section
+3. Create detailed issue with reproduction steps
+4. Include environment information (Node version, OS, browser)
 
 ## Contributing
 
 1. Create feature branch from main
 2. Implement changes with TypeScript
-3. Test thoroughly with test suite
+3. Test thoroughly in development
 4. Submit pull request with detailed description
+5. Ensure code follows project standards
 
 ---
 
