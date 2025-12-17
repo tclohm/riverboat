@@ -125,6 +125,36 @@
       console.error('Failed to mark notification as read:', error);
     }
   }
+
+  async function markInquiryAsRead(inquiryId) {
+    try {
+      // Mark the inquiry as read via API
+      const response = await fetch(`/api/inquiries/${inquiryId}/mark-read`, { 
+        method: 'POST' 
+      });
+
+      if (response.ok) {
+        await invalidateAll();
+      }
+    } catch(error) {
+      console.error('Failed to mark inquiry as read:', error);
+    }
+  }
+
+  async function dismissInquiry(inquiryId) {
+    try {
+      // Could archive or delete inquiry - for now just mark as read
+      const response = await fetch(`/api/inquiries/${inquiryId}/mark-read`, { 
+        method: 'POST' 
+      });
+
+      if (response.ok) {
+        await invalidateAll();
+      }
+    } catch(error) {
+      console.error('Failed to dismiss inquiry:', error);
+    }
+  }
 </script>
 
 <div class="admin-layout">
@@ -307,53 +337,70 @@
         </button>
         
         {#if showNotificationsMenu}
-          <div 
-            class="notifications-dropdown"
-            on:click|stopPropagation
-          >
-            <div class="dropdown-header">
-              <h3>Notifications</h3>
-            </div>
-            
-            <div class="notifications-list-dropdown">
-              {#if data.notifications.length === 0}
-                <div class="empty-notifications">
-                  <p>No new notifications</p>
-                </div>
-              {:else}
-                {#each data.notifications as notification}
-                  <a 
-                    href={getNotificationLink(notification)}
-                    class="notification-item"
-                    on:click={() => {
-                      markNotificationAsRead(notification.id);
-                      showNotificationsMenu = false;
-                    }}
-                  >
-                    <div class="notification-content">
-                      <h4>{notification.title}</h4>
-                      <p>{notification.message}</p>
-                      <span class="notification-time">
-                        {new Date(notification.createdAt).toLocaleTimeString()}
-                      </span>
-                    </div>
-                    <button 
-                      type="button"
-                      class="dismiss-btn"
-                      on:click|preventDefault|stopPropagation={() => dismissNotification(notification.id)}
-                      aria-label="Dismiss"
-                    >
-                      ×
-                    </button>
-                  </a>
-                {/each}
-              {/if}
-            </div>
-          </div>
-        {/if}
-      </div>
-    {/if}
+  <div 
+    class="notifications-dropdown"
+    on:click|stopPropagation
+  >
+    <div class="dropdown-header">
+      <h3>Notifications</h3>
+    </div>
     
+    <div class="notifications-list-dropdown">
+      {#if data.notifications.length === 0}
+        <div class="empty-notifications">
+          <p>No new notifications</p>
+        </div>
+      {:else}
+        {#each data.notifications as notification}
+          {@const isInquiry = notification.type === 'inquiry'}
+          {@const metadata = (() => {
+            try {
+              return notification.metadata ? JSON.parse(notification.metadata) : {};
+            } catch {
+              return {};
+            }
+          })()}
+          {@const link = isInquiry ? '/requests' : getNotificationLink(notification)}
+          
+          <a 
+            href={link}
+            class="notification-item"
+            on:click={() => {
+              if (isInquiry) {
+                markInquiryAsRead(notification.inquiryId);
+              } else {
+                markNotificationAsRead(notification.id);
+              }
+              showNotificationsMenu = false;
+            }}
+          >
+            <div class="notification-content">
+              <h4>{notification.title}</h4>
+              <p>{notification.message}</p>
+              <span class="notification-time">
+                {new Date(notification.createdAt).toLocaleTimeString()}
+              </span>
+            </div>
+            <button 
+              type="button"
+              class="dismiss-btn"
+              on:click|preventDefault|stopPropagation={() => {
+                if (isInquiry) {
+                  dismissInquiry(notification.inquiryId);
+                } else {
+                  dismissNotification(notification.id);
+                }
+              }}
+              aria-label="Dismiss"
+            >
+              ×
+            </button>
+          </a>
+        {/each}
+      {/if}
+    </div>
+  </div>
+{/if}    
     <!-- Page content -->
     <slot />
   </main>
