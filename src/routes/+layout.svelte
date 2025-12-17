@@ -34,7 +34,7 @@
   
   $: {
     // Check if user has any passes created
-    hasPassesCreated = data.userPassCount > 0;
+    hasPassesCreated = (data?.userPassCount || 0) > 0;
   
     userNavItems = [
       ...hasPassesCreated
@@ -66,30 +66,30 @@
     }
   ];
   
-  $: isLoggedIn = !!data.user;
+  $: isLoggedIn = !!data?.user;
   
   function getNotificationLink(notification) {
     // Get metadata
     let metadata = {};
     try {
-      if (notification.metadata) {
+      if (notification?.metadata) {
         metadata = JSON.parse(notification.metadata);
       }
     } catch(e) {}
   
     // Inquiry = incoming booking request -> go to /requests (pass owner receiving requests)
-    if (notification.type === 'inquiry') {
+    if (notification?.type === 'inquiry') {
       return `/requests`;
     }
-  
+
     // Request = approval/decline of a booking -> go to /bookings (user who made the request)
-    if (notification.type === 'request') {
+    if (notification?.type === 'request') {
       const tab = metadata.tab || 'approved';
       return `/bookings?tab=${tab}`;
     }
-  
+
     // Booking notifications -> go to /bookings
-    if (notification.type === 'booking') {
+    if (notification?.type === 'booking') {
       const tab = metadata.tab || 'approved';
       return `/bookings?tab=${tab}`;
     }
@@ -246,10 +246,10 @@
       <!-- User Section -->
       <div class="user-section">
         <div class="user-info">
-          <div class="user-avatar">{data.user?.name?.charAt(0) || 'U'}</div>
+          <div class="user-avatar">{data?.user?.name?.charAt(0) || 'U'}</div>
           <div class="user-details">
-            <p class="user-name">{data.user?.name || 'User'}</p>
-            <p class="user-email">{data.user?.email || 'user@example.com'}</p>
+            <p class="user-name">{data?.user?.name || 'User'}</p>
+            <p class="user-email">{data?.user?.email || 'user@example.com'}</p>
           </div>
         </div>
         
@@ -333,7 +333,7 @@
           aria-label="Notifications"
         >
           <Bell size={20} />
-          {#if data.unreadNotificationCount > 0}
+          {#if (data?.unreadNotificationCount || 0) > 0}
             <span class="bell-badge">{data.unreadNotificationCount}</span>
           {/if}
         </button>
@@ -348,13 +348,13 @@
             </div>
             
             <div class="notifications-list-dropdown">
-              {#if data.notifications.length === 0}
+              {#if !data?.notifications || data.notifications.length === 0}
                 <div class="empty-notifications">
                   <p>No new notifications</p>
                 </div>
               {:else}
                 {#each data.notifications as notification}
-                  {@const isInquiry = notification.type === 'inquiry'}
+                  {@const isInquiry = notification?.type === 'inquiry'}
                   {@const link = getNotificationLink(notification)}
                   
                   <a 
@@ -370,10 +370,10 @@
                     }}
                   >
                     <div class="notification-content">
-                      <h4>{notification.title}</h4>
-                      <p>{notification.message}</p>
+                      <h4>{notification?.title || 'Notification'}</h4>
+                      <p>{notification?.message || ''}</p>
                       <span class="notification-time">
-                        {new Date(notification.createdAt).toLocaleTimeString()}
+                        {new Date(notification?.createdAt).toLocaleTimeString()}
                       </span>
                     </div>
                     <button 

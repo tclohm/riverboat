@@ -1,11 +1,10 @@
 import { getDb } from '$lib/db';
-import { inquiries, passes, user, notifications } from '$lib/db/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { inquiries, passes, user } from '$lib/db/schema';
+import { eq, desc } from 'drizzle-orm';
 import { redirect } from '@sveltejs/kit';
 import { parseRequestedDatesToRange, addBookedDateRange } from '$lib/server/dateUtils';
 
 export async function load({ platform, locals }) {
-  // Check if user is logged in
   if (!locals.user) {
     throw redirect(303, '/login?returnTo=/requests');
   }
@@ -13,18 +12,16 @@ export async function load({ platform, locals }) {
   try {
     const db = await getDb(platform);
     
-    // Check if user has created any passes
     const userPasses = await db.select()
       .from(passes)
       .where(eq(passes.userId, locals.user.id))
       .all();
 
-    // If user has no passes, redirect them to add a pass
     if (userPasses.length === 0) {
       throw redirect(303, '/add');
     }
     
-    // Get all inquiries for the user's passes, joined with pass and sender user info
+    // Get all inquiries for the user's passes
     const userInquiries = await db.select({
       inquiry: inquiries,
       pass: passes,
@@ -39,7 +36,18 @@ export async function load({ platform, locals }) {
     .orderBy(desc(inquiries.createdAt))
     .all()
 
-    // Transform the data for the component
+    // Mark all inquiries as read (notification seen)
+    const inquiryIds = userInquiries.map(item => item.inquiry.id);
+    if (inquiryIds.length > 0) {
+      for (const id of inquiryIds) {
+        await db.update(inquiries)
+          .set({ read: true })
+          .where(eq(inquiries.id, id))
+          .run();
+      }
+    }
+
+    // Transform the data
     const transformedInquiries = userInquiries.map(item => ({
       ...item.inquiry,
       pass: item.pass,
@@ -57,7 +65,6 @@ export async function load({ platform, locals }) {
 
 export const actions = {
   updateInquiryStatus: async ({ request, platform, locals }) => {
-    // Check if user is logged in
     if (!locals.user) {
       throw redirect(303, '/login');
     }
@@ -68,7 +75,6 @@ export const actions = {
 
     console.log('Processing inquiry:', inquiryId, 'with status:', status);
     
-    // Validate status is one of the allowed values
     if (!inquiryId || !status || !['approved', 'rejected'].includes(status)) {
       return { error: 'Invalid input' };
     }
@@ -76,7 +82,6 @@ export const actions = {
     try {
       const db = await getDb(platform);
       
-      // Get the inquiry
       const inquiry = await db.select()
         .from(inquiries)
         .where(eq(inquiries.id, inquiryId))
@@ -86,7 +91,6 @@ export const actions = {
         return { error: 'Inquiry not found' };
       }
 
-      // Verify the user owns the pass
       const pass = await db.select()
         .from(passes)
         .where(eq(passes.id, inquiry.passId))
@@ -96,23 +100,23 @@ export const actions = {
         return { error: 'Unauthorized' };
       }
       
-      // Update inquiry status
+      // Update inquiry status and mark as read
       await db.update(inquiries)
         .set({
           status: status,
+          read: true,
           updatedAt: new Date()
         })
         .where(eq(inquiries.id, inquiryId))
         .run();
 
-      // If approved, add the booked dates to the pass
+      // If approved, add booked dates
       if (status === 'approved' && inquiry.requestedDates) {
         const dateRange = parseRequestedDatesToRange(inquiry.requestedDates);
         
         if (dateRange) {
           console.log('Parsed date range:', dateRange);
           
-          // Add the booked date range to the pass
           const updatedBookedDates = addBookedDateRange(
             pass.bookedDates,
             dateRange.start,
@@ -121,42 +125,14 @@ export const actions = {
           
           console.log('Updated booked dates:', updatedBookedDates);
           
-          // Update the pass with new booked dates
           await db.update(passes)
             .set({ bookedDates: updatedBookedDates })
             .where(eq(passes.id, inquiry.passId))
             .run();
-        } else {
-          console.warn('Failed to parse requested dates:', inquiry.requestedDates);
         }
       }
 
-      // Determine which tab to show based on status
-      const tab = status === 'approved' ? 'approved' : 'rejected';
-
-      // Create notification for the requester with tab info
-      const statusMessage = status === 'approved' ? 'approved' : 'declined';
-      const notificationTitle = status === 'approved' ? 'Request Approved! ✓' : 'Request Declined';
-      const notificationMessage = `Your request for "${pass?.title || 'a pass'}" has been ${statusMessage}.`;
-
-      await db.insert(notifications).values({
-        userId: inquiry.senderUserId,
-        passId: inquiry.passId,
-        type: 'request',
-        title: notificationTitle,
-        message: notificationMessage,
-        read: false,
-        archived: false,
-        createdAt: new Date(),
-        metadata: JSON.stringify({
-          inquiryId: inquiryId,
-          status: status,
-          requestedDates: inquiry.requestedDates,
-          tab: tab
-        })
-      }).run();
-
-      console.log('Successfully updated inquiry status and created notification');
+      console.log('Successfully updated inquiry status');
       return { success: true };
     } catch (error) {
       console.error('Failed to update inquiry status:', error);

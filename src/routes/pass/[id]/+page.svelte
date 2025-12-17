@@ -1,6 +1,8 @@
 <script lang="ts">
   import InteractiveCalendar from '$lib/components/InteractiveCalendar.svelte';
   import { X } from '@lucide/svelte';
+  import { enhance } from '$app/forms';
+  
   export let data;
   const { pass } = data;
   const isOwner = data.user && data.pass.userId == data.user.id;
@@ -104,23 +106,18 @@
         <form 
           method="POST" 
           action="?/createInquiry"
-          on:submit|preventDefault={async (e) => {
+          use:enhance={() => {
             formSubmitting = true;
-            const formData = new FormData(e.target);
-            try {
-              const response = await fetch('?/createInquiry', {
-                method: 'POST', 
-                body: formData
-              });
-              if (response.ok) {
-                formSuccess = true;
-              }
-            } catch (error) { 
-              console.error('Failed to submit request:', error);
-            } finally { 
+            return async ({ result }) => {
               formSubmitting = false;
-            }
-          }}>
+              if (result.type === 'success') {
+                formSuccess = true;
+              } else if (result.type === 'failure') {
+                console.error('Form submission failed:', result);
+              }
+            };
+          }}
+        >
           
           <div class="modal-body">
             <div class="form-group">
