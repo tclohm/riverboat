@@ -16,6 +16,7 @@
 		"seed:sql": "NODE_ENV=development vite-node src/lib/db/seed.ts --sql > seed.sql"
 	},
 	"devDependencies": {
+		"@playwright/test": "^1.57.0",
 		"@sveltejs/adapter-auto": "^7.0.0",
 		"@sveltejs/adapter-cloudflare": "^7.2.4",
 		"@sveltejs/kit": "^2.47.1",
@@ -26,6 +27,7 @@
 		"@tailwindcss/vite": "^4.1.17",
 		"@types/bcryptjs": "^2.4.6",
 		"@types/better-sqlite3": "^7.6.13",
+		"@vitest/coverage-v8": "^4.0.16",
 		"autoprefixer": "^10.4.22",
 		"better-sqlite3": "^12.4.1",
 		"drizzle-kit": "^0.31.6",
@@ -37,6 +39,7 @@
 		"typescript": "^5.9.3",
 		"vite": "^7.1.10",
 		"vite-node": "^5.0.0",
+		"vitest": "^4.0.16",
 		"wrangler": "^4.45.4"
 	},
 	"dependencies": {
