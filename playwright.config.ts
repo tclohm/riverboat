@@ -30,7 +30,10 @@ export default defineConfig({
   webServer: {
     command: 'npm run dev',
     url: 'http://localhost:5173',
-    reuseExisitingServer: !process.env.CI, 
+    reuseExisitingServer: !process.env.CI,
+    env: {
+      DATABASE_MOCK: 'true',
+    },
     timeout: 120000,
   },
 
