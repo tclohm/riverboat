@@ -13,7 +13,11 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"seed": "NODE_ENV=development vite-node src/lib/db/seed.ts",
-		"seed:sql": "NODE_ENV=development vite-node src/lib/db/seed.ts --sql > seed.sql"
+		"seed:sql": "NODE_ENV=development vite-node src/lib/db/seed.ts --sql > seed.sql",
+		"test": "vitest",
+		"test:watch": "vitest --watch",
+		"e2e": "playwright test",
+		"e2e:headed": "playwright test --headed"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.57.0",
@@ -25,6 +29,7 @@
 		"@tailwindcss/postcss": "^4.1.17",
 		"@tailwindcss/typography": "^0.5.19",
 		"@tailwindcss/vite": "^4.1.17",
+		"@testing-library/svelte": "^5.2.9",
 		"@types/bcryptjs": "^2.4.6",
 		"@types/better-sqlite3": "^7.6.13",
 		"@vitest/coverage-v8": "^4.0.16",
