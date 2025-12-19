@@ -1,15 +1,8 @@
-import { expect, afterEach, vi } from 'vitest';
-import { cleanup } from '@testing-library/svelte';
+import { vi } from 'vitest';
 
-// Cleanup after each test 
-afterEach(() => {
-  cleanup();
-});
-
-// Mock window.matchMedia 
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: vi.fn().mockImplementation(query => ({
+// Mock window object 
+global.window = {
+  matchMedia: vi.fn().mockImplementation(query => ({
     matches: false,
     media: query,
     onchange: null,
@@ -17,9 +10,14 @@ Object.defineProperty(window, 'matchMedia', {
     removeListener: vi.fn(),
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })),
-});
+    dispatchEvent: vi.fn()
+  }))
+} as any;
 
-// Mock fetch globally 
-globally.fetch = vi.fn();
+// Mock localStorage
+global.localStorage = {
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
+} as any;
