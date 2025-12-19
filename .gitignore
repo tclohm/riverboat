@@ -31,3 +31,6 @@ local.db-wal
 # Generated files
 drizzle
 seed.sql
+
+test-results/*
+test-result/*
