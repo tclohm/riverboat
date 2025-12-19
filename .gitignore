@@ -32,5 +32,5 @@ local.db-wal
 drizzle
 seed.sql
 
-test-results/*
-test-result/*
+/test-results
+/test-result
