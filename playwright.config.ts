@@ -33,8 +33,7 @@ export default defineConfig({
     reuseExisitingServer: !process.env.CI,
     env: {
       DATABASE_MOCK: 'true',
-    },
-    timeout: 120000,
+    }
   },
 
   // Browser configuration

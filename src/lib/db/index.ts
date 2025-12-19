@@ -1,10 +1,14 @@
 import { DatabaseClient } from './client';
+import { createMockDb } from './mock-db';
 export * from './schema';
 
 let clientInitialized = false;
 
+const isMocked = process.env.DATABASE_MOCK === 'true';
+
 // For async contexts
 export async function getDb(platform?: any) {
+  if (isMocked) return createMockDb();
   const mode = import.meta.env.MODE;
   console.log(`Getting DB in mode: ${mode}`);
 
