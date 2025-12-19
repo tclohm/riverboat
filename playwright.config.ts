@@ -5,8 +5,8 @@ export default defineConfig({
   testMatch: '**/*.e2e.test.ts',
 
   // Test execution 
-  fullyParallel: true
-  forbidOnly: !!process.env.CI,
+  fullyParallel: true,
+  forbidOnly: process.env.CI ? true : false,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
 
@@ -24,7 +24,7 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     vide: 'retain-on-failure',
-  }
+  },
 
   // Web server configuration 
   webServer: {
