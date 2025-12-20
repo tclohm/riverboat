@@ -31,9 +31,6 @@ export default defineConfig({
     command: 'npm run dev',
     url: 'http://localhost:5173',
     reuseExisitingServer: !process.env.CI,
-    env: {
-      DATABASE_MOCK: 'true',
-    }
   },
 
   // Browser configuration
