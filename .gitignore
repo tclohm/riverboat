@@ -34,3 +34,4 @@ seed.sql
 
 /test-results
 /test-result
+/playwright-report
