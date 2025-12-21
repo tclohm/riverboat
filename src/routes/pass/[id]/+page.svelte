@@ -124,17 +124,6 @@
               <label for="requestedDates">When would you like to use this pass?</label>
               <InteractiveCalendar passId={data.pass.id} onDateRangeSelect={handleDateRangeSelect} />
             </div>
-
-            <div class="form-group">
-              <label for="contactInfo">Preferred Contact Method</label>
-              <input 
-                type="text" 
-                id="contactInfo" 
-                name="contactInfo" 
-                placeholder="Phone or Email" 
-                required
-              />
-            </div>
           
             <div class="form-group">
               <label for="message">Message to the Host</label>

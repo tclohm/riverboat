@@ -79,7 +79,6 @@ export const inquiries = sqliteTable('inquiries', {
   senderUserId: text('sender_user_id').notNull().references(() => user.id),
   receiverUserId: text('receiver_user_id').notNull().references(() => user.id),
   message: text('message').notNull(),
-  contactInfo: text('contact_info'),
   requestedDates: text('requested_dates'),
   status: text('status').notNull().default('pending'), // 'pending', 'approved', 'rejected'
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
