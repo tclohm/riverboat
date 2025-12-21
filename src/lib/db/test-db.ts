@@ -4,7 +4,10 @@ import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
 import { user, account, session } from './schema';
 
+let cachedTestDb: any = null;
+
 export async function setupTestDb() {
+  if (cachedTestDb) return cachedTestDb;
   const testDb = new Database(':memory:');
   const db = drizzle(testDb);
 
@@ -76,5 +79,6 @@ export async function setupTestDb() {
     updatedAt: new Date(),
   }).run();
 
-  return { db, userId, token, testDb };
+  cachedTestDb = { db, userId, token, testDb };
+  return cachedTestDb;
 }
