@@ -115,12 +115,11 @@ export const actions = {
     const passId = parseInt(formData.get('passId')?.toString() || 0);
     const receiverUserId = formData.get('receiverUserId')?.toString() || '';
     const message = formData.get('message')?.toString() || '';
-    const contactInfo = formData.get('contactInfo')?.toString() || '';
     const requestedDates = formData.get('requestedDates')?.toString() || '';
 
     console.log('[createInquiry] Form data:', { passId, receiverUserId, message, contactInfo, requestedDates });
 
-    if (!passId || !receiverUserId || !message || !contactInfo || !requestedDates) {
+    if (!passId || !receiverUserId || !message || !requestedDates) {
       return fail(400, { error: 'All fields are required' });
     }
 
@@ -158,7 +157,6 @@ export const actions = {
         senderUserId: locals.user.id,
         receiverUserId,
         message,
-        contactInfo,
         requestedDates,
         status: 'pending',
         createdAt: new Date(),
