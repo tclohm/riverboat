@@ -13,9 +13,15 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"seed": "NODE_ENV=development vite-node src/lib/db/seed.ts",
-		"seed:sql": "NODE_ENV=development vite-node src/lib/db/seed.ts --sql > seed.sql"
+		"seed:sql": "NODE_ENV=development vite-node src/lib/db/seed.ts --sql > seed.sql",
+		"test": "vitest",
+		"test:watch": "vitest --watch",
+    "test:coverage": "vitest run --coverage",
+		"e2e": "playwright test",
+		"e2e:headed": "playwright test --headed"
 	},
 	"devDependencies": {
+		"@playwright/test": "^1.57.0",
 		"@sveltejs/adapter-auto": "^7.0.0",
 		"@sveltejs/adapter-cloudflare": "^7.2.4",
 		"@sveltejs/kit": "^2.47.1",
@@ -24,8 +30,10 @@
 		"@tailwindcss/postcss": "^4.1.17",
 		"@tailwindcss/typography": "^0.5.19",
 		"@tailwindcss/vite": "^4.1.17",
+		"@testing-library/svelte": "^5.2.9",
 		"@types/bcryptjs": "^2.4.6",
 		"@types/better-sqlite3": "^7.6.13",
+		"@vitest/coverage-v8": "^4.0.16",
 		"autoprefixer": "^10.4.22",
 		"better-sqlite3": "^12.4.1",
 		"drizzle-kit": "^0.31.6",
@@ -37,6 +45,7 @@
 		"typescript": "^5.9.3",
 		"vite": "^7.1.10",
 		"vite-node": "^5.0.0",
+		"vitest": "^4.0.16",
 		"wrangler": "^4.45.4"
 	},
 	"dependencies": {

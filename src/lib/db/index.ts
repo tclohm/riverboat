@@ -1,10 +1,23 @@
 import { DatabaseClient } from './client';
+import { setupTestDb } from './test-db';
 export * from './schema';
 
 let clientInitialized = false;
 
+const isTest = process.env.NODE_ENV === 'test';
+let testDbInstance: any = null;
+
 // For async contexts
 export async function getDb(platform?: any) {
+  if (isTest) {
+    if (!testDbInstance) {
+      const { db } = await setupTestDb();
+      testDbInstance = db;
+    }
+    return testDbInstance;
+  }
+
+
   const mode = import.meta.env.MODE;
   console.log(`Getting DB in mode: ${mode}`);
 
@@ -33,6 +46,10 @@ export function getDbSync(platform?: any) {
 
 // Helper to initialize DB in hooks.server.ts
 export async function initializeDb(platform?: any) {
+  if (isTest) {
+    await setupTestDb();
+    return;
+  }
   if (clientInitialized) return;
   
   const mode = import.meta.env.MODE;

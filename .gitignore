@@ -31,7 +31,8 @@ local.db-wal
 # Generated files
 drizzle
 seed.sql
-playwright-report/
-test-report/
-test-results/
-test-result/
+
+/test-results
+/test-result
+/playwright-report
+
