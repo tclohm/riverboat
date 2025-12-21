@@ -1,6 +1,8 @@
 <script lang="ts">
   export let data;
-  import { Check, Clock, X } from '@lucide/svelte';
+  import { Check, Clock, X, Edit2, Trash2 } from '@lucide/svelte';
+  import { enhance } from '$app/forms';
+  import { invalidateAll } from '$app/navigation';
 
   interface Inquiry {
     id: number;
@@ -56,6 +58,97 @@
 
   type TabType = 'pending' | 'approved' | 'rejected';
   let activeTab: TabType = (data.defaultTab as TabType) || 'approved';
+
+  // Edit modal state
+  let editingInquiryId: number | null = null;
+  let editFormData = {
+    message: '',
+    contactInfo: '',
+    requestedDates: ''
+  };
+
+  let editLoading = false;
+  let cancelLoading: { [key: number]: boolean } = {};
+  let editError = '';
+  let editSuccess = false;
+
+  function openEditModal(inquiry: any) {
+    editingInquiryId = inquiry.id;
+    editFormData = {
+      message: inquiry.message || '',
+      contactInfo: inquiry.contactInfo || '',
+      requestedDates: inquiry.requestedDates || ''
+    };
+    editError = '';
+    editSuccess = false;
+  }
+
+  function closeEditModal() {
+    editingInquiryId = null;
+    editError = '';
+    editSuccess = false;
+  }
+
+  async function handleEditSubmit() {
+    if (!editingInquiryId) return;
+
+    editLoading = true;
+    editError = '';
+
+    try {
+      const response = await fetch('/api/inquiries/edit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          inquiryId: editingInquiryId,
+          ...editFormData
+        })
+      });
+
+      if (response.ok) {
+        editSuccess = true;
+        setTimeout(() => {
+          closeEditModal();
+          invalidateAll();
+        }, 1500);
+      } else {
+        const error = await response.json();
+        editError = error.error || 'Failed to edit booking';
+      }
+    } catch (error) {
+      editError = 'Failed to edit booking. Please try again.';
+      console.error('Edit error:', error);
+    } finally {
+      editLoading = false;
+    }
+  }
+
+  async function handleCancel(inquiryId: number) {
+    if (!confirm('Are you sure you want to cancel this booking? This action cannot be undone.')) {
+      return;
+    }
+
+    cancelLoading[inquiryId] = true;
+
+    try {
+      const response = await fetch('/api/inquiries/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inquiryId })
+      });
+
+      if (response.ok) {
+        await invalidateAll();
+      } else {
+        alert('Failed to cancel booking');
+      }
+    } catch (error) {
+      console.error('Cancel error:', error);
+      alert('Failed to cancel booking');
+    } finally {
+      cancelLoading[inquiryId] = false;
+    }
+  }
 </script>
 
 <svelte:head>
@@ -143,6 +236,28 @@
                       <p class="value message-text">{inquiry.message}</p>
                     </div>
                   </div>
+
+                  <div class="card-actions">
+                    <button 
+                      type="button"
+                      class="action-btn edit-btn"
+                      on:click={() => openEditModal(inquiry)}
+                      title="Edit booking"
+                    >
+                      <Edit2 size={16} />
+                      Edit
+                    </button>
+                    <button 
+                      type="button"
+                      class="action-btn cancel-btn"
+                      on:click={() => handleCancel(inquiry.id)}
+                      disabled={cancelLoading[inquiry.id]}
+                      title="Cancel booking"
+                    >
+                      <Trash2 size={16} />
+                      Cancel
+                    </button>
+                  </div>
                 </div>
               {/each}
             </div>
@@ -187,6 +302,28 @@
                     <div class="help-text">
                       The pass owner will review and contact you soon.
                     </div>
+                  </div>
+
+                  <div class="card-actions">
+                    <button 
+                      type="button"
+                      class="action-btn edit-btn"
+                      on:click={() => openEditModal(inquiry)}
+                      title="Edit request"
+                    >
+                      <Edit2 size={16} />
+                      Edit
+                    </button>
+                    <button 
+                      type="button"
+                      class="action-btn cancel-btn"
+                      on:click={() => handleCancel(inquiry.id)}
+                      disabled={cancelLoading[inquiry.id]}
+                      title="Cancel request"
+                    >
+                      <Trash2 size={16} />
+                      Cancel
+                    </button>
                   </div>
                 </div>
               {/each}
@@ -243,6 +380,97 @@
     </div>
   {/if}
 </div>
+
+<!-- Edit Modal -->
+{#if editingInquiryId}
+  <div 
+    class="modal-backdrop"
+    on:click={closeEditModal}
+    on:keydown={(e) => e.key === 'Escape' && closeEditModal()}
+    role="button"
+    tabindex="0"
+    aria-label="Close modal"
+  >
+    <div class="modal-content" on:click|stopPropagation role="main" aria-label="modal content">
+      <div class="modal-header">
+        <h2>Edit Booking Request</h2>
+        <button
+          type="button"
+          class="modal-close"
+          on:click={closeEditModal}
+          aria-label="Close"
+        >
+          ✕
+        </button>
+      </div>
+
+      {#if editSuccess}
+        <div class="success-message">
+          <p>✓ Booking updated successfully!</p>
+        </div>
+      {:else}
+        <div class="modal-body">
+          {#if editError}
+            <div class="error-message">
+              {editError}
+            </div>
+          {/if}
+
+          <div class="form-group">
+            <label for="contactInfo">Contact Method</label>
+            <input 
+              type="text"
+              id="contactInfo"
+              bind:value={editFormData.contactInfo}
+              placeholder="Phone or Email"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="requestedDates">Requested Dates</label>
+            <input 
+              type="text"
+              id="requestedDates"
+              bind:value={editFormData.requestedDates}
+              placeholder="e.g., Dec 15-17, 2025"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="message">Message</label>
+            <textarea 
+              id="message"
+              bind:value={editFormData.message}
+              placeholder="Tell the host about your plans..."
+              rows="4"
+              required
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button 
+            type="button"
+            class="cancel-btn"
+            on:click={closeEditModal}
+          >
+            Cancel
+          </button>
+          <button 
+            type="button"
+            class="save-btn"
+            on:click={handleEditSubmit}
+            disabled={editLoading}
+          >
+            {editLoading ? 'Saving...' : 'Save Changes'}
+          </button>
+        </div>
+      {/if}
+    </div>
+  </div>
+{/if}
 
 <style>
   .container {
@@ -512,6 +740,58 @@
     border-left: 2px solid #d9a574;
   }
 
+  .card-actions {
+    padding: 12px 16px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    gap: 8px;
+  }
+
+  .action-btn {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 2px;
+    font-weight: 700;
+    font-size: 12px;
+    font-family: 'Fredoka', sans-serif;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .edit-btn {
+    background: #d9a574;
+    color: white;
+  }
+
+  .edit-btn:hover:not(:disabled) {
+    background: #c85a54;
+    transform: translateY(-1px);
+  }
+
+  .cancel-btn {
+    background: #e8dcc8;
+    color: #8b7355;
+    border: 1px solid #d4c4b0;
+  }
+
+  .cancel-btn:hover:not(:disabled) {
+    background: #c85a54;
+    color: white;
+    border-color: #8b7355;
+  }
+
+  .cancel-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
   .card-footer {
     padding: 12px 16px;
     border-top: 1px solid #e5e7eb;
@@ -531,6 +811,192 @@
     text-decoration: underline;
   }
 
+  /* Modal Styles */
+  .modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .modal-content {
+    background: #e8dcc8;
+    border: 2px solid #8b7355;
+    border-radius: 2px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px;
+    border-bottom: 2px solid #d4c4b0;
+  }
+
+  .modal-header h2 {
+    margin: 0;
+    font-size: 24px;
+    color: #5a4a3a;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    color: #8b7355;
+    cursor: pointer;
+    padding: 0;
+    font-size: 28px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    border-radius: 2px;
+  }
+
+  .modal-close:hover {
+    background: rgba(139, 115, 85, 0.1);
+    color: #5a4a3a;
+  }
+
+  .modal-body {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex: 1;
+  }
+
+  .error-message {
+    background: rgba(200, 90, 84, 0.1);
+    border: 1px solid #c85a54;
+    border-radius: 2px;
+    padding: 12px;
+    color: #8b4545;
+    font-size: 14px;
+  }
+
+  .success-message {
+    padding: 40px;
+    background: rgba(143, 168, 129, 0.1);
+    border-radius: 2px;
+    margin: 24px;
+    text-align: center;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .success-message p {
+    color: #5a7a4a;
+    font-size: 16px;
+    line-height: 1.6;
+    margin: 0;
+    font-weight: 600;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .form-group label {
+    font-weight: 600;
+    color: #5a4a3a;
+    font-size: 14px;
+  }
+
+  .form-group input,
+  .form-group textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #d4c4b0;
+    border-radius: 2px;
+    font-size: 15px;
+    font-family: 'Fredoka', sans-serif;
+    background: #faf6f0;
+    color: #5a4a3a;
+    transition: all 0.2s;
+    box-sizing: border-box;
+  }
+
+  .form-group input::placeholder,
+  .form-group textarea::placeholder {
+    color: #a0937f;
+  }
+
+  .form-group input:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: #c85a54;
+    box-shadow: 0 0 0 3px rgba(200, 90, 84, 0.1);
+    background: white;
+  }
+
+  .form-group textarea {
+    resize: vertical;
+  }
+
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 2px solid #d4c4b0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+
+  .cancel-btn,
+  .save-btn {
+    padding: 10px 20px;
+    border-radius: 2px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 2px solid #8b7355;
+    font-family: 'Fredoka', sans-serif;
+    transition: all 0.2s;
+    font-size: 14px;
+  }
+
+  .cancel-btn {
+    background: #d4c4b0;
+    color: #5a4a3a;
+  }
+
+  .cancel-btn:hover {
+    background: #c85a54;
+    color: white;
+  }
+
+  .save-btn {
+    background: #d9a574;
+    color: white;
+  }
+
+  .save-btn:hover:not(:disabled) {
+    background: #c85a54;
+  }
+
+  .save-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
   /* Responsive */
   @media (max-width: 768px) {
     .header-content h1 {
@@ -547,10 +1013,6 @@
       gap: 6px;
     }
 
-    .tab-button span:nth-child(1) {
-      display: none;
-    }
-
     .cards-grid {
       grid-template-columns: 1fr;
     }
@@ -565,6 +1027,10 @@
 
     .card-body {
       font-size: 12px;
+    }
+
+    .modal-content {
+      width: 95%;
     }
   }
 </style>
