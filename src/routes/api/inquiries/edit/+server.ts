@@ -9,9 +9,9 @@ export async function POST({ request, platform, locals }) {
   }
 
   try {
-    const { inquiryId, message, contactInfo, requestedDates } = await request.json();
+    const { inquiryId, message, requestedDates } = await request.json();
 
-    if (!inquiryId || !message || !contactInfo || !requestedDates) {
+    if (!inquiryId || !message || !requestedDates) {
       return json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -41,7 +41,6 @@ export async function POST({ request, platform, locals }) {
     await db.update(inquiries)
       .set({
         message,
-        contactInfo,
         requestedDates,
         updatedAt: new Date()
       })
