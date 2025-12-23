@@ -13,32 +13,28 @@
   let currentMonth = today.getMonth();
   let currentYear = today.getFullYear();
   
-  // Current selected range (from props or empty)
-  let selectedStartDate: Date | null = null;
-  let selectedEndDate: Date | null = null;
+  // Current booking dates (reference only, shown at start)
+  let currentStartDate: Date | null = null;
+  let currentEndDate: Date | null = null;
   
-  // Edit mode tracking
-  let editingMode: 'start' | 'end' | null = null;
-  let previewStartDate: Date | null = null;
-  let previewEndDate: Date | null = null;
+  // New selection (what user is picking)
+  let newStartDate: Date | null = null;
+  let newEndDate: Date | null = null;
+  
   let hoveredDate: Date | null = null;
   
   let bookedDates: {start: string, end: string}[] = [];
   let loading = true;
-  let errorMessage = '';
 
   // ===== INITIALIZATION =====
   onMount(() => {
     // Parse initial dates if provided
     if (initialStartDate && initialEndDate) {
-      const parts = initialStartDate.split(', ');
-      const endParts = initialEndDate.split(', ');
-      
-      if (parts.length >= 2) {
-        selectedStartDate = parseDisplayDate(initialStartDate);
-      }
-      if (endParts.length >= 2) {
-        selectedEndDate = parseDisplayDate(initialEndDate);
+      try {
+        currentStartDate = parseDisplayDate(initialStartDate);
+        currentEndDate = parseDisplayDate(initialEndDate);
+      } catch (error) {
+        console.error('Failed to parse initial dates:', error);
       }
     }
 
@@ -142,74 +138,68 @@
 
   $: canGoPrevious = new Date(currentYear, currentMonth, 1) > today;
 
-  // ===== DATE SELECTION LOGIC =====
-  function startEditMode(mode: 'start' | 'end') {
-    if (editingMode === mode) {
-      editingMode = null;
-      previewStartDate = null;
-      previewEndDate = null;
-    } else {
-      editingMode = mode;
-      previewStartDate = selectedStartDate;
-      previewEndDate = selectedEndDate;
-    }
-    errorMessage = '';
-  }
-
-  function selectDateInEditMode(day: number) {
+  // ===== DATE SELECTION =====
+  function selectDate(day: number) {
     const date = new Date(currentYear, currentMonth, day);
     
     // Can't select past or booked dates
     if (isDateInPast(date) || isDateBooked(date)) return;
 
-    if (editingMode === 'start') {
-      // Validate: new start can't be after current end
-      if (selectedEndDate && date > selectedEndDate) {
-        errorMessage = 'Start date must be before end date';
-        return;
-      }
-      selectedStartDate = date;
-      errorMessage = '';
-    } else if (editingMode === 'end') {
-      // Validate: new end can't be before current start
-      if (selectedStartDate && date < selectedStartDate) {
-        errorMessage = 'End date must be after start date';
-        return;
-      }
-      selectedEndDate = date;
-      errorMessage = '';
+    // If user is selecting their first new date, clear the old dates reference
+    if (newStartDate === null && newEndDate === null) {
+      currentStartDate = null;
+      currentEndDate = null;
     }
 
-    editingMode = null;
-    previewStartDate = null;
-    previewEndDate = null;
-
-    // Emit the update
-    if (selectedStartDate && selectedEndDate) {
-      const startDisplay = formatDateForDisplay(selectedStartDate);
-      const endDisplay = formatDateForDisplay(selectedEndDate);
+    // First click = start date
+    if (newStartDate === null) {
+      newStartDate = date;
+    } 
+    // Second click = end date
+    else if (newEndDate === null) {
+      // Auto-sort: if they click an earlier date, make it start and push current start to end
+      if (date < newStartDate) {
+        newEndDate = newStartDate;
+        newStartDate = date;
+      } else {
+        newEndDate = date;
+      }
+      
+      // Emit the selection
+      const startDisplay = formatDateForDisplay(newStartDate);
+      const endDisplay = formatDateForDisplay(newEndDate);
+      onDateRangeSelect(startDisplay, endDisplay);
+    }
+    // Subsequent clicks = adjust the range
+    else {
+      // Determine which end to adjust based on proximity
+      const distToStart = Math.abs(date.getTime() - newStartDate.getTime());
+      const distToEnd = Math.abs(date.getTime() - newEndDate.getTime());
+      
+      if (distToStart < distToEnd) {
+        // Closer to start, adjust start
+        if (date < newEndDate) {
+          newStartDate = date;
+        }
+      } else {
+        // Closer to end, adjust end
+        if (date > newStartDate) {
+          newEndDate = date;
+        }
+      }
+      
+      // Emit the update
+      const startDisplay = formatDateForDisplay(newStartDate);
+      const endDisplay = formatDateForDisplay(newEndDate);
       onDateRangeSelect(startDisplay, endDisplay);
     }
   }
 
   function resetSelection() {
-    selectedStartDate = null;
-    selectedEndDate = null;
-    editingMode = null;
-    previewStartDate = null;
-    previewEndDate = null;
-    errorMessage = '';
-  }
-
-  // ===== REACTIVITY FOR PREVIEW RANGE =====
-  $: if (editingMode && hoveredDate) {
-    if (editingMode === 'start') {
-      previewStartDate = hoveredDate;
-      previewEndDate = selectedEndDate;
-    } else if (editingMode === 'end') {
-      previewStartDate = selectedStartDate;
-      previewEndDate = hoveredDate;
-    }
+    newStartDate = null;
+    newEndDate = null;
+    currentStartDate = initialStartDate ? parseDisplayDate(initialStartDate) : null;
+    currentEndDate = initialEndDate ? parseDisplayDate(initialEndDate) : null;
   }
 
   // ===== CALENDAR DISPLAY VALUES =====
@@ -236,38 +226,53 @@
 
     classes.push('available');
 
-    // Check if in current selected range
-    if (selectedStartDate && selectedEndDate) {
-      const rangeStart = getNormalizedDate(selectedStartDate);
-      const rangeEnd = getNormalizedDate(selectedEndDate);
+    // Show current booking dates (only if no new selection has been made)
+    if (newStartDate === null && newEndDate === null && currentStartDate && currentEndDate) {
+      const currentStart = getNormalizedDate(currentStartDate);
+      const currentEnd = getNormalizedDate(currentEndDate);
       
-      const inRange = date >= rangeStart && date <= rangeEnd;
+      const inCurrentRange = date >= currentStart && date <= currentEnd;
       
-      if (inRange) {
-        classes.push('in-range');
+      if (inCurrentRange) {
+        classes.push('current-booking');
         
-        if (date.getTime() === rangeStart.getTime() || date.getTime() === rangeEnd.getTime()) {
-          classes.push('endpoint');
+        if (date.getTime() === currentStart.getTime() || date.getTime() === currentEnd.getTime()) {
+          classes.push('current-endpoint');
         }
         
         return classes.join(' ');
       }
     }
 
-    // Check if in preview range (when editing)
-    if (editingMode && previewStartDate && previewEndDate) {
-      const rangeStart = getNormalizedDate(previewStartDate);
-      const rangeEnd = getNormalizedDate(previewEndDate);
+    // Show new selection range
+    if (newStartDate && newEndDate) {
+      const newStart = getNormalizedDate(newStartDate);
+      const newEnd = getNormalizedDate(newEndDate);
       
-      const inRange = date >= rangeStart && date <= rangeEnd;
+      const inNewRange = date >= newStart && date <= newEnd;
       
-      if (inRange) {
-        classes.push('preview-range');
+      if (inNewRange) {
+        classes.push('new-selection');
         
-        if (date.getTime() === rangeStart.getTime() || date.getTime() === rangeEnd.getTime()) {
-          classes.push('preview-endpoint');
+        if (date.getTime() === newStart.getTime() || date.getTime() === newEnd.getTime()) {
+          classes.push('new-endpoint');
         }
         
+        return classes.join(' ');
+      }
+    }
+
+    // Show preview range on hover when selecting
+    if (newStartDate && !newEndDate && hoveredDate) {
+      const start = getNormalizedDate(newStartDate);
+      const end = getNormalizedDate(hoveredDate);
+      const rangeStart = start < end ? start : end;
+      const rangeEnd = start < end ? end : start;
+      
+      const inPreview = date >= rangeStart && date <= rangeEnd;
+      
+      if (inPreview) {
+        classes.push('preview-range');
         return classes.join(' ');
       }
     }
@@ -276,7 +281,7 @@
   }
 
   // ===== REACTIVE DAY CLASSES =====
-  $: dayClassMap = (selectedStartDate, selectedEndDate, editingMode, previewStartDate, previewEndDate, hoveredDate, currentMonth, currentYear, days) && 
+  $: dayClassMap = (newStartDate, newEndDate, currentStartDate, currentEndDate, hoveredDate, currentMonth, currentYear, days) && 
     days.map(day => ({
       day,
       class: getDayClass(day)
@@ -287,48 +292,30 @@
   {#if loading}
     <div class="loading">Loading availability...</div>
   {:else}
-    <!-- Current Selection Display -->
-    {#if selectedStartDate && selectedEndDate}
-      <div class="current-selection">
-        <div class="selection-info">
-          <p class="selection-label">Current Selection</p>
-          <p class="selection-dates">{formatDateForDisplay(selectedStartDate)} – {formatDateForDisplay(selectedEndDate)}</p>
-        </div>
-        
-        <div class="edit-buttons">
-          <button 
-            type="button"
-            class="edit-date-btn start"
-            class:active={editingMode === 'start'}
-            on:click={() => startEditMode('start')}
-            title="Click to change start date"
-          >
-            Start Date
-          </button>
-          <button 
-            type="button"
-            class="edit-date-btn end"
-            class:active={editingMode === 'end'}
-            on:click={() => startEditMode('end')}
-            title="Click to change end date"
-          >
-            End Date
-          </button>
-        </div>
+    <!-- Current Booking Reference (shown only before first selection) -->
+    {#if newStartDate === null && newEndDate === null && currentStartDate && currentEndDate}
+      <div class="current-booking-info">
+        <p class="info-label">Your Current Booking</p>
+        <p class="info-dates">{formatDateForDisplay(currentStartDate)} – {formatDateForDisplay(currentEndDate)}</p>
+        <p class="info-hint">Click to select new dates. Your current dates will disappear once you start selecting.</p>
       </div>
     {/if}
 
-    <!-- Error Message -->
-    {#if errorMessage}
-      <div class="error-message">
-        <p>{errorMessage}</p>
+    <!-- New Selection Display -->
+    {#if newStartDate && newEndDate}
+      <div class="new-selection-info">
+        <p class="info-label">New Dates Selected</p>
+        <p class="info-dates">{formatDateForDisplay(newStartDate)} – {formatDateForDisplay(newEndDate)}</p>
+        <p class="info-hint">Click dates to adjust. Click Reset to start over.</p>
       </div>
     {/if}
 
-    <!-- Edit Mode Instructions -->
-    {#if editingMode}
-      <div class="edit-instructions">
-        <p>Click a date to {editingMode === 'start' ? 'move the start date' : 'move the end date'}</p>
+    <!-- Only Start Date Selected -->
+    {#if newStartDate && !newEndDate}
+      <div class="selection-progress-info">
+        <p class="info-label">Start Date Selected</p>
+        <p class="info-dates">{formatDateForDisplay(newStartDate)}</p>
+        <p class="info-hint">Now click an end date to complete your selection.</p>
       </div>
     {/if}
 
@@ -375,18 +362,14 @@
         {@const date = new Date(currentYear, currentMonth, day)}
         {@const isBooked = isDateBooked(date)}
         {@const isPast = isDateInPast(date)}
-        {@const isClickable = !isBooked && !isPast && (editingMode !== null)}
+        {@const isClickable = !isBooked && !isPast}
         
         <button
           type="button"
           class={dayClass}
-          on:click={() => editingMode && selectDateInEditMode(day)}
-          on:mouseenter={() => { 
-            if (editingMode) hoveredDate = date;
-          }}
-          on:mouseleave={() => { 
-            if (editingMode) hoveredDate = null;
-          }}
+          on:click={() => isClickable && selectDate(day)}
+          on:mouseenter={() => { hoveredDate = date; }}
+          on:mouseleave={() => { hoveredDate = null; }}
           disabled={!isClickable}
         >
           {day}
@@ -400,9 +383,9 @@
         type="button"
         class="reset-btn"
         on:click={resetSelection}
-        disabled={selectedStartDate === null}
+        disabled={newStartDate === null}
       >
-        Reset
+        Reset Selection
       </button>
     </div>
 
@@ -420,14 +403,16 @@
         <div class="legend-color booked"></div>
         <span>Booked</span>
       </div>
-      <div class="legend-item">
-        <div class="legend-color selected"></div>
-        <span>Selected</span>
-      </div>
-      {#if editingMode}
+      {#if newStartDate === null && newEndDate === null && currentStartDate}
         <div class="legend-item">
-          <div class="legend-color preview"></div>
-          <span>Preview</span>
+          <div class="legend-color current"></div>
+          <span>Your Current</span>
+        </div>
+      {/if}
+      {#if newStartDate || newEndDate}
+        <div class="legend-item">
+          <div class="legend-color selected"></div>
+          <span>Your New Dates</span>
         </div>
       {/if}
     </div>
@@ -440,7 +425,6 @@
     border: 2px solid #d4c4b0;
     border-radius: 2px;
     padding: 16px;
-    margin-top: 24px;
   }
 
   .loading {
@@ -450,24 +434,30 @@
     font-size: 14px;
   }
 
-  /* Current Selection Display */
-  .current-selection {
+  /* Info Boxes */
+  .current-booking-info,
+  .new-selection-info,
+  .selection-progress-info {
     background: white;
     border: 2px solid #d4c4b0;
     border-radius: 2px;
     padding: 16px;
     margin-bottom: 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
   }
 
-  .selection-info {
-    flex: 1;
+  .current-booking-info {
+    border-left: 4px solid #d9a574;
   }
 
-  .selection-label {
+  .new-selection-info {
+    border-left: 4px solid #8fa881;
+  }
+
+  .selection-progress-info {
+    border-left: 4px solid #d9a574;
+  }
+
+  .info-label {
     margin: 0 0 4px 0;
     font-size: 12px;
     font-weight: 600;
@@ -476,76 +466,18 @@
     letter-spacing: 0.5px;
   }
 
-  .selection-dates {
-    margin: 0;
+  .info-dates {
+    margin: 0 0 8px 0;
     font-size: 16px;
     font-weight: 700;
-    color: #d9a574;
+    color: #5a4a3a;
   }
 
-  .edit-buttons {
-    display: flex;
-    gap: 8px;
-  }
-
-  .edit-date-btn {
-    padding: 8px 12px;
-    background: #e8dcc8;
-    border: 2px solid #d4c4b0;
-    border-radius: 2px;
+  .info-hint {
+    margin: 0;
     font-size: 12px;
-    font-weight: 600;
-    font-family: 'Fredoka', sans-serif;
     color: #8b7355;
-    cursor: pointer;
-    transition: all 0.2s;
-    white-space: nowrap;
-  }
-
-  .edit-date-btn:hover {
-    background: #d4c4b0;
-    border-color: #8b7355;
-  }
-
-  .edit-date-btn.active {
-    background: #d9a574;
-    color: white;
-    border-color: #8b7355;
-  }
-
-  .edit-date-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  /* Error Message */
-  .error-message {
-    background: rgba(200, 90, 84, 0.1);
-    border: 1px solid #c85a54;
-    border-radius: 2px;
-    padding: 12px;
-    margin-bottom: 16px;
-    color: #8b4545;
-    font-size: 13px;
-  }
-
-  .error-message p {
-    margin: 0;
-  }
-
-  /* Instructions */
-  .edit-instructions {
-    background: rgba(217, 165, 116, 0.1);
-    border-left: 4px solid #d9a574;
-    border-radius: 2px;
-    padding: 12px;
-    margin-bottom: 16px;
-    font-size: 13px;
-    color: #8b7355;
-  }
-
-  .edit-instructions p {
-    margin: 0;
+    font-style: italic;
   }
 
   /* Calendar Header */
@@ -586,10 +518,6 @@
   .nav-btn:disabled {
     opacity: 0.3;
     cursor: not-allowed;
-  }
-
-  .nav-btn:disabled:hover {
-    background: none;
   }
 
   /* Weekdays */
@@ -676,19 +604,19 @@
     transform: none;
   }
 
-  /* Current selected range */
-  .day.in-range {
-    background: rgba(217, 165, 116, 0.3);
+  /* Current booking dates (reference) */
+  .day.current-booking {
+    background: rgba(217, 165, 116, 0.2);
     border-color: #d9a574;
     color: #5a4a3a;
   }
 
-  .day.in-range:hover:not(:disabled) {
-    background: rgba(217, 165, 116, 0.4);
+  .day.current-booking:hover:not(:disabled) {
+    background: rgba(217, 165, 116, 0.3);
     transform: scale(1.05);
   }
 
-  .day.in-range.endpoint {
+  .day.current-booking.current-endpoint {
     background: #d9a574;
     color: white;
     border-color: #8b7355;
@@ -696,23 +624,23 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
   }
 
-  .day.in-range.endpoint:hover:not(:disabled) {
+  .day.current-booking.current-endpoint:hover:not(:disabled) {
     background: #c85a54;
   }
 
-  /* Preview range (when editing) */
-  .day.preview-range {
+  /* New selection range */
+  .day.new-selection {
     background: rgba(143, 168, 129, 0.3);
     border-color: #8fa881;
     color: #5a4a3a;
   }
 
-  .day.preview-range:hover:not(:disabled) {
+  .day.new-selection:hover:not(:disabled) {
     background: rgba(143, 168, 129, 0.4);
     transform: scale(1.05);
   }
 
-  .day.preview-range.preview-endpoint {
+  .day.new-selection.new-endpoint {
     background: #8fa881;
     color: white;
     border-color: #5a7a4a;
@@ -720,8 +648,14 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
   }
 
-  .day.preview-range.preview-endpoint:hover:not(:disabled) {
+  .day.new-selection.new-endpoint:hover:not(:disabled) {
     background: #7a9a6f;
+  }
+
+  /* Preview range on hover */
+  .day.preview-range {
+    background: rgba(143, 168, 129, 0.2);
+    border-color: #8fa881;
   }
 
   .day:disabled {
@@ -794,30 +728,17 @@
     background: #d4c4b0;
   }
 
-  .legend-color.selected {
+  .legend-color.current {
     background: #d9a574;
   }
 
-  .legend-color.preview {
+  .legend-color.selected {
     background: #8fa881;
   }
 
   @media (max-width: 480px) {
     .edit-calendar {
       padding: 12px;
-    }
-
-    .current-selection {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-
-    .edit-buttons {
-      width: 100%;
-    }
-
-    .edit-date-btn {
-      flex: 1;
     }
 
     .calendar-header h3 {
@@ -836,6 +757,10 @@
     .legend-color {
       width: 12px;
       height: 12px;
+    }
+
+    .info-dates {
+      font-size: 14px;
     }
   }
 </style>

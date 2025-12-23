@@ -62,13 +62,13 @@ export const verification = sqliteTable('verification', {
 export const notifications = sqliteTable('notifications', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   userId: text('user_id').notNull().references(() => user.id),
-  type: text('type').notNull(), // 'inquiry_new', 'inquiry_approved', 'inquiry_rejected', 'chat_message', etc
+  type: text('type').notNull(), // 'inquiry_new', 'inquiry_approved', 'inquiry_rejected', 'modification_requested', 'modification_approved', 'modification_rejected', etc
   title: text('title').notNull(),
   message: text('message').notNull(),
   read: integer('read', { mode: 'boolean' }).notNull().default(false),
   archived: integer('archived', { mode: 'boolean' }).default(false),
   archivedAt: integer('archived_at', { mode: 'timestamp' }),
-  relatedId: integer('related_id'), // inquiry ID, chat message ID, etc
+  relatedId: integer('related_id'), // inquiry ID, modification ID, etc
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
   metadata: text('metadata') // JSON for flexible data
 });
@@ -79,8 +79,25 @@ export const inquiries = sqliteTable('inquiries', {
   senderUserId: text('sender_user_id').notNull().references(() => user.id),
   receiverUserId: text('receiver_user_id').notNull().references(() => user.id),
   message: text('message').notNull(),
+  contactInfo: text('contact_info'),
   requestedDates: text('requested_dates'),
   status: text('status').notNull().default('pending'), // 'pending', 'approved', 'rejected'
+  modificationCount: integer('modification_count').notNull().default(0), // Track how many times modified (max 2)
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`)
+});
+
+// NEW: Inquiry Modifications table - tracks all date change requests
+export const inquiryModifications = sqliteTable('inquiry_modifications', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  inquiryId: integer('inquiry_id').notNull().references(() => inquiries.id),
+  requestedByUserId: text('requested_by_user_id').notNull().references(() => user.id),
+  previousDates: text('previous_dates').notNull(), // What dates were before
+  newDates: text('new_dates').notNull(), // What dates are requested
+  status: text('status').notNull().default('pending'), // 'pending', 'approved', 'rejected'
+  reason: text('reason'),
+  ownerResponse: text('owner_response'), 
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
+  reviewedAt: integer('reviewed_at', { mode: 'timestamp' }),
+  metadata: text('metadata')
 });

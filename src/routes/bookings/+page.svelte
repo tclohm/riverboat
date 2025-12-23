@@ -1,7 +1,7 @@
 <script lang="ts">
   export let data;
   import { Check, Clock, X, Edit2, Trash2 } from '@lucide/svelte';
-  import InteractiveCalendar from '$lib/components/InteractiveCalendar.svelte';
+  import EditableInteractiveCalendar from '$lib/components/EditableInteractiveCalendar.svelte';
   import { invalidateAll } from '$app/navigation';
 
   interface Inquiry {
@@ -47,6 +47,26 @@
     return groups;
   }
 
+  // Helper to split "Dec 23, 2025 – Dec 25, 2025" into start and end
+  function splitRequestedDates(dateString: string): { start: string; end: string } {
+    if (!dateString) return { start: '', end: '' };
+    
+    let parts: string[] = [];
+    
+    if (dateString.includes(' – ')) {
+      parts = dateString.split(' – ');
+    } else if (dateString.includes(' - ')) {
+      parts = dateString.split(' - ');
+    } else {
+      return { start: '', end: '' };
+    }
+
+    return {
+      start: parts[0]?.trim() || '',
+      end: parts[1]?.trim() || ''
+    };
+  }
+
   // Compute filtered inquiries based on current data
   $: pendingInquiries = data.inquiries.filter(inq => inq.status === 'pending');
   $: approvedInquiries = data.inquiries.filter(inq => inq.status === 'approved');
@@ -88,7 +108,7 @@
   }
 
   function handleDateRangeSelect(startDate: string, endDate: string) {
-    editFormData.requestedDates = `${startDate} - ${endDate}`;
+    editFormData.requestedDates = `${startDate} – ${endDate}`;
   }
 
   async function handleEditSubmit() {
@@ -400,7 +420,7 @@
   >
     <div class="modal-content" on:click|stopPropagation role="main" aria-label="modal content">
       <div class="modal-header">
-        <h2>Edit Booking Request</h2>
+        <h2>Edit Booking</h2>
         <button
           type="button"
           class="modal-close"
@@ -423,22 +443,15 @@
             </div>
           {/if}
 
-          <!-- Interactive Calendar for Date Selection -->
+          <!-- Calendar -->
           <div class="form-section">
-            <label>Select Your Dates</label>
-            <InteractiveCalendar 
-              passId={editingInquiry.passId} 
+            <EditableInteractiveCalendar 
+              passId={editingInquiry.passId}
+              initialStartDate={splitRequestedDates(editingInquiry.requestedDates).start}
+              initialEndDate={splitRequestedDates(editingInquiry.requestedDates).end}
               onDateRangeSelect={handleDateRangeSelect}
             />
           </div>
-
-          <!-- Selected Dates Display -->
-          {#if editFormData.requestedDates}
-            <div class="selected-dates-display">
-              <span class="label">Selected:</span>
-              <span class="dates">{editFormData.requestedDates}</span>
-            </div>
-          {/if}
 
           <!-- Message to Host -->
           <div class="form-group">
@@ -447,7 +460,7 @@
               id="message"
               bind:value={editFormData.message}
               placeholder="Tell the host about your plans..."
-              rows="5"
+              rows="4"
               required
             ></textarea>
             <p class="char-count">{editFormData.message.length}/500 characters</p>
@@ -834,7 +847,7 @@
     border: 2px solid #8b7355;
     border-radius: 2px;
     width: 90%;
-    max-width: 600px;
+    max-width: 700px;
     max-height: 90vh;
     overflow-y: auto;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
@@ -893,12 +906,6 @@
     gap: 12px;
   }
 
-  .form-section > label {
-    font-weight: 600;
-    color: #5a4a3a;
-    font-size: 14px;
-  }
-
   .error-message {
     background: rgba(200, 90, 84, 0.1);
     border: 1px solid #c85a54;
@@ -926,27 +933,6 @@
     line-height: 1.6;
     margin: 0;
     font-weight: 600;
-  }
-
-  .selected-dates-display {
-    background: white;
-    border: 2px solid #d4c4b0;
-    border-radius: 2px;
-    padding: 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .selected-dates-display .label {
-    margin: 0;
-    font-size: 12px;
-  }
-
-  .selected-dates-display .dates {
-    font-weight: 600;
-    color: #d9a574;
-    font-size: 16px;
   }
 
   .form-group {
@@ -987,7 +973,7 @@
 
   .form-group textarea {
     resize: vertical;
-    min-height: 120px;
+    min-height: 100px;
   }
 
   .char-count {
