@@ -1,5 +1,5 @@
 import { getDb } from '$lib/db';
-import { inquiries, passes, user, notifications } from '$lib/db/schema';
+import { inquiries, inquiryEvents, passes, user, notifications } from '$lib/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { redirect } from '@sveltejs/kit';
 import { parseRequestedDatesToRange, addBookedDateRange } from '$lib/server/dateUtils';
@@ -21,7 +21,7 @@ export async function load({ platform, locals }) {
       throw redirect(303, '/add');
     }
     
-    // Get all inquiries for the user's passes
+    // Get all inquiries for the user's passes (exclude cancelled from main view)
     const userInquiries = await db.select({
       inquiry: inquiries,
       pass: passes,
@@ -30,20 +30,28 @@ export async function load({ platform, locals }) {
     .from(inquiries)
     .leftJoin(passes, eq(inquiries.passId, passes.id))
     .leftJoin(user, eq(inquiries.senderUserId, user.id))
-    .where(
-      eq(inquiries.receiverUserId, locals.user.id)
-    )
+    .where(eq(inquiries.receiverUserId, locals.user.id))
     .orderBy(desc(inquiries.createdAt))
-    .all()
+    .all();
 
-    // Mark all inquiry_new notifications as read (user is viewing the page)
-    console.log('[requests/load] Marking inquiry notifications as read');
+    // Mark inquiry_new notifications as read
     await db.update(notifications)
       .set({ read: true })
       .where(
         and(
           eq(notifications.userId, locals.user.id),
           eq(notifications.type, 'inquiry_new')
+        )
+      )
+      .run();
+
+    // Also mark cancelled notifications as read
+    await db.update(notifications)
+      .set({ read: true })
+      .where(
+        and(
+          eq(notifications.userId, locals.user.id),
+          eq(notifications.type, 'inquiry_cancelled')
         )
       )
       .run();
@@ -107,22 +115,32 @@ export const actions = {
         .where(eq(user.id, locals.user.id))
         .get();
 
+      const now = new Date();
+
       // 1. UPDATE INQUIRY STATUS
-      console.log('[requests/updateInquiryStatus] Updating inquiry status to:', status);
       await db.update(inquiries)
         .set({
           status: status,
-          updatedAt: new Date()
+          updatedAt: now
         })
         .where(eq(inquiries.id, inquiryId))
         .run();
 
-      // 2. IF APPROVED, ADD BOOKED DATES
+      // 2. LOG THE EVENT
+      let eventMetadata: any = {
+        passId: inquiry.passId,
+        passTitle: pass?.title
+      };
+
+      // 3. IF APPROVED, ADD BOOKED DATES
       if (status === 'approved' && inquiry.requestedDates) {
         const dateRange = parseRequestedDatesToRange(inquiry.requestedDates);
         
         if (dateRange) {
-          console.log('[requests/updateInquiryStatus] Parsed date range:', dateRange);
+          eventMetadata.bookedDates = {
+            start: dateRange.start,
+            end: dateRange.end
+          };
           
           const updatedBookedDates = addBookedDateRange(
             pass.bookedDates,
@@ -137,12 +155,19 @@ export const actions = {
         }
       }
 
-      // 3. CREATE NOTIFICATION FOR REQUESTER
+      // Log the approval/rejection event
+      await db.insert(inquiryEvents).values({
+        inquiryId,
+        eventType: status,
+        actorUserId: locals.user.id,
+        metadata: JSON.stringify(eventMetadata),
+        createdAt: now
+      }).run();
+
+      // 4. CREATE NOTIFICATION FOR REQUESTER
       const notificationType = status === 'approved' ? 'inquiry_approved' : 'inquiry_rejected';
       const titleText = status === 'approved' ? 'Request Approved! ✓' : 'Request Declined';
       const messageText = `Your request for "${pass?.title || 'a pass'}" has been ${status}.`;
-      
-      console.log('[requests/updateInquiryStatus] Creating notification for', inquiry.senderUserId);
       
       await db.insert(notifications).values({
         userId: inquiry.senderUserId,
@@ -152,7 +177,7 @@ export const actions = {
         read: false,
         archived: false,
         relatedId: inquiryId,
-        createdAt: new Date(),
+        createdAt: now,
         metadata: JSON.stringify({
           inquiryId: inquiryId,
           ownerName: ownerUser?.name,
@@ -162,7 +187,7 @@ export const actions = {
         })
       }).run();
 
-      console.log('[requests/updateInquiryStatus] Successfully updated inquiry and created notification');
+      console.log('[requests/updateInquiryStatus] Successfully updated inquiry and logged event');
       return { success: true };
     } catch (error) {
       console.error('[requests/updateInquiryStatus] Error:', error);

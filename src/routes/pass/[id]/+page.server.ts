@@ -1,4 +1,4 @@
-import { passes, inquiries, notifications, user } from '$lib/db/schema';
+import { passes, inquiries, inquiryEvents, notifications, user } from '$lib/db/schema';
 import { getDb } from '$lib/db';
 import { error, fail, redirect } from '@sveltejs/kit';
 import { eq, and, desc } from 'drizzle-orm';
@@ -112,14 +112,13 @@ export const actions = {
     }
 
     const formData = await request.formData();
-    const passId = parseInt(formData.get('passId')?.toString() || 0);
+    const passId = parseInt(formData.get('passId')?.toString() || '0');
     const receiverUserId = formData.get('receiverUserId')?.toString() || '';
     const message = formData.get('message')?.toString() || '';
+    const contactInfo = formData.get('contactInfo')?.toString() || '';
     const requestedDates = formData.get('requestedDates')?.toString() || '';
 
-    console.log('[createInquiry] Form data:', { passId, receiverUserId, message, contactInfo, requestedDates });
-
-    if (!passId || !receiverUserId || !message || !requestedDates) {
+    if (!passId || !receiverUserId || !message || !contactInfo || !requestedDates) {
       return fail(400, { error: 'All fields are required' });
     }
 
@@ -145,22 +144,23 @@ export const actions = {
 
     try {
       const db = await getDb(platform);
+      const now = new Date();
       
       // Get pass and sender user info
       const pass = await db.select().from(passes).where(eq(passes.id, passId)).get();
       const senderUser = await db.select().from(user).where(eq(user.id, locals.user.id)).get();
       
       // 1. CREATE INQUIRY
-      console.log('[createInquiry] Creating inquiry...');
-      await db.insert(inquiries).values({
+      const result = await db.insert(inquiries).values({
         passId,
         senderUserId: locals.user.id,
         receiverUserId,
         message,
+        contactInfo,
         requestedDates,
         status: 'pending',
-        createdAt: new Date(),
-        updatedAt: new Date()
+        createdAt: now,
+        updatedAt: now
       }).run();
       
       // 2. GET THE INQUIRY ID
@@ -175,11 +175,23 @@ export const actions = {
         )
         .orderBy(desc(inquiries.createdAt))
         .get();
-      
-      console.log('[createInquiry] Inquiry created with ID:', newInquiry?.id);
 
-      // 3. CREATE NOTIFICATION FOR PASS OWNER
-      console.log('[createInquiry] Creating notification for', receiverUserId);
+      // 3. LOG THE CREATED EVENT
+      if (newInquiry) {
+        await db.insert(inquiryEvents).values({
+          inquiryId: newInquiry.id,
+          eventType: 'created',
+          actorUserId: locals.user.id,
+          metadata: JSON.stringify({
+            passId,
+            passTitle: pass?.title,
+            requestedDates
+          }),
+          createdAt: now
+        }).run();
+      }
+
+      // 4. CREATE NOTIFICATION FOR PASS OWNER
       await db.insert(notifications).values({
         userId: receiverUserId,
         type: 'inquiry_new',
@@ -188,7 +200,7 @@ export const actions = {
         read: false,
         archived: false,
         relatedId: newInquiry?.id,
-        createdAt: new Date(),
+        createdAt: now,
         metadata: JSON.stringify({
           inquiryId: newInquiry?.id,
           senderName: senderUser?.name,
@@ -199,7 +211,6 @@ export const actions = {
         })
       }).run();
       
-      console.log('[createInquiry] Notification created');
       return { success: true };
     } catch (error) {
       console.error('[createInquiry] Error:', error);

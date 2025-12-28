@@ -1,19 +1,22 @@
 <script lang="ts">
   export let data;
-  import { Check, Clock, X, Edit2, Trash2 } from '@lucide/svelte';
-  import EditableInteractiveCalendar from '$lib/components/EditableInteractiveCalendar.svelte';
+  import { Check, Clock, X, Trash2 } from '@lucide/svelte';
   import { invalidateAll } from '$app/navigation';
 
   interface Inquiry {
     id: number;
     createdAt: Date | string;
-    status: 'pending' | 'approved' | 'rejected';
+    status: 'pending' | 'approved' | 'rejected' | 'cancelled';
     [key: string]: any;
   }
 
   interface GroupedInquiries {
     [key: string]: Inquiry[];
   }
+
+  let cancellingId: number | null = null;
+  let showConfirmCancel = false;
+  let selectedInquiry: Inquiry | null = null;
 
   function groupByDate(inquiries: Inquiry[]): GroupedInquiries {
     const groups: GroupedInquiries = {};
@@ -47,141 +50,55 @@
     return groups;
   }
 
-  // Helper to split "Dec 23, 2025 – Dec 25, 2025" into start and end
-  function splitRequestedDates(dateString: string): { start: string; end: string } {
-    if (!dateString) return { start: '', end: '' };
-    
-    let parts: string[] = [];
-    
-    if (dateString.includes(' – ')) {
-      parts = dateString.split(' – ');
-    } else if (dateString.includes(' - ')) {
-      parts = dateString.split(' - ');
-    } else {
-      return { start: '', end: '' };
-    }
-
-    return {
-      start: parts[0]?.trim() || '',
-      end: parts[1]?.trim() || ''
-    };
+  function openCancelConfirm(inquiry: Inquiry) {
+    selectedInquiry = inquiry;
+    showConfirmCancel = true;
   }
 
-  // Compute filtered inquiries based on current data
+  function closeCancelConfirm() {
+    selectedInquiry = null;
+    showConfirmCancel = false;
+  }
+
+  async function handleCancel() {
+    if (!selectedInquiry) return;
+
+    cancellingId = selectedInquiry.id;
+
+    try {
+      const response = await fetch(`/api/inquiries/${selectedInquiry.id}/cancel`, {
+        method: 'POST'
+      });
+
+      if (response.ok) {
+        closeCancelConfirm();
+        await invalidateAll();
+      } else {
+        const data = await response.json();
+        console.error('Failed to cancel:', data.error);
+        alert(data.error || 'Failed to cancel booking');
+      }
+    } catch (error) {
+      console.error('Error cancelling:', error);
+      alert('An error occurred. Please try again.');
+    } finally {
+      cancellingId = null;
+    }
+  }
+
+  // Filter out cancelled from main views, show in separate tab
   $: pendingInquiries = data.inquiries.filter(inq => inq.status === 'pending');
   $: approvedInquiries = data.inquiries.filter(inq => inq.status === 'approved');
   $: rejectedInquiries = data.inquiries.filter(inq => inq.status === 'rejected');
+  $: cancelledInquiries = data.inquiries.filter(inq => inq.status === 'cancelled');
 
   $: pendingGrouped = groupByDate(pendingInquiries);
   $: approvedGrouped = groupByDate(approvedInquiries);
   $: rejectedGrouped = groupByDate(rejectedInquiries);
+  $: cancelledGrouped = groupByDate(cancelledInquiries);
 
-  type TabType = 'pending' | 'approved' | 'rejected';
+  type TabType = 'pending' | 'approved' | 'rejected' | 'cancelled';
   let activeTab: TabType = (data.defaultTab as TabType) || 'approved';
-
-  // Edit modal state
-  let editingInquiry: any = null;
-  let editFormData = {
-    message: '',
-    requestedDates: ''
-  };
-
-  let editLoading = false;
-  let cancelLoading: { [key: number]: boolean } = {};
-  let editError = '';
-  let editSuccess = false;
-
-  function openEditModal(inquiry: any) {
-    editingInquiry = inquiry;
-    editFormData = {
-      message: inquiry.message || '',
-      requestedDates: inquiry.requestedDates || ''
-    };
-    editError = '';
-    editSuccess = false;
-  }
-
-  function closeEditModal() {
-    editingInquiry = null;
-    editError = '';
-    editSuccess = false;
-  }
-
-  function handleDateRangeSelect(startDate: string, endDate: string) {
-    editFormData.requestedDates = `${startDate} – ${endDate}`;
-  }
-
-  async function handleEditSubmit() {
-    if (!editingInquiry) return;
-
-    if (!editFormData.message.trim()) {
-      editError = 'Message is required';
-      return;
-    }
-
-    if (!editFormData.requestedDates) {
-      editError = 'Please select dates from the calendar';
-      return;
-    }
-
-    editLoading = true;
-    editError = '';
-
-    try {
-      const response = await fetch('/api/inquiries/edit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          inquiryId: editingInquiry.id,
-          message: editFormData.message,
-          requestedDates: editFormData.requestedDates
-        })
-      });
-
-      if (response.ok) {
-        editSuccess = true;
-        setTimeout(() => {
-          closeEditModal();
-          invalidateAll();
-        }, 1500);
-      } else {
-        const error = await response.json();
-        editError = error.error || 'Failed to edit booking';
-      }
-    } catch (error) {
-      editError = 'Failed to edit booking. Please try again.';
-      console.error('Edit error:', error);
-    } finally {
-      editLoading = false;
-    }
-  }
-
-  async function handleCancel(inquiryId: number) {
-    if (!confirm('Are you sure you want to cancel this booking? This action cannot be undone.')) {
-      return;
-    }
-
-    cancelLoading[inquiryId] = true;
-
-    try {
-      const response = await fetch('/api/inquiries/cancel', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inquiryId })
-      });
-
-      if (response.ok) {
-        await invalidateAll();
-      } else {
-        alert('Failed to cancel booking');
-      }
-    } catch (error) {
-      console.error('Cancel error:', error);
-      alert('Failed to cancel booking');
-    } finally {
-      cancelLoading[inquiryId] = false;
-    }
-  }
 </script>
 
 <svelte:head>
@@ -221,9 +138,20 @@
       on:click={() => activeTab = 'rejected'}
     >
       <X size={18} />
-      <span>Rejected</span>
+      <span>Declined</span>
       <span class="badge rejected">{rejectedInquiries.length}</span>
     </button>
+    {#if cancelledInquiries.length > 0}
+      <button 
+        class="tab-button" 
+        class:active={activeTab === 'cancelled'}
+        on:click={() => activeTab = 'cancelled'}
+      >
+        <Trash2 size={18} />
+        <span>Cancelled</span>
+        <span class="badge cancelled">{cancelledInquiries.length}</span>
+      </button>
+    {/if}
   </div>
 
   <!-- Approved Tab -->
@@ -258,31 +186,21 @@
                         <span class="value">{inquiry.requestedDates}</span>
                       </div>
                     {/if}
-                    <div class="info-item">
-                      <span class="label">Your Message:</span>
-                      <p class="value message-text">{inquiry.message}</p>
-                    </div>
+                    {#if inquiry.contactInfo}
+                      <div class="info-item">
+                        <span class="label">You Provided:</span>
+                        <span class="value">{inquiry.contactInfo}</span>
+                      </div>
+                    {/if}
                   </div>
 
-                  <div class="card-actions">
+                  <div class="card-footer">
                     <button 
                       type="button"
-                      class="action-btn edit-btn"
-                      on:click={() => openEditModal(inquiry)}
-                      title="Edit booking"
+                      class="cancel-btn"
+                      on:click={() => openCancelConfirm(inquiry)}
                     >
-                      <Edit2 size={16} />
-                      Edit
-                    </button>
-                    <button 
-                      type="button"
-                      class="action-btn cancel-btn"
-                      on:click={() => handleCancel(inquiry.id)}
-                      disabled={cancelLoading[inquiry.id]}
-                      title="Cancel booking"
-                    >
-                      <Trash2 size={16} />
-                      Cancel
+                      Cancel Booking
                     </button>
                   </div>
                 </div>
@@ -331,25 +249,13 @@
                     </div>
                   </div>
 
-                  <div class="card-actions">
+                  <div class="card-footer">
                     <button 
                       type="button"
-                      class="action-btn edit-btn"
-                      on:click={() => openEditModal(inquiry)}
-                      title="Edit request"
+                      class="cancel-btn"
+                      on:click={() => openCancelConfirm(inquiry)}
                     >
-                      <Edit2 size={16} />
-                      Edit
-                    </button>
-                    <button 
-                      type="button"
-                      class="action-btn cancel-btn"
-                      on:click={() => handleCancel(inquiry.id)}
-                      disabled={cancelLoading[inquiry.id]}
-                      title="Cancel request"
-                    >
-                      <Trash2 size={16} />
-                      Cancel
+                      Cancel Request
                     </button>
                   </div>
                 </div>
@@ -367,7 +273,7 @@
       {#if rejectedInquiries.length === 0}
         <div class="empty-state">
           <X size={48} />
-          <p>No rejected requests</p>
+          <p>No declined requests</p>
           <a href="/" class="cta-button">Browse More Passes</a>
         </div>
       {:else}
@@ -406,85 +312,103 @@
       {/if}
     </div>
   {/if}
-</div>
 
-<!-- Edit Modal -->
-{#if editingInquiry}
-  <div 
-    class="modal-backdrop"
-    on:click={closeEditModal}
-    on:keydown={(e) => e.key === 'Escape' && closeEditModal()}
-    role="button"
-    tabindex="0"
-    aria-label="Close modal"
-  >
-    <div class="modal-content" on:click|stopPropagation role="main" aria-label="modal content">
-      <div class="modal-header">
-        <h2>Edit Booking</h2>
-        <button
-          type="button"
-          class="modal-close"
-          on:click={closeEditModal}
-          aria-label="Close"
-        >
-          ✕
-        </button>
-      </div>
-
-      {#if editSuccess}
-        <div class="success-message">
-          <p>✓ Booking updated successfully!</p>
+  <!-- Cancelled Tab -->
+  {#if activeTab === 'cancelled'}
+    <div class="tab-content">
+      {#if cancelledInquiries.length === 0}
+        <div class="empty-state">
+          <Trash2 size={48} />
+          <p>No cancelled bookings</p>
         </div>
       {:else}
-        <div class="modal-body">
-          {#if editError}
-            <div class="error-message">
-              {editError}
+        {#each Object.entries(cancelledGrouped) as [dateLabel, inquiries]}
+          <div class="date-group">
+            <h2 class="date-label">{dateLabel}</h2>
+            <div class="cards-grid">
+              {#each inquiries as inquiry (inquiry.id)}
+                <div class="booking-card cancelled">
+                  <div class="card-header">
+                    <h3>{inquiry.pass?.title || 'A Pass'}</h3>
+                    <span class="status-badge cancelled">Cancelled</span>
+                  </div>
+                  
+                  <div class="card-body">
+                    <div class="info-item">
+                      <span class="label">Host:</span>
+                      <span class="value">{inquiry.ownerName || 'Unknown'}</span>
+                    </div>
+                    {#if inquiry.requestedDates}
+                      <div class="info-item">
+                        <span class="label">Dates:</span>
+                        <span class="value cancelled-dates">{inquiry.requestedDates}</span>
+                      </div>
+                    {/if}
+                    {#if inquiry.cancelledAt}
+                      <div class="info-item">
+                        <span class="label">Cancelled:</span>
+                        <span class="value">{new Date(inquiry.cancelledAt).toLocaleDateString()}</span>
+                      </div>
+                    {/if}
+                  </div>
+
+                  <div class="card-footer">
+                    <a href="/pass/{inquiry.pass?.id}" class="browse-link">Request again</a>
+                  </div>
+                </div>
+              {/each}
             </div>
-          {/if}
-
-          <!-- Calendar -->
-          <div class="form-section">
-            <EditableInteractiveCalendar 
-              passId={editingInquiry.passId}
-              initialStartDate={splitRequestedDates(editingInquiry.requestedDates).start}
-              initialEndDate={splitRequestedDates(editingInquiry.requestedDates).end}
-              onDateRangeSelect={handleDateRangeSelect}
-            />
           </div>
-
-          <!-- Message to Host -->
-          <div class="form-group">
-            <label for="message">Message to Host</label>
-            <textarea 
-              id="message"
-              bind:value={editFormData.message}
-              placeholder="Tell the host about your plans..."
-              rows="4"
-              required
-            ></textarea>
-            <p class="char-count">{editFormData.message.length}/500 characters</p>
-          </div>
-        </div>
-
-        <div class="modal-footer">
-          <button 
-            type="button"
-            class="cancel-btn"
-            on:click={closeEditModal}
-          >
-            Cancel
-          </button>
-          <button 
-            type="button"
-            class="save-btn"
-            on:click={handleEditSubmit}
-            disabled={editLoading}
-          >
-            {editLoading ? 'Saving...' : 'Save Changes'}
-          </button>
-        </div>
+        {/each}
       {/if}
+    </div>
+  {/if}
+</div>
+
+<!-- Cancel Confirmation Modal -->
+{#if showConfirmCancel && selectedInquiry}
+  <div 
+    class="modal-backdrop"
+    on:click={closeCancelConfirm}
+    on:keydown={(e) => e.key === 'Escape' && closeCancelConfirm()}
+    tabindex="0"
+    role="button"
+    aria-label="Close modal"
+  >
+    <div 
+      class="modal-content"
+      on:click|stopPropagation
+      role="dialog"
+    >
+      <div class="modal-header">
+        <h2>Cancel {selectedInquiry.status === 'approved' ? 'Booking' : 'Request'}?</h2>
+      </div>
+
+      <div class="modal-body">
+        <p class="confirm-text">
+          {#if selectedInquiry.status === 'approved'}
+            Are you sure you want to cancel your approved booking for <strong>{selectedInquiry.pass?.title}</strong>?
+            The dates ({selectedInquiry.requestedDates}) will become available again.
+          {:else}
+            Are you sure you want to cancel your request for <strong>{selectedInquiry.pass?.title}</strong>?
+          {/if}
+        </p>
+        <p class="subtext">The pass owner will be notified.</p>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="keep-btn" on:click={closeCancelConfirm}>
+          Keep {selectedInquiry.status === 'approved' ? 'Booking' : 'Request'}
+        </button>
+        <button 
+          type="button" 
+          class="confirm-cancel-btn"
+          on:click={handleCancel}
+          disabled={cancellingId === selectedInquiry.id}
+        >
+          {cancellingId === selectedInquiry.id ? 'Cancelling...' : 'Yes, Cancel'}
+        </button>
+      </div>
     </div>
   </div>
 {/if}
@@ -568,17 +492,10 @@
     color: white;
   }
 
-  .badge.pending {
-    background: #d9a574;
-  }
-
-  .badge.approved {
-    background: #8fa881;
-  }
-
-  .badge.rejected {
-    background: #c85a54;
-  }
+  .badge.pending { background: #d9a574; }
+  .badge.approved { background: #8fa881; }
+  .badge.rejected { background: #c85a54; }
+  .badge.cancelled { background: #a0937f; }
   
   .tab-content {
     margin-bottom: 48px;
@@ -655,17 +572,10 @@
     transform: translateY(-4px);
   }
   
-  .booking-card.pending {
-    border-top: 4px solid #d9a574;
-  }
-
-  .booking-card.approved {
-    border-top: 4px solid #8fa881;
-  }
-
-  .booking-card.rejected {
-    border-top: 4px solid #c85a54;
-  }
+  .booking-card.pending { border-top: 4px solid #d9a574; }
+  .booking-card.approved { border-top: 4px solid #8fa881; }
+  .booking-card.rejected { border-top: 4px solid #c85a54; }
+  .booking-card.cancelled { border-top: 4px solid #a0937f; opacity: 0.8; }
   
   .card-header {
     padding: 16px;
@@ -696,25 +606,14 @@
     letter-spacing: 0.5px;
   }
   
-  .status-badge.pending {
-    background: rgba(217, 165, 116, 0.15);
-    color: #8b6f38;
-  }
-  
-  .status-badge.approved {
-    background: rgba(143, 168, 129, 0.15);
-    color: #5a7a4a;
-  }
-  
-  .status-badge.rejected {
-    background: rgba(200, 90, 84, 0.15);
-    color: #8b4545;
-  }
+  .status-badge.pending { background: rgba(217, 165, 116, 0.15); color: #8b6f38; }
+  .status-badge.approved { background: rgba(143, 168, 129, 0.15); color: #5a7a4a; }
+  .status-badge.rejected { background: rgba(200, 90, 84, 0.15); color: #8b4545; }
+  .status-badge.cancelled { background: rgba(160, 147, 127, 0.15); color: #6b6259; }
   
   .card-body {
     padding: 16px;
     flex: 1;
-    overflow-y: auto;
     font-size: 13px;
   }
 
@@ -739,11 +638,9 @@
     line-height: 1.4;
   }
 
-  .message-text {
-    font-size: 13px;
-    line-height: 1.5;
-    max-height: 80px;
-    overflow-y: auto;
+  .value.cancelled-dates {
+    text-decoration: line-through;
+    color: #a0937f;
   }
 
   .help-text {
@@ -757,62 +654,31 @@
     border-left: 2px solid #d9a574;
   }
 
-  .card-actions {
-    padding: 12px 16px;
-    border-top: 1px solid #e5e7eb;
-    display: flex;
-    gap: 8px;
-  }
-
-  .action-btn {
-    flex: 1;
-    padding: 10px 12px;
-    border-radius: 2px;
-    font-weight: 700;
-    font-size: 12px;
-    font-family: 'Fredoka', sans-serif;
-    cursor: pointer;
-    border: none;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .edit-btn {
-    background: #d9a574;
-    color: white;
-  }
-
-  .edit-btn:hover:not(:disabled) {
-    background: #c85a54;
-    transform: translateY(-1px);
-  }
-
-  .cancel-btn {
-    background: #e8dcc8;
-    color: #8b7355;
-    border: 1px solid #d4c4b0;
-  }
-
-  .cancel-btn:hover:not(:disabled) {
-    background: #c85a54;
-    color: white;
-    border-color: #8b7355;
-  }
-
-  .cancel-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
   .card-footer {
     padding: 12px 16px;
     border-top: 1px solid #e5e7eb;
-    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .cancel-btn {
+    background: #faf6f0;
+    color: #c85a54;
+    border: 2px solid #d4c4b0;
+    padding: 8px 16px;
+    border-radius: 2px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'Fredoka', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .cancel-btn:hover {
+    background: #c85a54;
+    color: white;
+    border-color: #8b7355;
   }
 
   .browse-link {
@@ -837,193 +703,90 @@
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
     z-index: 1000;
+    padding: 16px;
   }
 
   .modal-content {
     background: #e8dcc8;
     border: 2px solid #8b7355;
     border-radius: 2px;
-    width: 90%;
-    max-width: 700px;
-    max-height: 90vh;
-    overflow-y: auto;
+    width: 100%;
+    max-width: 420px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-    display: flex;
-    flex-direction: column;
   }
 
   .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 24px;
+    padding: 20px 24px;
     border-bottom: 2px solid #d4c4b0;
-    flex-shrink: 0;
   }
 
   .modal-header h2 {
     margin: 0;
-    font-size: 24px;
-    color: #5a4a3a;
-  }
-
-  .modal-close {
-    background: none;
-    border: none;
-    color: #8b7355;
-    cursor: pointer;
-    padding: 0;
-    font-size: 28px;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    border-radius: 2px;
-  }
-
-  .modal-close:hover {
-    background: rgba(139, 115, 85, 0.1);
+    font-size: 20px;
+    font-weight: 700;
     color: #5a4a3a;
   }
 
   .modal-body {
     padding: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    flex: 1;
-    overflow-y: auto;
   }
 
-  .form-section {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .error-message {
-    background: rgba(200, 90, 84, 0.1);
-    border: 1px solid #c85a54;
-    border-radius: 2px;
-    padding: 12px;
-    color: #8b4545;
-    font-size: 14px;
-  }
-
-  .success-message {
-    padding: 40px;
-    background: rgba(143, 168, 129, 0.1);
-    border-radius: 2px;
-    margin: 24px;
-    text-align: center;
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .success-message p {
-    color: #5a7a4a;
-    font-size: 16px;
-    line-height: 1.6;
-    margin: 0;
-    font-weight: 600;
-  }
-
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .form-group label {
-    font-weight: 600;
-    color: #5a4a3a;
-    font-size: 14px;
-  }
-
-  .form-group textarea {
-    width: 100%;
-    padding: 12px 16px;
-    border: 2px solid #d4c4b0;
-    border-radius: 2px;
+  .confirm-text {
+    margin: 0 0 12px 0;
     font-size: 15px;
-    font-family: 'Fredoka', sans-serif;
-    background: #faf6f0;
     color: #5a4a3a;
-    transition: all 0.2s;
-    box-sizing: border-box;
+    line-height: 1.5;
   }
 
-  .form-group textarea::placeholder {
-    color: #a0937f;
-  }
-
-  .form-group textarea:focus {
-    outline: none;
-    border-color: #c85a54;
-    box-shadow: 0 0 0 3px rgba(200, 90, 84, 0.1);
-    background: white;
-  }
-
-  .form-group textarea {
-    resize: vertical;
-    min-height: 100px;
-  }
-
-  .char-count {
-    font-size: 12px;
-    color: #a0937f;
+  .subtext {
     margin: 0;
+    font-size: 13px;
+    color: #8b7355;
   }
 
   .modal-footer {
+    display: flex;
+    gap: 12px;
     padding: 16px 24px;
     border-top: 2px solid #d4c4b0;
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    flex-shrink: 0;
   }
 
-  .cancel-btn,
-  .save-btn {
-    padding: 10px 20px;
+  .keep-btn,
+  .confirm-cancel-btn {
+    flex: 1;
+    padding: 12px 20px;
     border-radius: 2px;
-    font-weight: 600;
-    cursor: pointer;
-    border: 2px solid #8b7355;
-    font-family: 'Fredoka', sans-serif;
-    transition: all 0.2s;
     font-size: 14px;
+    font-weight: 600;
+    font-family: 'Fredoka', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid #8b7355;
   }
 
-  .cancel-btn {
-    background: #d4c4b0;
-    color: #5a4a3a;
+  .keep-btn {
+    background: #8fa881;
+    color: white;
   }
 
-  .cancel-btn:hover {
+  .keep-btn:hover {
+    background: #7a9a6f;
+  }
+
+  .confirm-cancel-btn {
     background: #c85a54;
     color: white;
   }
 
-  .save-btn {
-    background: #d9a574;
-    color: white;
+  .confirm-cancel-btn:hover:not(:disabled) {
+    background: #b84a45;
   }
 
-  .save-btn:hover:not(:disabled) {
-    background: #c85a54;
-  }
-
-  .save-btn:disabled {
-    opacity: 0.6;
+  .confirm-cancel-btn:disabled {
+    opacity: 0.5;
     cursor: not-allowed;
   }
 
@@ -1043,6 +806,10 @@
       gap: 6px;
     }
 
+    .tab-button span:first-child {
+      display: none;
+    }
+
     .cards-grid {
       grid-template-columns: 1fr;
     }
@@ -1051,26 +818,8 @@
       padding: 60px 24px;
     }
 
-    .date-label {
-      font-size: 14px;
-    }
-
-    .card-body {
-      font-size: 12px;
-    }
-
-    .modal-content {
-      width: 95%;
-      max-width: 95%;
-    }
-
-    .modal-body {
-      padding: 16px;
-      gap: 16px;
-    }
-
-    .form-group textarea {
-      font-size: 14px;
+    .modal-footer {
+      flex-direction: column;
     }
   }
 </style>
