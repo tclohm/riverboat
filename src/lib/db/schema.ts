@@ -62,15 +62,15 @@ export const verification = sqliteTable('verification', {
 export const notifications = sqliteTable('notifications', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   userId: text('user_id').notNull().references(() => user.id),
-  type: text('type').notNull(), // 'inquiry_new', 'inquiry_approved', 'inquiry_rejected', 'modification_requested', 'modification_approved', 'modification_rejected', etc
+  type: text('type').notNull(), // 'inquiry_new', 'inquiry_approved', 'inquiry_rejected', 'inquiry_cancelled'
   title: text('title').notNull(),
   message: text('message').notNull(),
   read: integer('read', { mode: 'boolean' }).notNull().default(false),
   archived: integer('archived', { mode: 'boolean' }).default(false),
   archivedAt: integer('archived_at', { mode: 'timestamp' }),
-  relatedId: integer('related_id'), // inquiry ID, modification ID, etc
+  relatedId: integer('related_id'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
-  metadata: text('metadata') // JSON for flexible data
+  metadata: text('metadata')
 });
 
 export const inquiries = sqliteTable('inquiries', {
@@ -81,23 +81,18 @@ export const inquiries = sqliteTable('inquiries', {
   message: text('message').notNull(),
   contactInfo: text('contact_info'),
   requestedDates: text('requested_dates'),
-  status: text('status').notNull().default('pending'), // 'pending', 'approved', 'rejected'
-  modificationCount: integer('modification_count').notNull().default(0), // Track how many times modified (max 2)
+  status: text('status').notNull().default('pending'), // 'pending', 'approved', 'rejected', 'cancelled'
+  cancelledAt: integer('cancelled_at', { mode: 'timestamp' }), // When the booking was cancelled
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`)
 });
 
-// NEW: Inquiry Modifications table - tracks all date change requests
-export const inquiryModifications = sqliteTable('inquiry_modifications', {
+// Audit log for inquiry lifecycle events
+export const inquiryEvents = sqliteTable('inquiry_events', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   inquiryId: integer('inquiry_id').notNull().references(() => inquiries.id),
-  requestedByUserId: text('requested_by_user_id').notNull().references(() => user.id),
-  previousDates: text('previous_dates').notNull(), // What dates were before
-  newDates: text('new_dates').notNull(), // What dates are requested
-  status: text('status').notNull().default('pending'), // 'pending', 'approved', 'rejected'
-  reason: text('reason'),
-  ownerResponse: text('owner_response'), 
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
-  reviewedAt: integer('reviewed_at', { mode: 'timestamp' }),
-  metadata: text('metadata')
+  eventType: text('event_type').notNull(), // 'created', 'approved', 'rejected', 'cancelled'
+  actorUserId: text('actor_user_id').notNull().references(() => user.id), // Who performed the action
+  metadata: text('metadata'), // JSON for extra context (e.g., dates that were released)
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`)
 });
