@@ -1,7 +1,7 @@
 <script lang="ts">
   export let data;
   import { Check, Clock, X, Edit2, Trash2 } from '@lucide/svelte';
-  import { enhance } from '$app/forms';
+  import EditableInteractiveCalendar from '$lib/components/EditableInteractiveCalendar.svelte';
   import { invalidateAll } from '$app/navigation';
 
   interface Inquiry {
@@ -47,6 +47,26 @@
     return groups;
   }
 
+  // Helper to split "Dec 23, 2025 – Dec 25, 2025" into start and end
+  function splitRequestedDates(dateString: string): { start: string; end: string } {
+    if (!dateString) return { start: '', end: '' };
+    
+    let parts: string[] = [];
+    
+    if (dateString.includes(' – ')) {
+      parts = dateString.split(' – ');
+    } else if (dateString.includes(' - ')) {
+      parts = dateString.split(' - ');
+    } else {
+      return { start: '', end: '' };
+    }
+
+    return {
+      start: parts[0]?.trim() || '',
+      end: parts[1]?.trim() || ''
+    };
+  }
+
   // Compute filtered inquiries based on current data
   $: pendingInquiries = data.inquiries.filter(inq => inq.status === 'pending');
   $: approvedInquiries = data.inquiries.filter(inq => inq.status === 'approved');
@@ -60,10 +80,9 @@
   let activeTab: TabType = (data.defaultTab as TabType) || 'approved';
 
   // Edit modal state
-  let editingInquiryId: number | null = null;
+  let editingInquiry: any = null;
   let editFormData = {
     message: '',
-    contactInfo: '',
     requestedDates: ''
   };
 
@@ -73,10 +92,9 @@
   let editSuccess = false;
 
   function openEditModal(inquiry: any) {
-    editingInquiryId = inquiry.id;
+    editingInquiry = inquiry;
     editFormData = {
       message: inquiry.message || '',
-      contactInfo: inquiry.contactInfo || '',
       requestedDates: inquiry.requestedDates || ''
     };
     editError = '';
@@ -84,13 +102,27 @@
   }
 
   function closeEditModal() {
-    editingInquiryId = null;
+    editingInquiry = null;
     editError = '';
     editSuccess = false;
   }
 
+  function handleDateRangeSelect(startDate: string, endDate: string) {
+    editFormData.requestedDates = `${startDate} – ${endDate}`;
+  }
+
   async function handleEditSubmit() {
-    if (!editingInquiryId) return;
+    if (!editingInquiry) return;
+
+    if (!editFormData.message.trim()) {
+      editError = 'Message is required';
+      return;
+    }
+
+    if (!editFormData.requestedDates) {
+      editError = 'Please select dates from the calendar';
+      return;
+    }
 
     editLoading = true;
     editError = '';
@@ -100,8 +132,9 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          inquiryId: editingInquiryId,
-          ...editFormData
+          inquiryId: editingInquiry.id,
+          message: editFormData.message,
+          requestedDates: editFormData.requestedDates
         })
       });
 
@@ -223,12 +256,6 @@
                       <div class="info-item">
                         <span class="label">Your Dates:</span>
                         <span class="value">{inquiry.requestedDates}</span>
-                      </div>
-                    {/if}
-                    {#if inquiry.contactInfo}
-                      <div class="info-item">
-                        <span class="label">You Provided:</span>
-                        <span class="value">{inquiry.contactInfo}</span>
                       </div>
                     {/if}
                     <div class="info-item">
@@ -382,7 +409,7 @@
 </div>
 
 <!-- Edit Modal -->
-{#if editingInquiryId}
+{#if editingInquiry}
   <div 
     class="modal-backdrop"
     on:click={closeEditModal}
@@ -393,7 +420,7 @@
   >
     <div class="modal-content" on:click|stopPropagation role="main" aria-label="modal content">
       <div class="modal-header">
-        <h2>Edit Booking Request</h2>
+        <h2>Edit Booking</h2>
         <button
           type="button"
           class="modal-close"
@@ -416,30 +443,19 @@
             </div>
           {/if}
 
-          <div class="form-group">
-            <label for="contactInfo">Contact Method</label>
-            <input 
-              type="text"
-              id="contactInfo"
-              bind:value={editFormData.contactInfo}
-              placeholder="Phone or Email"
-              required
+          <!-- Calendar -->
+          <div class="form-section">
+            <EditableInteractiveCalendar 
+              passId={editingInquiry.passId}
+              initialStartDate={splitRequestedDates(editingInquiry.requestedDates).start}
+              initialEndDate={splitRequestedDates(editingInquiry.requestedDates).end}
+              onDateRangeSelect={handleDateRangeSelect}
             />
           </div>
 
+          <!-- Message to Host -->
           <div class="form-group">
-            <label for="requestedDates">Requested Dates</label>
-            <input 
-              type="text"
-              id="requestedDates"
-              bind:value={editFormData.requestedDates}
-              placeholder="e.g., Dec 15-17, 2025"
-              required
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="message">Message</label>
+            <label for="message">Message to Host</label>
             <textarea 
               id="message"
               bind:value={editFormData.message}
@@ -447,6 +463,7 @@
               rows="4"
               required
             ></textarea>
+            <p class="char-count">{editFormData.message.length}/500 characters</p>
           </div>
         </div>
 
@@ -830,7 +847,7 @@
     border: 2px solid #8b7355;
     border-radius: 2px;
     width: 90%;
-    max-width: 500px;
+    max-width: 700px;
     max-height: 90vh;
     overflow-y: auto;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
@@ -844,6 +861,7 @@
     align-items: center;
     padding: 24px;
     border-bottom: 2px solid #d4c4b0;
+    flex-shrink: 0;
   }
 
   .modal-header h2 {
@@ -877,8 +895,15 @@
     padding: 24px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 20px;
     flex: 1;
+    overflow-y: auto;
+  }
+
+  .form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
   }
 
   .error-message {
@@ -922,7 +947,6 @@
     font-size: 14px;
   }
 
-  .form-group input,
   .form-group textarea {
     width: 100%;
     padding: 12px 16px;
@@ -936,12 +960,10 @@
     box-sizing: border-box;
   }
 
-  .form-group input::placeholder,
   .form-group textarea::placeholder {
     color: #a0937f;
   }
 
-  .form-group input:focus,
   .form-group textarea:focus {
     outline: none;
     border-color: #c85a54;
@@ -951,6 +973,13 @@
 
   .form-group textarea {
     resize: vertical;
+    min-height: 100px;
+  }
+
+  .char-count {
+    font-size: 12px;
+    color: #a0937f;
+    margin: 0;
   }
 
   .modal-footer {
@@ -959,6 +988,7 @@
     display: flex;
     justify-content: flex-end;
     gap: 12px;
+    flex-shrink: 0;
   }
 
   .cancel-btn,
@@ -1031,6 +1061,16 @@
 
     .modal-content {
       width: 95%;
+      max-width: 95%;
+    }
+
+    .modal-body {
+      padding: 16px;
+      gap: 16px;
+    }
+
+    .form-group textarea {
+      font-size: 14px;
     }
   }
 </style>
