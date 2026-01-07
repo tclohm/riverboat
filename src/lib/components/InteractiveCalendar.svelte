@@ -1,25 +1,38 @@
 <script lang="ts">
-  import { ChevronLeft, ChevronRight } from '@lucide/svelte';
+  import { ChevronLeft, ChevronRight, X, Calendar } from '@lucide/svelte';
   import { onMount } from 'svelte';
 
+  // Props - same interface as before
   export let passId: number | null = null;
   export let onDateRangeSelect: (startDate: string, endDate: string) => void = () => {};
 
+  // State
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   let currentMonth = today.getMonth();
   let currentYear = today.getFullYear();
+  let numberOfMonths = 2;
   
-  // Store full Date objects for multi-month selection
   let selectedStartDate: Date | null = null;
   let selectedEndDate: Date | null = null;
   let hoveredDate: Date | null = null;
+  let focusedInput: 'start' | 'end' = 'start';
   
   let bookedDates: {start: string, end: string}[] = [];
   let loading = true;
+  let isOpen = false;
 
-  // ===== FETCH DATA ===== 
+  // Memoization cache
+  let gridCache: Record<string, (Date | null)[][]> = {};
+
+  const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const MONTHS = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  // ===== FETCH BOOKED DATES =====
   async function fetchBookedDates() {
     if (!passId) {
       loading = false;
@@ -41,12 +54,13 @@
 
   onMount(() => {
     if (passId) {
-      fetchBookedDates()
+      fetchBookedDates();
+    } else {
+      loading = false;
     }
-  })
+  });
 
-
-  // ===== DATE UTILITIES =====
+  // ===== UTILITY FUNCTIONS =====
   function formatDateForComparison(date: Date): string {
     const m = String(date.getMonth() + 1).padStart(2, '0');
     const d = String(date.getDate()).padStart(2, '0');
@@ -54,10 +68,18 @@
   }
 
   function formatDateForDisplay(date: Date): string {
-    const month = date.toLocaleDateString('en-US', { month: 'short' });
-    const day = date.getDate();
-    const year = date.getFullYear();
-    return `${month} ${day}, ${year}`;
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric'
+    });
+  }
+
+  function formatFullDate(date: Date): string {
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      year: 'numeric'
+    });
   }
 
   function isDateBooked(date: Date): boolean {
@@ -66,24 +88,78 @@
   }
 
   function isDateInPast(date: Date): boolean {
-    const normalized = getNormalizedDate(date);
+    const normalized = new Date(date.getFullYear(), date.getMonth(), date.getDate());
     return normalized < today;
   }
 
-  function getDaysInMonth(month: number, year: number): number {
-    return new Date(year, month + 1, 0).getDate();
+  function isSameDay(date1: Date | null, date2: Date | null): boolean {
+    if (!date1 || !date2) return false;
+    return date1.toDateString() === date2.toDateString();
   }
 
-  function getFirstDayOfMonth(month: number, year: number): number {
-    return new Date(year, month, 1).getDay();
+  function isInRange(date: Date): boolean {
+    if (!selectedStartDate || !selectedEndDate) return false;
+    return date > selectedStartDate && date < selectedEndDate;
   }
+
+  function isInHoverRange(date: Date): boolean {
+    if (!selectedStartDate || !hoveredDate || selectedEndDate) return false;
+    if (focusedInput !== 'end') return false;
+    
+    const start = selectedStartDate < hoveredDate ? selectedStartDate : hoveredDate;
+    const end = selectedStartDate < hoveredDate ? hoveredDate : selectedStartDate;
+    return date > start && date <= end;
+  }
+
+  function isDateDisabled(date: Date): boolean {
+    return isDateInPast(date) || isDateBooked(date);
+  }
+
+  // ===== GRID GENERATION (MEMOIZED) =====
+  function generateMonthGrid(year: number, month: number): (Date | null)[][] {
+    const cacheKey = `${year}-${month}`;
+    if (gridCache[cacheKey]) return gridCache[cacheKey];
+
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startingDay = firstDay.getDay();
+
+    const grid: (Date | null)[][] = [];
+    let dayCounter = 1 - startingDay;
+
+    for (let week = 0; week < 6; week++) {
+      const weekRow: (Date | null)[] = [];
+      for (let day = 0; day < 7; day++) {
+        if (dayCounter < 1 || dayCounter > lastDay.getDate()) {
+          weekRow.push(null);
+        } else {
+          weekRow.push(new Date(year, month, dayCounter));
+        }
+        dayCounter++;
+      }
+      grid.push(weekRow);
+    }
+
+    gridCache[cacheKey] = grid;
+    return grid;
+  }
+
+  // ===== VISIBLE MONTHS =====
+  $: visibleMonths = Array.from({ length: numberOfMonths }, (_, i) => {
+    const date = new Date(currentYear, currentMonth + i, 1);
+    return {
+      year: date.getFullYear(),
+      month: date.getMonth(),
+      name: `${MONTHS[date.getMonth()]} ${date.getFullYear()}`,
+      grid: generateMonthGrid(date.getFullYear(), date.getMonth())
+    };
+  });
 
   // ===== NAVIGATION =====
-  function previousMonth() {
-    // Can't go to past months
-    const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
-    if (firstDayOfMonth <= today) return;
-    
+  $: canGoPrevious = new Date(currentYear, currentMonth, 1) > today;
+
+  function goToPreviousMonth() {
+    if (!canGoPrevious) return;
     if (currentMonth === 0) {
       currentMonth = 11;
       currentYear--;
@@ -92,7 +168,7 @@
     }
   }
 
-  function nextMonth() {
+  function goToNextMonth() {
     if (currentMonth === 11) {
       currentMonth = 0;
       currentYear++;
@@ -101,276 +177,340 @@
     }
   }
 
-  $: canGoPrevious = new Date(currentYear, currentMonth, 1) > today;
-
   // ===== SELECTION LOGIC =====
-  function selectDate(day: number) {
-    const date = new Date(currentYear, currentMonth, day);
-    
-    // Can't select booked dates or past dates
-    if (isDateBooked(date) || isDateInPast(date)) return;
+  function onDayClick(date: Date | null) {
+    if (!date || isDateDisabled(date)) return;
 
-    if (selectedStartDate === null) {
-      // First selection
+    if (focusedInput === 'start') {
       selectedStartDate = date;
-      console.log('Start date selected:', selectedStartDate);
-    } else if (selectedEndDate === null) {
-      // Second selection - auto-sort
-      if (date < selectedStartDate) {
+      selectedEndDate = null;
+      focusedInput = 'end';
+    } else {
+      if (date < selectedStartDate!) {
         selectedEndDate = selectedStartDate;
         selectedStartDate = date;
       } else {
         selectedEndDate = date;
       }
+      focusedInput = 'start';
       
-      console.log('End date selected:', selectedEndDate);
-      console.log('Ordered range:', {
-        start: selectedStartDate,
-        end: selectedEndDate
-      });
-      
-      // Emit the range
-      const startDisplay = formatDateForDisplay(selectedStartDate);
-      const endDisplay = formatDateForDisplay(selectedEndDate);
-      onDateRangeSelect(startDisplay, endDisplay);
+      // Emit the completed range
+      if (selectedStartDate && selectedEndDate) {
+        onDateRangeSelect(
+          formatFullDate(selectedStartDate),
+          formatFullDate(selectedEndDate)
+        );
+      }
     }
   }
 
-  // Debug reactive ranges
-  $: if (orderedRange) {
-    console.log('Ordered range updated:', {
-      start: orderedRange.start,
-      end: orderedRange.end
-    });
+  function onDayHover(date: Date | null) {
+    if (focusedInput === 'end' && selectedStartDate && !selectedEndDate && date) {
+      hoveredDate = date;
+    }
+  }
+
+  function onDayLeave() {
+    hoveredDate = null;
   }
 
   function resetSelection() {
     selectedStartDate = null;
     selectedEndDate = null;
+    focusedInput = 'start';
+    hoveredDate = null;
   }
 
-  // ===== REACTIVE CALCULATIONS =====
-  
-  // Normalize selected range (ensure start < end)
-  $: orderedRange = selectedStartDate && selectedEndDate
-    ? {
-        start: selectedStartDate < selectedEndDate ? selectedStartDate : selectedEndDate,
-        end: selectedStartDate < selectedEndDate ? selectedEndDate : selectedStartDate
-      }
-    : null;
-
-  // Normalize hover range (for preview when start is selected but end is not)
-  $: hoverRange = selectedStartDate && !selectedEndDate && hoveredDate
-    ? {
-        start: selectedStartDate < hoveredDate ? selectedStartDate : hoveredDate,
-        end: selectedStartDate < hoveredDate ? hoveredDate : selectedStartDate
-      }
-    : null;
-
-  // Display range text
-  $: displayRangeText = selectedStartDate && selectedEndDate
-    ? `${formatDateForDisplay(orderedRange!.start)} - ${formatDateForDisplay(orderedRange!.end)}`
-    : '';
-
-  // Calendar display values
-  $: daysInMonth = getDaysInMonth(currentMonth, currentYear);
-  $: firstDay = getFirstDayOfMonth(currentMonth, currentYear);
-  $: monthName = new Date(currentYear, currentMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-  $: days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-  $: emptyDays = Array.from({ length: firstDay }, (_, i) => i);
-
-  // Helper to normalize date to midnight (remove time component)
-  function getNormalizedDate(date: Date): Date {
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  function toggleCalendar() {
+    isOpen = !isOpen;
   }
 
-  // ===== DAY CLASSIFICATION =====
-  function getDayClass(day: number): string {
-    const date = getNormalizedDate(new Date(currentYear, currentMonth, day));
+  // ===== DAY CLASSES =====
+  function getDayClasses(date: Date | null): string {
     const classes: string[] = ['day'];
 
-    // Check if past
-    if (isDateInPast(date)) {
-      return 'day past-date';
+    if (!date) {
+      classes.push('empty');
+      return classes.join(' ');
     }
 
-    // Check if booked
-    if (isDateBooked(getNormalizedDate(date))) {
-      return 'day booked';
+    if (isDateInPast(date)) {
+      classes.push('past');
+      return classes.join(' ');
+    }
+
+    if (isDateBooked(date)) {
+      classes.push('booked');
+      return classes.join(' ');
     }
 
     classes.push('available');
 
-    // Check if in confirmed selected range
-    if (orderedRange) {
-      const rangeStart = getNormalizedDate(orderedRange.start);
-      const rangeEnd = getNormalizedDate(orderedRange.end);
-      
-      const inRange = date >= rangeStart && date <= rangeEnd;
-      
-      if (inRange) {
-        classes.push('in-range');
-        
-        // Check if it's an endpoint
-        if (date.getTime() === rangeStart.getTime() || date.getTime() === rangeEnd.getTime()) {
-          classes.push('endpoint');
-        }
-        
-        return classes.join(' ');
-      }
+    // Selected endpoints
+    if (isSameDay(date, selectedStartDate)) {
+      classes.push('selected', 'start-date');
+    }
+    if (isSameDay(date, selectedEndDate)) {
+      classes.push('selected', 'end-date');
     }
 
-    // Check if in hover preview range (only if start selected but end not selected)
-    if (hoverRange) {
-      const rangeStart = getNormalizedDate(hoverRange.start);
-      const rangeEnd = getNormalizedDate(hoverRange.end);
-      
-      const inRange = date >= rangeStart && date <= rangeEnd;
-      
-      if (inRange) {
-        classes.push('hover-range');
-        
-        // Check if it's an endpoint of hover range
-        if (date.getTime() === rangeStart.getTime() || date.getTime() === rangeEnd.getTime()) {
-          classes.push('endpoint');
-        }
-        
-        return classes.join(' ');
-      }
+    // In confirmed range
+    if (isInRange(date)) {
+      classes.push('in-range');
     }
 
-    // Check if it's the start selection (before end is selected)
-    if (selectedStartDate && !selectedEndDate && date.getTime() === getNormalizedDate(selectedStartDate).getTime()) {
-      classes.push('selected');
+    // Hover preview range
+    if (isInHoverRange(date)) {
+      classes.push('hover-range');
+    }
+
+    // Today
+    if (isSameDay(date, today)) {
+      classes.push('today');
     }
 
     return classes.join(' ');
   }
 
-  // FORCE recalculation of all day classes when:
-  // - orderedRange changes (selection made)
-  // - hoveredDate changes (hover preview)
-  // - currentMonth/currentYear changes (month navigation)
-  // - days changes (derived from month change)
-  $: dayClassMap = (orderedRange, hoveredDate, hoverRange, selectedStartDate, selectedEndDate, currentMonth, currentYear, days) && days.map(day => ({
-    day,
-    class: getDayClass(day)
-  }));
+  // ===== DISPLAY TEXT =====
+  $: displayText = selectedStartDate && selectedEndDate
+    ? `${formatDateForDisplay(selectedStartDate)} - ${formatDateForDisplay(selectedEndDate)}`
+    : selectedStartDate
+      ? `${formatDateForDisplay(selectedStartDate)} - ?`
+      : 'Select dates';
+
+  $: statusText = selectedStartDate === null
+    ? 'Select check-in date'
+    : selectedEndDate === null
+      ? 'Select check-out date'
+      : `${Math.round((selectedEndDate.getTime() - selectedStartDate.getTime()) / (1000 * 60 * 60 * 24))} nights selected`;
+
+  // FORCE recalculation of day classes when state changes
+  // This creates a reactive map that updates whenever selection/hover changes
+  $: dayClassMaps = visibleMonths.map(month => {
+    // These dependencies trigger recalculation
+    const _deps = [selectedStartDate, selectedEndDate, hoveredDate, focusedInput];
+    
+    return month.grid.flat().map(date => ({
+      date,
+      class: getDayClasses(date)
+    }));
+  });
 </script>
 
-<div class="calendar">
-  {#if loading}
-    <div class="loading">Loading availability...</div>
-  {:else}
-    <!-- Header with month navigation -->
-    <div class="calendar-header">
+<div class="calendar-wrapper">
+  <!-- Trigger Button -->
+  <button 
+    type="button"
+    class="calendar-trigger"
+    class:active={isOpen}
+    class:has-selection={selectedStartDate}
+    on:click={toggleCalendar}
+  >
+    <Calendar size={18} />
+    <span class="trigger-text">{displayText}</span>
+    {#if selectedStartDate}
       <button 
         type="button"
-        class="nav-btn"
-        on:click={previousMonth}
-        disabled={!canGoPrevious}
-        aria-label="Previous month"
+        class="clear-trigger"
+        on:click|stopPropagation={resetSelection}
+        aria-label="Clear dates"
       >
-        <ChevronLeft size={20} />
+        <X size={14} />
       </button>
-      <h3>{monthName}</h3>
-      <button 
-        type="button"
-        class="nav-btn"
-        on:click={nextMonth}
-        aria-label="Next month"
-      >
-        <ChevronRight size={20} />
-      </button>
-    </div>
+    {/if}
+  </button>
 
-    <!-- Selection status -->
-    <div class="selection-status">
-      {#if selectedStartDate === null}
-        <p class="status-text">Tap start date</p>
-      {:else if selectedEndDate === null}
-        <p class="status-text">Tap end date</p>
+  <!-- Inline Calendar (expands below trigger) -->
+  {#if isOpen}
+    <div class="calendar-panel">
+      {#if loading}
+        <div class="loading">Loading availability...</div>
       {:else}
-        <p class="status-text selected">{displayRangeText}</p>
+        <!-- Header with navigation -->
+        <div class="calendar-header">
+          <button 
+            type="button"
+            class="nav-btn"
+            on:click={goToPreviousMonth}
+            disabled={!canGoPrevious}
+            aria-label="Previous month"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          
+          <div class="months-title">
+            {#each visibleMonths as month}
+              <span class="month-name">{month.name}</span>
+            {/each}
+          </div>
+          
+          <button 
+            type="button"
+            class="nav-btn"
+            on:click={goToNextMonth}
+            aria-label="Next month"
+          >
+            <ChevronRight size={20} />
+          </button>
+        </div>
+
+        <!-- Status -->
+        <div class="selection-status">
+          <p>{statusText}</p>
+        </div>
+
+        <!-- Calendars -->
+        <div class="calendars">
+          {#each visibleMonths as month, monthIndex}
+            <div class="calendar">
+              <div class="month-label">{month.name}</div>
+              <div class="weekdays">
+                {#each DAYS as day}
+                  <span class="weekday">{day}</span>
+                {/each}
+              </div>
+
+              <div class="days-grid">
+                {#each dayClassMaps[monthIndex] as { date, class: dayClass }}
+                  <button
+                    type="button"
+                    class={dayClass}
+                    disabled={!date || isDateDisabled(date)}
+                    on:click={() => onDayClick(date)}
+                    on:mouseenter={() => onDayHover(date)}
+                    on:mouseleave={onDayLeave}
+                  >
+                    {date ? date.getDate() : ''}
+                  </button>
+                {/each}
+              </div>
+            </div>
+          {/each}
+        </div>
+
+        <!-- Footer -->
+        <div class="calendar-footer">
+          <div class="legend">
+            <div class="legend-item">
+              <span class="legend-dot available"></span>
+              <span>Available</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot booked"></span>
+              <span>Booked</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot selected"></span>
+              <span>Selected</span>
+            </div>
+          </div>
+          
+          <div class="footer-actions">
+            <button 
+              type="button"
+              class="btn-clear"
+              on:click={resetSelection}
+              disabled={!selectedStartDate}
+            >
+              Clear
+            </button>
+            <button 
+              type="button"
+              class="btn-done"
+              on:click={toggleCalendar}
+            >
+              Done
+            </button>
+          </div>
+        </div>
       {/if}
-    </div>
-
-    <!-- Weekday headers -->
-    <div class="weekdays">
-      <div class="weekday">Sun</div>
-      <div class="weekday">Mon</div>
-      <div class="weekday">Tue</div>
-      <div class="weekday">Wed</div>
-      <div class="weekday">Thu</div>
-      <div class="weekday">Fri</div>
-      <div class="weekday">Sat</div>
-    </div>
-
-    <!-- Days grid -->
-    <div class="days-grid">
-      {#each emptyDays as _}
-        <div class="empty-day"></div>
-      {/each}
-
-      {#each dayClassMap as { day, class: dayClass } (day)}
-        {@const date = new Date(currentYear, currentMonth, day)}
-        {@const isBooked = isDateBooked(date)}
-        {@const isPast = isDateInPast(date)}
-        
-        <button
-          type="button"
-          class={dayClass}
-          on:click={() => selectDate(day)}
-          on:mouseenter={() => { hoveredDate = date; }}
-          on:mouseleave={() => { hoveredDate = null; }}
-          disabled={isBooked || isPast}
-        >
-          {day}
-        </button>
-      {/each}
-    </div>
-
-    <!-- Reset button -->
-    <div class="calendar-actions">
-      <button 
-        type="button"
-        class="reset-btn"
-        on:click={resetSelection}
-        disabled={selectedStartDate === null}
-      >
-        Reset
-      </button>
-    </div>
-
-    <!-- Legend -->
-    <div class="calendar-legend">
-      <div class="legend-item">
-        <div class="legend-color available"></div>
-        <span>Available</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color past"></div>
-        <span>Past</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color booked"></div>
-        <span>Booked</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-color selected"></div>
-        <span>Selected</span>
-      </div>
     </div>
   {/if}
 </div>
 
 <style>
-  .calendar {
-    background: #faf6f0;
+  .calendar-wrapper {
+    width: 100%;
+  }
+
+  /* ===== TRIGGER BUTTON ===== */
+  .calendar-trigger {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 14px 16px;
+    background: white;
     border: 2px solid #d4c4b0;
     border-radius: 2px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'Fredoka', sans-serif;
+    color: #8b7355;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+  }
+
+  .calendar-trigger:hover {
+    border-color: #8b7355;
+    background: #faf6f0;
+  }
+
+  .calendar-trigger.active {
+    border-color: #c85a54;
+    box-shadow: 0 0 0 3px rgba(200, 90, 84, 0.15);
+  }
+
+  .calendar-trigger.has-selection {
+    color: #5a4a3a;
+    background: #faf6f0;
+  }
+
+  .trigger-text {
+    flex: 1;
+  }
+
+  .clear-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    background: #d4c4b0;
+    border: none;
+    border-radius: 50%;
+    color: #5a4a3a;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .clear-trigger:hover {
+    background: #c85a54;
+    color: white;
+  }
+
+  /* ===== CALENDAR PANEL (inline, not dropdown) ===== */
+  .calendar-panel {
+    background: #faf6f0;
+    border: 2px solid #d4c4b0;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
     padding: 16px;
-    margin-top: 24px;
+    animation: slideDown 0.2s ease;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .loading {
@@ -380,38 +520,33 @@
     font-size: 14px;
   }
 
+  /* ===== HEADER ===== */
   .calendar-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
     margin-bottom: 12px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #d4c4b0;
-  }
-
-  .calendar-header h3 {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 700;
-    color: #5a4a3a;
   }
 
   .nav-btn {
-    background: none;
-    border: none;
-    color: #8b7355;
-    cursor: pointer;
-    padding: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    background: white;
+    border: 1px solid #d4c4b0;
     border-radius: 2px;
+    color: #8b7355;
+    cursor: pointer;
+    transition: all 0.15s;
   }
 
-  .nav-btn:hover {
-    background: rgba(217, 165, 116, 0.2);
-    color: #5a4a3a;
+  .nav-btn:hover:not(:disabled) {
+    background: #d9a574;
+    border-color: #8b7355;
+    color: white;
   }
 
   .nav-btn:disabled {
@@ -419,275 +554,282 @@
     cursor: not-allowed;
   }
 
-  .nav-btn:disabled:hover {
-    background: none;
+  .months-title {
+    display: none; /* Hidden on desktop, shown per-calendar */
   }
 
+  /* ===== STATUS ===== */
   .selection-status {
     text-align: center;
-    margin-bottom: 12px;
-    padding: 12px;
+    padding: 8px;
     background: white;
     border: 1px solid #e5e7eb;
     border-radius: 2px;
+    margin-bottom: 12px;
   }
 
-  .status-text {
+  .selection-status p {
     margin: 0;
     font-size: 13px;
-    color: #8b7355;
     font-weight: 600;
+    color: #8b7355;
   }
 
-  .status-text.selected {
-    color: #d9a574;
+  /* ===== CALENDARS ===== */
+  .calendars {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .calendar {
+    min-width: 0;
+  }
+
+  .month-label {
+    text-align: center;
     font-size: 14px;
     font-weight: 700;
+    color: #5a4a3a;
+    margin-bottom: 8px;
+    font-family: 'Fredoka', sans-serif;
   }
 
   .weekdays {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 2px;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
   }
 
   .weekday {
     text-align: center;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
     color: #8b7355;
     padding: 4px 0;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
   }
 
   .days-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 2px;
-    margin-bottom: 12px;
   }
 
-  .empty-day {
-    aspect-ratio: 1;
-  }
-
+  /* ===== DAY CELLS ===== */
   .day {
     aspect-ratio: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
-    border-radius: 2px;
-    cursor: pointer;
-    transition: all 0.2s;
-    border: 1px solid #d4c4b0;
-    background: white;
-    color: #5a4a3a;
     font-family: 'Fredoka', sans-serif;
+    background: white;
+    border: 1px solid #e8dcc8;
+    border-radius: 2px;
+    color: #5a4a3a;
+    cursor: pointer;
+    transition: all 0.12s ease;
     padding: 0;
+    min-width: 0;
   }
 
-  .day:hover:not(:disabled) {
+  .day.empty {
+    background: transparent;
+    border-color: transparent;
+    cursor: default;
+  }
+
+  .day.past {
+    background: #e8dcc8;
+    color: #a0937f;
+    cursor: not-allowed;
+    border-color: #d4c4b0;
+  }
+
+  .day.booked {
+    background: #d4c4b0;
+    color: #8b7355;
+    cursor: not-allowed;
+    border-color: #a0937f;
+    position: relative;
+  }
+
+  .day.booked::after {
+    content: '';
+    position: absolute;
+    width: 60%;
+    height: 2px;
+    background: #8b7355;
+    transform: rotate(-45deg);
+  }
+
+  .day.available:hover {
     background: #e8dcc8;
     border-color: #8b7355;
     transform: scale(1.08);
   }
 
-  .day.available {
-    border-color: #d4c4b0;
-    background: white;
-  }
-
-  /* Past dates - disabled */
-  .day.past-date {
-    background: #ccc;
-    color: #999;
-    border-color: #bbb;
-    cursor: not-allowed;
-    opacity: 0.4;
-  }
-
-  .day.past-date:hover {
-    transform: none;
-  }
-
-  /* Booked dates - disabled */
-  .day.booked {
-    background: #d4c4b0;
-    color: #8b7355;
-    border-color: #a0937f;
-    cursor: not-allowed;
-    opacity: 0.5;
-  }
-
-  .day.booked:hover {
-    transform: none;
-  }
-
-  /* Confirmed selected range - light highlight for middle dates */
-  .day.in-range {
-    background: rgba(217, 165, 116, 0.3);
+  .day.today {
+    font-weight: 800;
     border-color: #d9a574;
-    color: #5a4a3a;
+    border-width: 2px;
   }
 
-  .day.in-range:hover:not(:disabled) {
-    background: rgba(217, 165, 116, 0.4);
-    transform: scale(1.05);
-  }
-
-  /* Endpoints of confirmed range - dark highlight */
-  .day.in-range.endpoint {
-    background: #d9a574;
-    color: white;
-    border-color: #8b7355;
-    font-weight: 700;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-  }
-
-  .day.in-range.endpoint:hover:not(:disabled) {
-    background: #c85a54;
-  }
-
-  /* Hover preview range - very light highlight */
-  .day.hover-range {
-    background: rgba(217, 165, 116, 0.2);
-    border-color: #d9a574;
-    color: #5a4a3a;
-  }
-
-  .day.hover-range:hover:not(:disabled) {
-    background: rgba(217, 165, 116, 0.3);
-    transform: scale(1.05);
-  }
-
-  /* Endpoints during hover preview */
-  .day.hover-range.endpoint {
-    background: #d9a574;
-    color: white;
-    border-color: #8b7355;
-    font-weight: 700;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-  }
-
-  /* Initial start selection (before end date selected) */
+  /* Selected states */
   .day.selected {
-    background: #d9a574;
-    color: white;
-    border-color: #8b7355;
+    background: #d9a574 !important;
+    color: white !important;
+    border-color: #8b7355 !important;
     font-weight: 700;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 2px 6px rgba(217, 165, 116, 0.4);
+    transform: scale(1.05);
   }
 
-  .day.selected:hover:not(:disabled) {
-    background: #c85a54;
+  .day.start-date {
+    border-radius: 2px 0 0 2px;
   }
 
-  .day:disabled {
-    cursor: not-allowed;
+  .day.end-date {
+    border-radius: 0 2px 2px 0;
   }
 
-  .calendar-actions {
-    margin-bottom: 12px;
-    text-align: center;
-  }
-
-  .reset-btn {
-    background: white;
-    color: #8b7355;
-    border: 1px solid #d4c4b0;
-    padding: 8px 16px;
+  .day.start-date.end-date {
     border-radius: 2px;
-    font-size: 12px;
-    font-weight: 600;
-    font-family: 'Fredoka', sans-serif;
-    cursor: pointer;
-    transition: all 0.2s;
   }
 
-  .reset-btn:hover:not(:disabled) {
-    background: #e8dcc8;
-    border-color: #8b7355;
+  .day.in-range {
+    background: rgba(217, 165, 116, 0.25);
+    border-color: rgba(217, 165, 116, 0.5);
+    border-radius: 0;
+    color: #5a4a3a;
   }
 
-  .reset-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  .day.hover-range {
+    background: rgba(217, 165, 116, 0.15);
+    border-color: rgba(217, 165, 116, 0.4);
+    border-radius: 0;
   }
 
-  .calendar-legend {
+  /* ===== FOOTER ===== */
+  .calendar-footer {
     display: flex;
-    gap: 12px;
-    justify-content: center;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
     padding-top: 12px;
     border-top: 1px solid #d4c4b0;
-    font-size: 12px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .legend {
+    display: flex;
+    gap: 12px;
     flex-wrap: wrap;
   }
 
   .legend-item {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 600;
     color: #8b7355;
   }
 
-  .legend-color {
-    width: 16px;
-    height: 16px;
+  .legend-dot {
+    width: 10px;
+    height: 10px;
     border-radius: 2px;
     border: 1px solid #8b7355;
   }
 
-  .legend-color.available {
+  .legend-dot.available {
     background: white;
   }
 
-  .legend-color.past {
-    background: #ccc;
-  }
-
-  .legend-color.booked {
+  .legend-dot.booked {
     background: #d4c4b0;
   }
 
-  .legend-color.selected {
+  .legend-dot.selected {
     background: #d9a574;
   }
 
-  @media (max-width: 480px) {
-    .calendar {
-      padding: 12px;
+  .footer-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn-clear,
+  .btn-done {
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: 'Fredoka', sans-serif;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-clear {
+    background: white;
+    color: #8b7355;
+    border: 1px solid #d4c4b0;
+  }
+
+  .btn-clear:hover:not(:disabled) {
+    background: #c85a54;
+    color: white;
+    border-color: #8b7355;
+  }
+
+  .btn-clear:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .btn-done {
+    background: #d9a574;
+    color: white;
+    border: 1px solid #8b7355;
+  }
+
+  .btn-done:hover {
+    background: #c85a54;
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 500px) {
+    .calendars {
+      grid-template-columns: 1fr;
+      gap: 20px;
     }
 
-    .calendar-header h3 {
-      font-size: 14px;
+    .calendar-header {
+      margin-bottom: 8px;
     }
 
-    .selection-status {
-      padding: 10px;
-      margin-bottom: 10px;
+    .legend {
+      width: 100%;
+      justify-content: center;
     }
 
-    .status-text {
-      font-size: 12px;
+    .footer-actions {
+      width: 100%;
     }
 
-    .day {
-      font-size: 12px;
+    .btn-clear,
+    .btn-done {
+      flex: 1;
+      text-align: center;
     }
 
-    .calendar-legend {
-      gap: 8px;
-      font-size: 11px;
-    }
-
-    .legend-color {
-      width: 12px;
-      height: 12px;
+    .calendar-footer {
+      flex-direction: column;
     }
   }
 </style>
