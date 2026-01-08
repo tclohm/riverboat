@@ -5,6 +5,7 @@
   // Props - same interface as before
   export let passId: number | null = null;
   export let onDateRangeSelect: (startDate: string, endDate: string) => void = () => {};
+  export let bookedDates: {start: string, end: string}[] = []; // NEW: Accept as prop
 
   // State
   const today = new Date();
@@ -19,8 +20,6 @@
   let hoveredDate: Date | null = null;
   let focusedInput: 'start' | 'end' = 'start';
   
-  let bookedDates: {start: string, end: string}[] = [];
-  let loading = true;
   let isOpen = false;
 
   // Memoization cache
@@ -31,34 +30,6 @@
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
-
-  // ===== FETCH BOOKED DATES =====
-  async function fetchBookedDates() {
-    if (!passId) {
-      loading = false;
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/passes/${passId}/booked-dates`);
-      if (response.ok) {
-        const data = await response.json();
-        bookedDates = data.bookedDates || [];
-      }
-    } catch (error) {
-      console.error('Failed to fetch booked dates:', error);
-    } finally {
-      loading = false;
-    }
-  }
-
-  onMount(() => {
-    if (passId) {
-      fetchBookedDates();
-    } else {
-      loading = false;
-    }
-  });
 
   // ===== UTILITY FUNCTIONS =====
   function formatDateForComparison(date: Date): string {
@@ -106,14 +77,48 @@
     if (!selectedStartDate || !hoveredDate || selectedEndDate) return false;
     if (focusedInput !== 'end') return false;
     
+    // Don't show hover range beyond max selectable date
+    if (maxSelectableDate && date > maxSelectableDate) return false;
+    
     const start = selectedStartDate < hoveredDate ? selectedStartDate : hoveredDate;
     const end = selectedStartDate < hoveredDate ? hoveredDate : selectedStartDate;
     return date > start && date <= end;
   }
 
   function isDateDisabled(date: Date): boolean {
-    return isDateInPast(date) || isDateBooked(date);
+    if (isDateInPast(date) || isDateBooked(date)) return true;
+    
+    // If we're selecting end date and there's a max selectable date, disable dates beyond it
+    if (focusedInput === 'end' && selectedStartDate && maxSelectableDate) {
+      const normalized = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      if (normalized > maxSelectableDate) return true;
+    }
+    
+    return false;
   }
+
+  // Find the next booked date after a given start date
+  // Returns the day BEFORE the next booked range starts (last selectable date)
+  function getMaxSelectableDate(startDate: Date): Date | null {
+    const startStr = formatDateForComparison(startDate);
+    
+    // Sort booked dates and find the first one that starts after our start date
+    const sortedRanges = [...bookedDates].sort((a, b) => a.start.localeCompare(b.start));
+    
+    for (const range of sortedRanges) {
+      if (range.start > startStr) {
+        // Return the day before this booked range starts
+        const [year, month, day] = range.start.split('-').map(Number);
+        const maxDate = new Date(year, month - 1, day - 1);
+        return maxDate;
+      }
+    }
+    
+    return null; // No limit - no booked dates after start
+  }
+
+  // Reactive: recalculate max selectable date when start date changes
+  $: maxSelectableDate = selectedStartDate ? getMaxSelectableDate(selectedStartDate) : null;
 
   // ===== GRID GENERATION (MEMOIZED) =====
   function generateMonthGrid(year: number, month: number): (Date | null)[][] {
@@ -244,6 +249,15 @@
       return classes.join(' ');
     }
 
+    // Check if blocked due to booked dates in between
+    if (focusedInput === 'end' && selectedStartDate && maxSelectableDate) {
+      const normalized = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      if (normalized > maxSelectableDate) {
+        classes.push('blocked');
+        return classes.join(' ');
+      }
+    }
+
     classes.push('available');
 
     // Selected endpoints
@@ -289,7 +303,7 @@
   // This creates a reactive map that updates whenever selection/hover changes
   $: dayClassMaps = visibleMonths.map(month => {
     // These dependencies trigger recalculation
-    const _deps = [selectedStartDate, selectedEndDate, hoveredDate, focusedInput];
+    const _deps = [selectedStartDate, selectedEndDate, hoveredDate, focusedInput, maxSelectableDate];
     
     return month.grid.flat().map(date => ({
       date,
@@ -324,10 +338,7 @@
   <!-- Inline Calendar (expands below trigger) -->
   {#if isOpen}
     <div class="calendar-panel">
-      {#if loading}
-        <div class="loading">Loading availability...</div>
-      {:else}
-        <!-- Header with navigation -->
+      <!-- Header with navigation -->
         <div class="calendar-header">
           <button 
             type="button"
@@ -424,7 +435,6 @@
             </button>
           </div>
         </div>
-      {/if}
     </div>
   {/if}
 </div>
@@ -511,13 +521,6 @@
       opacity: 1;
       transform: translateY(0);
     }
-  }
-
-  .loading {
-    padding: 32px;
-    text-align: center;
-    color: #8b7355;
-    font-size: 14px;
   }
 
   /* ===== HEADER ===== */
@@ -664,6 +667,14 @@
     height: 2px;
     background: #8b7355;
     transform: rotate(-45deg);
+  }
+
+  .day.blocked {
+    background: #f0e8df;
+    color: #b8a99a;
+    cursor: not-allowed;
+    border-color: #d4c4b0;
+    opacity: 0.5;
   }
 
   .day.available:hover {
