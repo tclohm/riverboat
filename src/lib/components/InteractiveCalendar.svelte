@@ -2,10 +2,11 @@
   import { ChevronLeft, ChevronRight, X, Calendar } from '@lucide/svelte';
   import { onMount } from 'svelte';
 
-  // Props - same interface as before
+  // Props
   export let passId: number | null = null;
   export let onDateRangeSelect: (startDate: string, endDate: string) => void = () => {};
-  export let bookedDates: {start: string, end: string}[] = []; // NEW: Accept as prop
+  export let bookedDates: {start: string, end: string}[] = [];
+  export let readonly = false; // NEW: readonly mode for display only
 
   // State
   const today = new Date();
@@ -20,7 +21,7 @@
   let hoveredDate: Date | null = null;
   let focusedInput: 'start' | 'end' = 'start';
   
-  let isOpen = false;
+  let isOpen = readonly; // If readonly, always open
 
   // Memoization cache
   let gridCache: Record<string, (Date | null)[][]> = {};
@@ -184,6 +185,7 @@
 
   // ===== SELECTION LOGIC =====
   function onDayClick(date: Date | null) {
+    if (readonly) return; // No selection in readonly mode
     if (!date || isDateDisabled(date)) return;
 
     if (focusedInput === 'start') {
@@ -210,12 +212,14 @@
   }
 
   function onDayHover(date: Date | null) {
+    if (readonly) return; // No hover in readonly mode
     if (focusedInput === 'end' && selectedStartDate && !selectedEndDate && date) {
       hoveredDate = date;
     }
   }
 
   function onDayLeave() {
+    if (readonly) return;
     hoveredDate = null;
   }
 
@@ -313,31 +317,33 @@
 </script>
 
 <div class="calendar-wrapper">
-  <!-- Trigger Button -->
-  <button 
-    type="button"
-    class="calendar-trigger"
-    class:active={isOpen}
-    class:has-selection={selectedStartDate}
-    on:click={toggleCalendar}
-  >
-    <Calendar size={18} />
-    <span class="trigger-text">{displayText}</span>
-    {#if selectedStartDate}
-      <button 
-        type="button"
-        class="clear-trigger"
-        on:click|stopPropagation={resetSelection}
-        aria-label="Clear dates"
-      >
-        <X size={14} />
-      </button>
-    {/if}
-  </button>
+  <!-- Trigger Button (hidden in readonly mode) -->
+  {#if !readonly}
+    <button 
+      type="button"
+      class="calendar-trigger"
+      class:active={isOpen}
+      class:has-selection={selectedStartDate}
+      on:click={toggleCalendar}
+    >
+      <Calendar size={18} />
+      <span class="trigger-text">{displayText}</span>
+      {#if selectedStartDate}
+        <button 
+          type="button"
+          class="clear-trigger"
+          on:click|stopPropagation={resetSelection}
+          aria-label="Clear dates"
+        >
+          <X size={14} />
+        </button>
+      {/if}
+    </button>
+  {/if}
 
   <!-- Inline Calendar (expands below trigger) -->
   {#if isOpen}
-    <div class="calendar-panel">
+    <div class="calendar-panel" class:readonly>
       <!-- Header with navigation -->
         <div class="calendar-header">
           <button 
@@ -366,10 +372,12 @@
           </button>
         </div>
 
-        <!-- Status -->
-        <div class="selection-status">
-          <p>{statusText}</p>
-        </div>
+        <!-- Status (hidden in readonly) -->
+        {#if !readonly}
+          <div class="selection-status">
+            <p>{statusText}</p>
+          </div>
+        {/if}
 
         <!-- Calendars -->
         <div class="calendars">
@@ -387,7 +395,8 @@
                   <button
                     type="button"
                     class={dayClass}
-                    disabled={!date || isDateDisabled(date)}
+                    class:readonly
+                    disabled={readonly || !date || isDateDisabled(date)}
                     on:click={() => onDayClick(date)}
                     on:mouseenter={() => onDayHover(date)}
                     on:mouseleave={onDayLeave}
@@ -411,29 +420,33 @@
               <span class="legend-dot booked"></span>
               <span>Booked</span>
             </div>
-            <div class="legend-item">
-              <span class="legend-dot selected"></span>
-              <span>Selected</span>
-            </div>
+            {#if !readonly}
+              <div class="legend-item">
+                <span class="legend-dot selected"></span>
+                <span>Selected</span>
+              </div>
+            {/if}
           </div>
           
-          <div class="footer-actions">
-            <button 
-              type="button"
-              class="btn-clear"
-              on:click={resetSelection}
-              disabled={!selectedStartDate}
-            >
-              Clear
-            </button>
-            <button 
-              type="button"
-              class="btn-done"
-              on:click={toggleCalendar}
-            >
-              Done
-            </button>
-          </div>
+          {#if !readonly}
+            <div class="footer-actions">
+              <button 
+                type="button"
+                class="btn-clear"
+                on:click={resetSelection}
+                disabled={!selectedStartDate}
+              >
+                Clear
+              </button>
+              <button 
+                type="button"
+                class="btn-done"
+                on:click={toggleCalendar}
+              >
+                Done
+              </button>
+            </div>
+          {/if}
         </div>
     </div>
   {/if}
@@ -681,6 +694,22 @@
     background: #e8dcc8;
     border-color: #8b7355;
     transform: scale(1.08);
+  }
+
+  /* Readonly mode - no hover effects */
+  .day.readonly {
+    cursor: default;
+  }
+
+  .day.readonly.available:hover {
+    background: white;
+    border-color: #e8dcc8;
+    transform: none;
+  }
+
+  .calendar-panel.readonly {
+    border: 2px solid #d4c4b0;
+    border-radius: 4px;
   }
 
   .day.today {
