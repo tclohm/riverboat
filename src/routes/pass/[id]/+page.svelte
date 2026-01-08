@@ -4,7 +4,7 @@
   import { enhance } from '$app/forms';
   
   export let data;
-  const { pass } = data;
+  const { pass, bookedDates } = data;
   const isOwner = data.user && data.pass.userId == data.user.id;
 
   let showInquiryForm = false;
@@ -55,8 +55,8 @@
             <a href="/login?returnTo=/pass/{data.pass.id}" class="login-button">Login to Request</a>
           {/if}
         </div>
-        <!-- Pass availability calendar - now shows actual booked dates -->
-        <InteractiveCalendar passId={data.pass.id} onDateRangeSelect={handleDateRangeSelect} />
+        <!-- Pass availability calendar - now with pre-loaded booked dates -->
+        <InteractiveCalendar {bookedDates} onDateRangeSelect={handleDateRangeSelect} />
       </div>
     </div>
   </div>
@@ -122,7 +122,7 @@
           <div class="modal-body">
             <div class="form-group">
               <label for="requestedDates">When would you like to use this pass?</label>
-              <InteractiveCalendar passId={data.pass.id} onDateRangeSelect={handleDateRangeSelect} />
+              <InteractiveCalendar {bookedDates} onDateRangeSelect={handleDateRangeSelect} />
             </div>
           
             <div class="form-group">
