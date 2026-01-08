@@ -150,6 +150,7 @@ export const actions = {
       const senderUser = await db.select().from(user).where(eq(user.id, locals.user.id)).get();
       
       // 1. CREATE INQUIRY
+      console.log('[createInquiry] Creating inquiry...');
       const result = await db.insert(inquiries).values({
         passId,
         senderUserId: locals.user.id,
@@ -174,6 +175,9 @@ export const actions = {
         .orderBy(desc(inquiries.createdAt))
         .get();
 
+      console.log('[createInquiry] Inquiry created with ID:', newInquiry?.id);
+      
+      console.log('[createInquiry] Logging Event')
       // 3. LOG THE CREATED EVENT
       if (newInquiry) {
         await db.insert(inquiryEvents).values({
@@ -190,6 +194,7 @@ export const actions = {
       }
 
       // 4. CREATE NOTIFICATION FOR PASS OWNER
+      console.log('[createInquiry] Creating notification for', receiverUserId);
       await db.insert(notifications).values({
         userId: receiverUserId,
         type: 'inquiry_new',
@@ -209,6 +214,7 @@ export const actions = {
         })
       }).run();
       
+      console.log('[createInquiry] Notification created');
       return { success: true };
     } catch (error) {
       console.error('[createInquiry] Error:', error);
