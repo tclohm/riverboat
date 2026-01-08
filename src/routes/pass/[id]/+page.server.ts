@@ -1,4 +1,4 @@
-import { passes, inquiries, inquiryEvents, notifications, user } from '$lib/db/schema';
+import { passes, inquiries, notifications, user } from '$lib/db/schema';
 import { getDb } from '$lib/db';
 import { error, fail, redirect } from '@sveltejs/kit';
 import { eq, and, desc } from 'drizzle-orm';
@@ -57,6 +57,7 @@ function parseRequestedDates(dateString: string): { startDate: Date, endDate: Da
     return { startDate, endDate };
   }
 
+  // Format: "Feb 8, 2026 - Feb 11, 2026" (full dates with year on both)
   match = dateString.match(/(\w+)\s+(\d+),?\s+(\d+)\s*-\s*(\w+)\s+(\d+),?\s+(\d+)/);
   if (match) {
     const startMonthStr = match[1];
@@ -99,9 +100,18 @@ export async function load({ params, platform, locals }) {
     ownerName: passWithOwner.owner?.name || 'Unknown'
   };
 
+  // Parse booked dates from JSON
+  let bookedDates: {start: string, end: string}[] = [];
+  try {
+    bookedDates = passWithOwner.pass.bookedDates ? JSON.parse(passWithOwner.pass.bookedDates) : [];
+  } catch {
+    bookedDates = [];
+  }
+
   return { 
     pass: passData,
-    user: locals.user
+    user: locals.user,
+    bookedDates
   };
 }
 
@@ -117,6 +127,9 @@ export const actions = {
     const message = formData.get('message')?.toString() || '';
     const requestedDates = formData.get('requestedDates')?.toString() || '';
 
+    console.log('[createInquiry] Form data:', { passId, receiverUserId, message, requestedDates });
+
+    // Removed contactInfo from required fields
     if (!passId || !receiverUserId || !message || !requestedDates) {
       return fail(400, { error: 'All fields are required' });
     }
@@ -143,23 +156,22 @@ export const actions = {
 
     try {
       const db = await getDb(platform);
-      const now = new Date();
       
       // Get pass and sender user info
       const pass = await db.select().from(passes).where(eq(passes.id, passId)).get();
       const senderUser = await db.select().from(user).where(eq(user.id, locals.user.id)).get();
       
-      // 1. CREATE INQUIRY
+      // 1. CREATE INQUIRY (removed contactInfo)
       console.log('[createInquiry] Creating inquiry...');
-      const result = await db.insert(inquiries).values({
+      await db.insert(inquiries).values({
         passId,
         senderUserId: locals.user.id,
         receiverUserId,
         message,
         requestedDates,
         status: 'pending',
-        createdAt: now,
-        updatedAt: now
+        createdAt: new Date(),
+        updatedAt: new Date()
       }).run();
       
       // 2. GET THE INQUIRY ID
@@ -174,26 +186,10 @@ export const actions = {
         )
         .orderBy(desc(inquiries.createdAt))
         .get();
-
-      console.log('[createInquiry] Inquiry created with ID:', newInquiry?.id);
       
-      console.log('[createInquiry] Logging Event')
-      // 3. LOG THE CREATED EVENT
-      if (newInquiry) {
-        await db.insert(inquiryEvents).values({
-          inquiryId: newInquiry.id,
-          eventType: 'created',
-          actorUserId: locals.user.id,
-          metadata: JSON.stringify({
-            passId,
-            passTitle: pass?.title,
-            requestedDates
-          }),
-          createdAt: now
-        }).run();
-      }
+      console.log('[createInquiry] Inquiry created with ID:', newInquiry?.id);
 
-      // 4. CREATE NOTIFICATION FOR PASS OWNER
+      // 3. CREATE NOTIFICATION FOR PASS OWNER
       console.log('[createInquiry] Creating notification for', receiverUserId);
       await db.insert(notifications).values({
         userId: receiverUserId,
@@ -203,7 +199,7 @@ export const actions = {
         read: false,
         archived: false,
         relatedId: newInquiry?.id,
-        createdAt: now,
+        createdAt: new Date(),
         metadata: JSON.stringify({
           inquiryId: newInquiry?.id,
           senderName: senderUser?.name,

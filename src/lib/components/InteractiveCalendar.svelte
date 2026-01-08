@@ -5,6 +5,7 @@
   // Props - same interface as before
   export let passId: number | null = null;
   export let onDateRangeSelect: (startDate: string, endDate: string) => void = () => {};
+  export let bookedDates: {start: string, end: string}[] = []; // NEW: Accept as prop
 
   // State
   const today = new Date();
@@ -19,8 +20,6 @@
   let hoveredDate: Date | null = null;
   let focusedInput: 'start' | 'end' = 'start';
   
-  let bookedDates: {start: string, end: string}[] = [];
-  let loading = true;
   let isOpen = false;
 
   // Memoization cache
@@ -31,34 +30,6 @@
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
-
-  // ===== FETCH BOOKED DATES =====
-  async function fetchBookedDates() {
-    if (!passId) {
-      loading = false;
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/passes/${passId}/booked-dates`);
-      if (response.ok) {
-        const data = await response.json();
-        bookedDates = data.bookedDates || [];
-      }
-    } catch (error) {
-      console.error('Failed to fetch booked dates:', error);
-    } finally {
-      loading = false;
-    }
-  }
-
-  onMount(() => {
-    if (passId) {
-      fetchBookedDates();
-    } else {
-      loading = false;
-    }
-  });
 
   // ===== UTILITY FUNCTIONS =====
   function formatDateForComparison(date: Date): string {
@@ -324,10 +295,7 @@
   <!-- Inline Calendar (expands below trigger) -->
   {#if isOpen}
     <div class="calendar-panel">
-      {#if loading}
-        <div class="loading">Loading availability...</div>
-      {:else}
-        <!-- Header with navigation -->
+      <!-- Header with navigation -->
         <div class="calendar-header">
           <button 
             type="button"
@@ -424,7 +392,6 @@
             </button>
           </div>
         </div>
-      {/if}
     </div>
   {/if}
 </div>
@@ -511,13 +478,6 @@
       opacity: 1;
       transform: translateY(0);
     }
-  }
-
-  .loading {
-    padding: 32px;
-    text-align: center;
-    color: #8b7355;
-    font-size: 14px;
   }
 
   /* ===== HEADER ===== */
