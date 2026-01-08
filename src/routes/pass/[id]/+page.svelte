@@ -55,8 +55,8 @@
             <a href="/login?returnTo=/pass/{data.pass.id}" class="login-button">Login to Request</a>
           {/if}
         </div>
-        <!-- Pass availability calendar - now with pre-loaded booked dates -->
-        <InteractiveCalendar {bookedDates} onDateRangeSelect={handleDateRangeSelect} />
+        <!-- Pass availability calendar - readonly for quick view -->
+        <InteractiveCalendar {bookedDates} readonly={true} />
       </div>
     </div>
   </div>
