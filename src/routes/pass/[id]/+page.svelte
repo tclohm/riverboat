@@ -1,5 +1,6 @@
 <script lang="ts">
   import InteractiveCalendar from '$lib/components/InteractiveCalendar.svelte';
+  import { getPassImage } from '$lib/passImages';
   import { X } from '@lucide/svelte';
   import { enhance } from '$app/forms';
   
@@ -28,6 +29,15 @@
 
   <div class="detail">
     <div class="info">
+      <!-- Pass Image -->
+      <div class="pass-image-container">
+        <img 
+          src={getPassImage(pass.passType)} 
+          alt={pass.passType}
+          class="pass-hero-image"
+        />
+      </div>
+
       <h1>{pass.passType}</h1>
       <p class="owner">Hosted by {pass.ownerName}</p>
       
@@ -55,7 +65,7 @@
             <a href="/login?returnTo=/pass/{data.pass.id}" class="login-button">Login to Request</a>
           {/if}
         </div>
-        <!-- Pass availability calendar - readonly for quick view -->
+        <!-- Pass availability calendar - readonly preview -->
         <InteractiveCalendar {bookedDates} readonly={true} />
       </div>
     </div>
@@ -181,6 +191,22 @@
     display: grid;
     grid-template-columns: 1fr 400px;
     gap: 80px;
+  }
+
+  /* Pass Image */
+  .pass-image-container {
+    width: 100%;
+    max-width: 500px;
+    border-radius: 2px;
+    overflow: hidden;
+    border: 2px solid #8b7355;
+    margin-bottom: 32px;
+  }
+
+  .pass-hero-image {
+    width: 100%;
+    height: auto;
+    display: block;
   }
 
   .info h1 {
@@ -499,6 +525,10 @@
 
     .booking {
       position: static;
+    }
+
+    .pass-image-container {
+      max-width: 100%;
     }
   }
 
