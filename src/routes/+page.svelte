@@ -1,5 +1,6 @@
 <script lang="ts">
   import SearchBar from '$lib/components/SearchBar.svelte';
+  import { getPassImage } from '$lib/passImages';
   export let data; 
 </script>
 
@@ -44,7 +45,11 @@
             
             <!-- LEFT: Large Illustration Area -->
             <div class="illustration-section">
-              <div class="illustration-placeholder"></div>
+              <img 
+                src={getPassImage(pass.passType)} 
+                alt={pass.passType}
+                class="pass-image"
+              />
             </div>
 
             <!-- RIGHT: Vertical Sidebar -->
@@ -61,8 +66,7 @@
 
               <!-- Dates info -->
               <div class="sidebar-info">
-                <p class="dates-label">Available</p>
-                <p class="dates-value">{pass.availableDates}</p>
+                <p class="dates-label">Per Day</p>
               </div>
             </div>
           </div>
@@ -177,15 +181,10 @@
     overflow: hidden;
   }
 
-  .illustration-placeholder {
+  .pass-image {
     width: 100%;
     height: 100%;
-    background: #d4c4b0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #8b7355;
-    font-size: 14px;
+    object-fit: cover;
   }
 
   /* RIGHT SECTION: Vertical Sidebar */
@@ -238,20 +237,12 @@
   }
 
   .dates-label {
-    margin: 0 0 4px 0;
+    margin: 0;
     font-size: 10px;
     font-weight: 600;
     color: #8b7355;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-  }
-
-  .dates-value {
-    margin: 0;
-    font-size: 11px;
-    font-weight: 500;
-    color: #5a4a3a;
-    line-height: 1.3;
   }
 
   /* Responsive */
