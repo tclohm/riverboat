@@ -20,7 +20,12 @@ function getMonthIndex(monthStr: string): number | undefined {
   return monthMap[monthStr.toLowerCase().slice(0, 3)];
 }
 
-function parseRequestedDates(dateString: string): { startDate: Date, endDate: Date } | null {
+interface DateRange {
+  startDate: Date;
+  endDate: Date;
+}
+
+function parseRequestedDates(dateString: string): DateRange | null {
   if (!dateString) return null;
 
   // Format: "Dec 15-17, 2025" (same month)
@@ -81,6 +86,49 @@ function parseRequestedDates(dateString: string): { startDate: Date, endDate: Da
   return null;
 }
 
+// Convert Date to YYYY-MM-DD string for comparison
+function toISODate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+// Check if two date ranges overlap
+function rangesOverlap(
+  searchStart: string, 
+  searchEnd: string, 
+  bookedStart: string, 
+  bookedEnd: string
+): boolean {
+  // Two ranges overlap if one starts before the other ends AND ends after the other starts
+  return searchStart <= bookedEnd && searchEnd >= bookedStart;
+}
+
+// Check if a pass is available for the given date range
+function isPassAvailable(
+  bookedDatesJson: string | null, 
+  searchStart: string, 
+  searchEnd: string
+): boolean {
+  if (!bookedDatesJson) return true;
+
+  try {
+    const bookedRanges: { start: string; end: string }[] = JSON.parse(bookedDatesJson);
+    
+    // If ANY booked range overlaps with search range, pass is NOT available
+    for (const range of bookedRanges) {
+      if (rangesOverlap(searchStart, searchEnd, range.start, range.end)) {
+        return false;
+      }
+    }
+    
+    return true;
+  } catch {
+    return true; // If we can't parse, assume available
+  }
+}
+
 export async function load({ platform, locals, url }) {
   const mode = import.meta.env.MODE;
   const client = DatabaseClient.getInstance();
@@ -91,28 +139,37 @@ export async function load({ platform, locals, url }) {
   // Get search params
   const searchDates = url.searchParams.get('requestedDates');
   const guests = url.searchParams.get('guests');
+  const passType = url.searchParams.get('passType');
 
   let filteredPasses = allPasses;
 
-  // If search dates are provided, filter passes
+  // Filter by date availability
   if (searchDates) {
     const parsed = parseRequestedDates(searchDates);
     
     if (parsed) {
-      filteredPasses = allPasses.filter(pass => {
-        // Simple filter: check if pass has availability
-        // In a real app, you'd store structured date ranges in the database
-        // For now, we'll just return all passes (you can enhance this logic)
-        return true;
-      });
+      const searchStart = toISODate(parsed.startDate);
+      const searchEnd = toISODate(parsed.endDate);
+      
+      filteredPasses = filteredPasses.filter(pass => 
+        isPassAvailable(pass.bookedDates, searchStart, searchEnd)
+      );
     }
+  }
+
+  // Filter by pass type
+  if (passType) {
+    filteredPasses = filteredPasses.filter(pass => pass.passType === passType);
   }
 
   return { 
     passes: filteredPasses,
     user: locals.user,
     searchDates: searchDates || null,
-    guests: guests ? parseInt(guests) : null
+    guests: guests ? parseInt(guests) : null,
+    passType: passType || null,
+    totalCount: allPasses.length,
+    filteredCount: filteredPasses.length
   };
 }
 
@@ -121,16 +178,20 @@ export const actions = {
     const formData = await request.formData();
     const dates = formData.get('requestedDates')?.toString();
     const guests = formData.get('guests')?.toString();
+    const passType = formData.get('passType')?.toString();
 
     if (!dates) {
       return fail(400, { error: 'Please select dates' });
     }
 
-    // Redirect to same page with search params
+    // Build search URL with params
     const url = new URL(request.url);
     url.searchParams.set('requestedDates', dates);
     if (guests) {
       url.searchParams.set('guests', guests);
+    }
+    if (passType) {
+      url.searchParams.set('passType', passType);
     }
 
     return { success: true, searchUrl: url.pathname + url.search };
