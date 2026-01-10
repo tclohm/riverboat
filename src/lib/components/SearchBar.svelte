@@ -128,8 +128,11 @@
     class="search-trigger"
     on:click={() => isOpen = !isOpen}
   >
-    <Search size={20} />
-    <span>Search & Filter</span>
+    <span class="search-icon">
+      <Search size={22} />
+    </span>
+    <span class="search-text">Where are you going? Pick dates...</span>
+    <span class="search-cta">Search</span>
   </button>
 
   {#if isOpen}
@@ -267,35 +270,61 @@
 <style>
   .search-container {
     position: relative;
-    margin: 0 0 48px 0;
+    margin: 0 0 32px 0;
+    width: 100%;
+    max-width: 700px;
   }
 
-  /* Search Trigger Button */
+  /* Search Trigger - Looks like a search bar */
   .search-trigger {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 24px;
-    background: #d9a574;
-    color: white;
-    border: 2px solid #8b7355;
+    gap: 16px;
+    width: 100%;
+    padding: 16px 20px;
+    background: white;
+    color: #8b7355;
+    border: 2px solid #d4c4b0;
     border-radius: 2px;
     font-size: 16px;
-    font-weight: 600;
+    font-weight: 500;
     font-family: 'Fredoka', sans-serif;
     cursor: pointer;
     transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   }
 
   .search-trigger:hover {
-    background: #c85a54;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    border-color: #8b7355;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
   }
 
   .search-trigger:active {
     transform: translateY(0);
+  }
+
+  .search-trigger .search-icon {
+    color: #d9a574;
+  }
+
+  .search-trigger .search-text {
+    flex: 1;
+    text-align: left;
+    color: #a0937f;
+  }
+
+  .search-trigger .search-cta {
+    background: #d9a574;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 2px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: background 0.2s;
+  }
+
+  .search-trigger:hover .search-cta {
+    background: #c85a54;
   }
 
   /* Popover Backdrop */

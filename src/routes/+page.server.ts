@@ -140,6 +140,7 @@ export async function load({ platform, locals, url }) {
   const searchDates = url.searchParams.get('requestedDates');
   const guests = url.searchParams.get('guests');
   const passType = url.searchParams.get('passType');
+  const sort = url.searchParams.get('sort') || 'price-asc';
 
   let filteredPasses = allPasses;
 
@@ -162,12 +163,26 @@ export async function load({ platform, locals, url }) {
     filteredPasses = filteredPasses.filter(pass => pass.passType === passType);
   }
 
+  // Sort passes
+  filteredPasses = filteredPasses.sort((a, b) => {
+    switch (sort) {
+      case 'price-desc':
+        return b.price - a.price;
+      case 'newest':
+        return b.id - a.id; // Higher ID = newer
+      case 'price-asc':
+      default:
+        return a.price - b.price;
+    }
+  });
+
   return { 
     passes: filteredPasses,
     user: locals.user,
     searchDates: searchDates || null,
     guests: guests ? parseInt(guests) : null,
     passType: passType || null,
+    sort: sort,
     totalCount: allPasses.length,
     filteredCount: filteredPasses.length
   };

@@ -1,9 +1,7 @@
 <script lang="ts">
-  import SearchBar from '$lib/components/SearchBar.svelte';
+  import FilterBar from '$lib/components/FilterBar.svelte';
   import { getPassImage } from '$lib/passImages';
   export let data; 
-
-  $: hasActiveFilters = data.searchDates || data.passType;
 </script>
 
 <svelte:head>
@@ -12,47 +10,14 @@
 
 <div class="container">
 
-  <!-- Search Bar -->
-  <div class="w-full flex justify-center align-items">
-    <SearchBar />
-  </div>
-
-  <!-- Active Filters / Results Info -->
-  {#if hasActiveFilters}
-    <div class="search-info">
-      <div class="filter-tags">
-        <span class="results-count">
-          {data.filteredCount} of {data.totalCount} passes
-        </span>
-        
-        {#if data.searchDates}
-          <span class="filter-tag">
-            📅 {data.searchDates}
-          </span>
-        {/if}
-        
-        {#if data.passType}
-          <span class="filter-tag">
-            🎟️ {data.passType}
-          </span>
-        {/if}
-        
-        {#if data.guests && data.guests > 1}
-          <span class="filter-tag">
-            👥 {data.guests} guests
-          </span>
-        {/if}
-      </div>
-      
-      <a href="/" class="clear-search">Clear all</a>
-    </div>
-  {/if}
+  <!-- Filter Bar -->
+  <FilterBar />
 
   <!-- Passes Grid -->
   {#if data.passes.length === 0}
     <div class="empty-state">
-      <p>No passes available{hasActiveFilters ? ' matching your filters' : ''}</p>
-      {#if hasActiveFilters}
+      <p>No passes available{data.searchDates || data.passType ? ' matching your filters' : ''}</p>
+      {#if data.searchDates || data.passType}
         <p class="empty-hint">Try different dates or pass type</p>
         <a href="/" class="browse-all">Browse all passes</a>
       {/if}
@@ -102,62 +67,6 @@
     max-width: 1400px;
     margin: 0 auto;
     padding: 0 16px;
-  }
-
-  .search-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 0 0 32px 0;
-    padding: 16px;
-    background: #e8dcc8;
-    border-radius: 2px;
-    border: 2px solid #d4c4b0;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-
-  .filter-tags {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-
-  .results-count {
-    font-size: 14px;
-    font-weight: 600;
-    color: #5a4a3a;
-  }
-
-  .filter-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: white;
-    color: #5a4a3a;
-    padding: 6px 12px;
-    border-radius: 2px;
-    font-size: 13px;
-    font-weight: 500;
-    border: 1px solid #d4c4b0;
-  }
-
-  .search-info p {
-    margin: 0;
-    font-size: 16px;
-    color: #5a4a3a;
-  }
-
-  .clear-search {
-    color: #c85a54;
-    text-decoration: none;
-    font-weight: 600;
-    transition: color 0.2s;
-  }
-
-  .clear-search:hover {
-    text-decoration: underline;
   }
 
   .empty-state {
@@ -324,15 +233,6 @@
     .sidebar-text h2 {
       font-size: 12px;
     }
-
-    .search-info {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-
-    .filter-tags {
-      width: 100%;
-    }
   }
 
   @media (max-width: 480px) {
@@ -342,11 +242,6 @@
 
     .pass-card {
       height: 250px;
-    }
-
-    .filter-tag {
-      font-size: 12px;
-      padding: 4px 8px;
     }
   }
 </style>
