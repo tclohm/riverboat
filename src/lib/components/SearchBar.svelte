@@ -1,12 +1,16 @@
 <script lang="ts">
   import { Search } from '@lucide/svelte';
+  import { goto } from '$app/navigation';
   
   let guests = 1;
   let startDate = '';
   let endDate = '';
+  let passType = '';
   let displayText = '';
   let error = '';
   let isOpen = false;
+
+  const passTypes = ['Dream Key', 'Inspire Key', 'Enchant Key', 'Believe Key'];
 
   // Get today's date in YYYY-MM-DD format
   function getTodayString(): string {
@@ -83,19 +87,39 @@
   const minDate = getTodayString();
 
   function handleSearch() {
-    if (!displayText) {
-      error = 'Please select dates';
-      return;
+    // Build URL with search params
+    const params = new URLSearchParams();
+    
+    if (displayText) {
+      params.set('requestedDates', displayText);
     }
-    const form = document.querySelector('form') as HTMLFormElement;
-    if (form) {
-      form.submit();
+    if (guests > 1) {
+      params.set('guests', guests.toString());
     }
+    if (passType) {
+      params.set('passType', passType);
+    }
+
+    const searchUrl = params.toString() ? `/?${params.toString()}` : '/';
+    goto(searchUrl);
+    closePopover();
   }
 
   function closePopover() {
     isOpen = false;
   }
+
+  function clearFilters() {
+    startDate = '';
+    endDate = '';
+    guests = 1;
+    passType = '';
+    displayText = '';
+    error = '';
+  }
+
+  // Check if any filters are active
+  $: hasActiveFilters = displayText || passType || guests > 1;
 </script>
 
 <div class="search-container">
@@ -104,8 +128,11 @@
     class="search-trigger"
     on:click={() => isOpen = !isOpen}
   >
-    <Search size={20} />
-    <span>Search & Filter</span>
+    <span class="search-icon">
+      <Search size={22} />
+    </span>
+    <span class="search-text">Where are you going? Pick dates...</span>
+    <span class="search-cta">Search</span>
   </button>
 
   {#if isOpen}
@@ -121,113 +148,121 @@
 
     <!-- Popover Content -->
     <div class="popover-content">
-      <form method="POST" action="?/search">
-        <div class="popover-header">
-          <h3>Search & Filter</h3>
-          <button 
-            type="button"
-            class="close-btn"
-            on:click={closePopover}
-            aria-label="Close"
-          >
-            ✕
-          </button>
+      <div class="popover-header">
+        <h3>Search & Filter</h3>
+        <button 
+          type="button"
+          class="close-btn"
+          on:click={closePopover}
+          aria-label="Close"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div class="popover-body">
+        <!-- Pass Type Filter -->
+        <div class="form-section">
+          <label for="passType">Pass Type</label>
+          <select id="passType" bind:value={passType}>
+            <option value="">All Types</option>
+            {#each passTypes as type}
+              <option value={type}>{type}</option>
+            {/each}
+          </select>
         </div>
 
-        <div class="popover-body">
-          <!-- Date Inputs -->
-          <div class="form-section">
-            <label for="startDate">Check In</label>
+        <!-- Date Inputs -->
+        <div class="form-section">
+          <label for="startDate">Check In</label>
+          <input 
+            type="date" 
+            id="startDate" 
+            bind:value={startDate}
+            min={minDate}
+          />
+        </div>
+
+        <div class="form-section">
+          <label for="endDate">Check Out</label>
+          <input 
+            type="date" 
+            id="endDate" 
+            bind:value={endDate}
+            min={startDate || minDate}
+          />
+        </div>
+
+        <!-- Guests -->
+        <div class="form-section">
+          <label for="guests">Guests</label>
+          <div class="guest-input">
+            <button 
+              type="button" 
+              class="guest-btn"
+              on:click={() => guests > 1 && guests--}
+              aria-label="Decrease guests"
+            >
+              −
+            </button>
             <input 
-              type="date" 
-              id="startDate" 
-              bind:value={startDate}
-              min={minDate}
-              required
+              type="number" 
+              id="guests"
+              bind:value={guests}
+              min="1"
+              max="99"
+              readonly
             />
+            <button 
+              type="button" 
+              class="guest-btn"
+              on:click={() => guests < 99 && guests++}
+              aria-label="Increase guests"
+            >
+              +
+            </button>
           </div>
-
-          <div class="form-section">
-            <label for="endDate">Check Out</label>
-            <input 
-              type="date" 
-              id="endDate" 
-              bind:value={endDate}
-              min={startDate || minDate}
-              required
-            />
-          </div>
-
-          <!-- Guests -->
-          <div class="form-section">
-            <label for="guests">Guests</label>
-            <div class="guest-input">
-              <button 
-                type="button" 
-                class="guest-btn"
-                on:click={() => guests > 1 && guests--}
-                aria-label="Decrease guests"
-              >
-                −
-              </button>
-              <input 
-                type="number" 
-                id="guests"
-                name="guests"
-                bind:value={guests}
-                min="1"
-                max="99"
-                readonly
-              />
-              <button 
-                type="button" 
-                class="guest-btn"
-                on:click={() => guests < 99 && guests++}
-                aria-label="Increase guests"
-              >
-                +
-              </button>
-            </div>
-          </div>
-
-          {#if error}
-            <div class="error-message">
-              <p>{error}</p>
-            </div>
-          {/if}
-
-          {#if displayText}
-            <div class="date-display">
-              <p class="selected-dates">{displayText}</p>
-            </div>
-          {/if}
         </div>
 
-        <!-- Hidden input for form submission -->
-        <input 
-          type="hidden" 
-          name="requestedDates" 
-          value={displayText}
-        />
+        {#if error}
+          <div class="error-message">
+            <p>{error}</p>
+          </div>
+        {/if}
 
-        <div class="popover-footer">
+        {#if displayText}
+          <div class="date-display">
+            <p class="selected-dates">{displayText}</p>
+          </div>
+        {/if}
+      </div>
+
+      <div class="popover-footer">
+        {#if hasActiveFilters}
           <button 
             type="button"
-            class="cancel-btn"
-            on:click={closePopover}
+            class="clear-btn"
+            on:click={clearFilters}
           >
-            Cancel
+            Clear All
           </button>
-          <button 
-            type="button"
-            class="search-btn"
-            on:click={handleSearch}
-          >
-            <Search size={18} />
-            Search
-          </button>
-        </div>
-      </form>
+        {/if}
+        <button 
+          type="button"
+          class="cancel-btn"
+          on:click={closePopover}
+        >
+          Cancel
+        </button>
+        <button 
+          type="button"
+          class="search-btn"
+          on:click={handleSearch}
+        >
+          <Search size={18} />
+          Search
+        </button>
+      </div>
     </div>
   {/if}
 </div>
@@ -235,35 +270,61 @@
 <style>
   .search-container {
     position: relative;
-    margin: 0 0 48px 0;
+    margin: 0 0 32px 0;
+    width: 100%;
+    max-width: 700px;
   }
 
-  /* Search Trigger Button */
+  /* Search Trigger - Looks like a search bar */
   .search-trigger {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 24px;
-    background: #d9a574;
-    color: white;
-    border: 2px solid #8b7355;
+    gap: 16px;
+    width: 100%;
+    padding: 16px 20px;
+    background: white;
+    color: #8b7355;
+    border: 2px solid #d4c4b0;
     border-radius: 2px;
     font-size: 16px;
-    font-weight: 600;
+    font-weight: 500;
     font-family: 'Fredoka', sans-serif;
     cursor: pointer;
     transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   }
 
   .search-trigger:hover {
-    background: #c85a54;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    border-color: #8b7355;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
   }
 
   .search-trigger:active {
     transform: translateY(0);
+  }
+
+  .search-trigger .search-icon {
+    color: #d9a574;
+  }
+
+  .search-trigger .search-text {
+    flex: 1;
+    text-align: left;
+    color: #a0937f;
+  }
+
+  .search-trigger .search-cta {
+    background: #d9a574;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 2px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: background 0.2s;
+  }
+
+  .search-trigger:hover .search-cta {
+    background: #c85a54;
   }
 
   /* Popover Backdrop */
@@ -352,7 +413,8 @@
   }
 
   input[type="date"],
-  input[type="number"] {
+  input[type="number"],
+  select {
     padding: 10px 12px;
     border: 2px solid #d4c4b0;
     border-radius: 2px;
@@ -364,10 +426,18 @@
   }
 
   input[type="date"]:focus,
-  input[type="number"]:focus {
+  input[type="number"]:focus,
+  select:focus {
     outline: none;
     border-color: #c85a54;
     box-shadow: 0 0 0 3px rgba(200, 90, 84, 0.1);
+  }
+
+  select {
+    cursor: pointer;
+    background: #faf6f0 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238b7355' d='M6 9L1 4h10z'/%3E%3C/svg%3E") no-repeat right 12px center;
+    padding-right: 36px;
+    appearance: none;
   }
 
   .guest-input {
@@ -401,7 +471,7 @@
     color: #5a4a3a;
   }
 
-  input[type="number"] {
+  .guest-input input[type="number"] {
     border: none;
     text-align: center;
     font-size: 16px;
@@ -413,13 +483,13 @@
     background: transparent;
   }
 
-  input[type="number"]::-webkit-outer-spin-button,
-  input[type="number"]::-webkit-inner-spin-button {
+  .guest-input input[type="number"]::-webkit-outer-spin-button,
+  .guest-input input[type="number"]::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
   }
 
-  input[type="number"] {
+  .guest-input input[type="number"] {
     -moz-appearance: textfield;
   }
 
@@ -461,6 +531,7 @@
     gap: 12px;
   }
 
+  .clear-btn,
   .cancel-btn,
   .search-btn {
     padding: 10px 20px;
@@ -471,6 +542,18 @@
     cursor: pointer;
     border: none;
     transition: all 0.2s ease;
+  }
+
+  .clear-btn {
+    background: white;
+    color: #c85a54;
+    border: 2px solid #c85a54;
+    margin-right: auto;
+  }
+
+  .clear-btn:hover {
+    background: #c85a54;
+    color: white;
   }
 
   .cancel-btn {
@@ -516,6 +599,12 @@
     .popover-footer {
       padding: 12px 16px;
       flex-wrap: wrap;
+    }
+
+    .clear-btn {
+      width: 100%;
+      margin-right: 0;
+      margin-bottom: 8px;
     }
   }
 </style>

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import SearchBar from '$lib/components/SearchBar.svelte';
+  import FilterBar from '$lib/components/FilterBar.svelte';
   import { getPassImage } from '$lib/passImages';
   export let data; 
 </script>
@@ -10,29 +10,15 @@
 
 <div class="container">
 
-  <!-- Search Bar -->
-  <div class="w-full flex justify-center align-items">
-  <SearchBar />
-  </div>
-
-  <!-- Results Info -->
-  {#if data.searchDates}
-    <div class="search-info">
-      <p>
-        Showing passes available for <strong>{data.searchDates}</strong>
-        {#if data.guests}
-          for <strong>{data.guests} {data.guests === 1 ? 'guest' : 'guests'}</strong>
-        {/if}
-      </p>
-      <a href="/" class="clear-search">Clear search</a>
-    </div>
-  {/if}
+  <!-- Filter Bar -->
+  <FilterBar />
 
   <!-- Passes Grid -->
   {#if data.passes.length === 0}
     <div class="empty-state">
-      <p>No passes available{data.searchDates ? ' for those dates' : ''}</p>
-      {#if data.searchDates}
+      <p>No passes available{data.searchDates || data.passType ? ' matching your filters' : ''}</p>
+      {#if data.searchDates || data.passType}
+        <p class="empty-hint">Try different dates or pass type</p>
         <a href="/" class="browse-all">Browse all passes</a>
       {/if}
     </div>
@@ -83,34 +69,6 @@
     padding: 0 16px;
   }
 
-  .search-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 32px 0;
-    padding: 16px;
-    background: #e3d5c6;
-    border-radius: 2px;
-    border-left: 4px solid #c85a54;
-  }
-
-  .search-info p {
-    margin: 0;
-    font-size: 16px;
-    color: #5a4a3a;
-  }
-
-  .clear-search {
-    color: #c85a54;
-    text-decoration: none;
-    font-weight: 600;
-    transition: color 0.2s;
-  }
-
-  .clear-search:hover {
-    text-decoration: underline;
-  }
-
   .empty-state {
     text-align: center;
     padding: 80px 32px;
@@ -123,6 +81,12 @@
   .empty-state p {
     font-size: 18px;
     color: #8b7355;
+    margin: 0 0 12px 0;
+  }
+
+  .empty-hint {
+    font-size: 14px;
+    color: #a0937f;
     margin: 0 0 24px 0;
   }
 
@@ -146,7 +110,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 24px;
-    margin: 48px 0;
+    margin: 0 0 48px 0;
   }
 
   .pass-card-link {
@@ -274,12 +238,6 @@
   @media (max-width: 480px) {
     .passes-grid {
       grid-template-columns: 1fr;
-    }
-
-    .search-info {
-      flex-direction: column;
-      gap: 12px;
-      align-items: flex-start;
     }
 
     .pass-card {
