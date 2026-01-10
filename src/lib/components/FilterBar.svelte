@@ -2,7 +2,7 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { SlidersHorizontal, ChevronDown, X } from '@lucide/svelte';
-  import InteractiveCalendar from './InteractiveCalendar.svelte';
+  import SearchCalendar from './SearchCalendar.svelte';
 
   const passTypes = [
     { value: '', label: 'All Passes' },
@@ -160,19 +160,7 @@
     <div class="filters-panel">
       <div class="filters-content">
         <div class="filter-section">
-          <div class="filter-header">
-            <h3>Select Dates</h3>
-            {#if currentDates}
-              <button type="button" class="clear-dates-btn" on:click={clearDateFilter}>
-                Clear dates
-              </button>
-            {/if}
-          </div>
-          
-          <InteractiveCalendar 
-            bookedDates={[]} 
-            onDateRangeSelect={handleDateRangeSelect}
-          />
+          <SearchCalendar onDateRangeSelect={handleDateRangeSelect} />
 
           {#if selectedDateRange}
             <div class="date-actions">
@@ -362,7 +350,7 @@
   }
 
   .filter-section {
-    max-width: 700px;
+    width: 100%;
   }
 
   .filter-header {
