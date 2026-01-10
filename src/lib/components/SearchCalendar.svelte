@@ -196,6 +196,37 @@
     const date = new Date(year, month, day);
     return date.toDateString() === today.toDateString();
   }
+
+  // FORCE recalculation - create a reactive map of all day classes
+  // This will update whenever any dependency changes
+  $: dayClassMap = (() => {
+    // These references create reactive dependencies
+    const _start = selectedStartDate;
+    const _end = selectedEndDate;
+    const _hover = hoveredDate;
+    const _ordered = orderedRange;
+    const _hoverRange = hoverRange;
+    
+    const map = new Map<string, { class: string; isToday: boolean; isPast: boolean }>();
+    
+    for (const { month, year } of months) {
+      const daysInMonth = getDaysInMonth(month, year);
+      for (let day = 1; day <= daysInMonth; day++) {
+        const key = `${year}-${month}-${day}`;
+        map.set(key, {
+          class: getDayClass(day, month, year),
+          isToday: isToday(day, month, year),
+          isPast: isDateInPast(new Date(year, month, day))
+        });
+      }
+    }
+    return map;
+  })();
+
+  function getDayData(day: number, month: number, year: number) {
+    const key = `${year}-${month}-${day}`;
+    return dayClassMap.get(key) || { class: 'day', isToday: false, isPast: false };
+  }
 </script>
 
 <div class="search-calendar">
@@ -225,13 +256,13 @@
     </button>
   </div>
 
-  <!-- Three month grid -->
+  <!-- Month grid -->
   <div class="months-grid">
     {#each months as { month, year }}
-      {@const daysInMonth = getDaysInMonth(month, year)}
       {@const firstDay = getFirstDayOfMonth(month, year)}
-      {@const days = Array.from({ length: daysInMonth }, (_, i) => i + 1)}
+      {@const daysInMonth = getDaysInMonth(month, year)}
       {@const emptyDays = Array.from({ length: firstDay }, (_, i) => i)}
+      {@const days = Array.from({ length: daysInMonth }, (_, i) => i + 1)}
       
       <div class="month">
         <h3 class="month-name">{getMonthName(month, year)}</h3>
@@ -251,18 +282,16 @@
             <div class="empty"></div>
           {/each}
           
-          {#each days as day}
-            {@const dayClass = getDayClass(day, month, year)}
-            {@const isPast = isDateInPast(new Date(year, month, day))}
-            
+          {#each days as day (day)}
+            {@const data = getDayData(day, month, year)}
             <button
               type="button"
-              class={dayClass}
-              class:today={isToday(day, month, year)}
+              class={data.class}
+              class:today={data.isToday}
               on:click={() => selectDate(day, month, year)}
               on:mouseenter={() => { hoveredDate = new Date(year, month, day); }}
               on:mouseleave={() => { hoveredDate = null; }}
-              disabled={isPast}
+              disabled={data.isPast}
             >
               {day}
             </button>
