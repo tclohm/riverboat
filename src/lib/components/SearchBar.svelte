@@ -1,90 +1,18 @@
 <script lang="ts">
-  import { Search } from '@lucide/svelte';
+  import { Search, X } from '@lucide/svelte';
   import { goto } from '$app/navigation';
+  import SearchCalendar from './SearchCalendar.svelte';
   
   let guests = 1;
-  let startDate = '';
-  let endDate = '';
-  let passType = '';
   let displayText = '';
-  let error = '';
+  let passType = '';
   let isOpen = false;
 
   const passTypes = ['Dream Key', 'Inspire Key', 'Enchant Key', 'Believe Key'];
 
-  // Get today's date in YYYY-MM-DD format
-  function getTodayString(): string {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+  function handleDateRangeSelect(startDate: string, endDate: string) {
+    displayText = `${startDate} - ${endDate}`;
   }
-
-  function formatDateRange(): string {
-    if (!startDate || !endDate) return '';
-    
-    const [startYear, startMonth, startDay] = startDate.split('-');
-    const [endYear, endMonth, endDay] = endDate.split('-');
-    
-    const start = new Date(parseInt(startYear), parseInt(startMonth) - 1, parseInt(startDay));
-    const end = new Date(parseInt(endYear), parseInt(endMonth) - 1, parseInt(endDay));
-    
-    const startMonthStr = start.toLocaleDateString('en-US', { month: 'short' });
-    const startDayNum = start.getDate();
-    const endDayNum = end.getDate();
-    const yearNum = end.getFullYear();
-    
-    if (start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear()) {
-      return `${startMonthStr} ${startDayNum}-${endDayNum}, ${yearNum}`;
-    }
-    
-    const endMonthStr = end.toLocaleDateString('en-US', { month: 'short' });
-    return `${startMonthStr} ${startDayNum} - ${endMonthStr} ${endDayNum}, ${yearNum}`;
-  }
-
-  function validateDates() {
-    error = '';
-    
-    if (!startDate || !endDate) return;
-    
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const [startYear, startMonth, startDay] = startDate.split('-');
-    const [endYear, endMonth, endDay] = endDate.split('-');
-    
-    const start = new Date(parseInt(startYear), parseInt(startMonth) - 1, parseInt(startDay));
-    const end = new Date(parseInt(endYear), parseInt(endMonth) - 1, parseInt(endDay));
-    
-    if (start < today) {
-      error = 'Start date must be today or in the future';
-      startDate = '';
-      endDate = '';
-      return;
-    }
-    
-    if (end < today) {
-      error = 'End date must be today or in the future';
-      endDate = '';
-      return;
-    }
-    
-    if (end < start) {
-      error = 'End date must be after start date';
-      endDate = '';
-      return;
-    }
-  }
-
-  $: {
-    if (startDate || endDate) {
-      validateDates();
-    }
-    displayText = formatDateRange();
-  }
-
-  const minDate = getTodayString();
 
   function handleSearch() {
     // Build URL with search params
@@ -110,12 +38,9 @@
   }
 
   function clearFilters() {
-    startDate = '';
-    endDate = '';
     guests = 1;
     passType = '';
     displayText = '';
-    error = '';
   }
 
   // Check if any filters are active
@@ -172,25 +97,10 @@
           </select>
         </div>
 
-        <!-- Date Inputs -->
-        <div class="form-section">
-          <label for="startDate">Check In</label>
-          <input 
-            type="date" 
-            id="startDate" 
-            bind:value={startDate}
-            min={minDate}
-          />
-        </div>
-
-        <div class="form-section">
-          <label for="endDate">Check Out</label>
-          <input 
-            type="date" 
-            id="endDate" 
-            bind:value={endDate}
-            min={startDate || minDate}
-          />
+        <!-- Calendar Date Selection -->
+        <div class="form-section calendar-section">
+          <label>Select Dates</label>
+          <SearchCalendar onDateRangeSelect={handleDateRangeSelect} />
         </div>
 
         <!-- Guests -->
@@ -223,12 +133,6 @@
             </button>
           </div>
         </div>
-
-        {#if error}
-          <div class="error-message">
-            <p>{error}</p>
-          </div>
-        {/if}
 
         {#if displayText}
           <div class="date-display">
@@ -348,7 +252,7 @@
     border: 2px solid #8b7355;
     border-radius: 2px;
     width: 90%;
-    max-width: 500px;
+    max-width: 800px;
     max-height: 90vh;
     overflow-y: auto;
     z-index: 50;
@@ -397,7 +301,7 @@
     padding: 24px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 20px;
   }
 
   .form-section {
@@ -412,77 +316,80 @@
     color: #5a4a3a;
   }
 
-  input[type="date"],
-  input[type="number"],
-  select {
-    padding: 10px 12px;
+  .form-section select {
+    padding: 12px 16px;
     border: 2px solid #d4c4b0;
     border-radius: 2px;
     font-size: 14px;
     font-family: 'Fredoka', sans-serif;
-    background: #faf6f0;
     color: #5a4a3a;
-    transition: all 0.2s ease;
-  }
-
-  input[type="date"]:focus,
-  input[type="number"]:focus,
-  select:focus {
-    outline: none;
-    border-color: #c85a54;
-    box-shadow: 0 0 0 3px rgba(200, 90, 84, 0.1);
-  }
-
-  select {
+    background: white;
     cursor: pointer;
-    background: #faf6f0 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238b7355' d='M6 9L1 4h10z'/%3E%3C/svg%3E") no-repeat right 12px center;
-    padding-right: 36px;
-    appearance: none;
+    transition: border-color 0.2s;
   }
 
+  .form-section select:focus {
+    outline: none;
+    border-color: #d9a574;
+  }
+
+  /* Calendar section */
+  .calendar-section {
+    border: 2px solid #d4c4b0;
+    border-radius: 2px;
+    padding: 16px;
+    background: white;
+  }
+
+  /* Guest input */
   .guest-input {
     display: flex;
     align-items: center;
+    gap: 8px;
+    background: white;
     border: 2px solid #d4c4b0;
     border-radius: 2px;
-    background: #faf6f0;
-    overflow: hidden;
+    padding: 4px;
     width: fit-content;
   }
 
   .guest-btn {
-    background: none;
+    width: 36px;
+    height: 36px;
+    background: #d4c4b0;
     border: none;
-    width: 40px;
-    height: 40px;
-    font-size: 18px;
+    border-radius: 2px;
+    font-size: 20px;
+    font-weight: 600;
+    color: #5a4a3a;
     cursor: pointer;
-    color: #8b7355;
     transition: all 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0;
-    font-weight: 600;
   }
 
   .guest-btn:hover {
-    background: rgba(217, 165, 116, 0.2);
-    color: #5a4a3a;
+    background: #d9a574;
+    color: white;
   }
 
-  .guest-input input[type="number"] {
-    border: none;
+  .guest-input input {
+    width: 50px;
     text-align: center;
+    border: none;
     font-size: 16px;
     font-weight: 600;
+    font-family: 'Fredoka', sans-serif;
     color: #5a4a3a;
-    padding: 0 8px;
-    width: 50px;
-    height: 40px;
     background: transparent;
   }
 
+  .guest-input input:focus {
+    outline: none;
+  }
+
+  /* Hide number input spinners */
   .guest-input input[type="number"]::-webkit-outer-spin-button,
   .guest-input input[type="number"]::-webkit-inner-spin-button {
     -webkit-appearance: none;
@@ -491,20 +398,6 @@
 
   .guest-input input[type="number"] {
     -moz-appearance: textfield;
-  }
-
-  .error-message {
-    background: rgba(200, 90, 84, 0.1);
-    border: 1px solid #c85a54;
-    border-radius: 2px;
-    padding: 12px;
-  }
-
-  .error-message p {
-    margin: 0;
-    font-size: 14px;
-    color: #8b4545;
-    font-weight: 500;
   }
 
   .date-display {

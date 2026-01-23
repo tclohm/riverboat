@@ -121,6 +121,7 @@
   function resetSelection() {
     selectedStartDate = null;
     selectedEndDate = null;
+    hoveredDate = null;
   }
 
   // Computed ranges
@@ -144,8 +145,9 @@
     ? `${formatDateForDisplay(selectedStartDate)} - Select end date`
     : 'Select check-in date';
 
-  // Day classification
-  function getDayClass(day: number, month: number, year: number): string {
+  // INLINE day class computation - this ensures Svelte reactivity works properly
+  // Instead of using a Map and getDayData, we compute classes directly in the template
+  function getDayClass(day: number, month: number, year: number, currentHoverRange: typeof hoverRange, currentOrderedRange: typeof orderedRange, currentSelectedStart: Date | null, currentSelectedEnd: Date | null): string {
     const date = getNormalizedDate(new Date(year, month, day));
     const classes: string[] = ['day'];
 
@@ -156,9 +158,9 @@
     classes.push('available');
 
     // Check confirmed range
-    if (orderedRange) {
-      const rangeStart = getNormalizedDate(orderedRange.start);
-      const rangeEnd = getNormalizedDate(orderedRange.end);
+    if (currentOrderedRange) {
+      const rangeStart = getNormalizedDate(currentOrderedRange.start);
+      const rangeEnd = getNormalizedDate(currentOrderedRange.end);
       
       if (date >= rangeStart && date <= rangeEnd) {
         classes.push('in-range');
@@ -169,10 +171,11 @@
       }
     }
 
-    // Check hover preview
-    if (hoverRange) {
-      const rangeStart = getNormalizedDate(hoverRange.start);
-      const rangeEnd = getNormalizedDate(hoverRange.end);
+    // Check hover preview - THIS IS THE KEY FIX
+    // By passing hoverRange as a parameter, Svelte will re-run this when hoverRange changes
+    if (currentHoverRange) {
+      const rangeStart = getNormalizedDate(currentHoverRange.start);
+      const rangeEnd = getNormalizedDate(currentHoverRange.end);
       
       if (date >= rangeStart && date <= rangeEnd) {
         classes.push('hover-range');
@@ -184,7 +187,7 @@
     }
 
     // Single start selection
-    if (selectedStartDate && !selectedEndDate && date.getTime() === getNormalizedDate(selectedStartDate).getTime()) {
+    if (currentSelectedStart && !currentSelectedEnd && date.getTime() === getNormalizedDate(currentSelectedStart).getTime()) {
       classes.push('selected');
     }
 
@@ -195,37 +198,6 @@
   function isToday(day: number, month: number, year: number): boolean {
     const date = new Date(year, month, day);
     return date.toDateString() === today.toDateString();
-  }
-
-  // FORCE recalculation - create a reactive map of all day classes
-  // This will update whenever any dependency changes
-  $: dayClassMap = (() => {
-    // These references create reactive dependencies
-    const _start = selectedStartDate;
-    const _end = selectedEndDate;
-    const _hover = hoveredDate;
-    const _ordered = orderedRange;
-    const _hoverRange = hoverRange;
-    
-    const map = new Map<string, { class: string; isToday: boolean; isPast: boolean }>();
-    
-    for (const { month, year } of months) {
-      const daysInMonth = getDaysInMonth(month, year);
-      for (let day = 1; day <= daysInMonth; day++) {
-        const key = `${year}-${month}-${day}`;
-        map.set(key, {
-          class: getDayClass(day, month, year),
-          isToday: isToday(day, month, year),
-          isPast: isDateInPast(new Date(year, month, day))
-        });
-      }
-    }
-    return map;
-  })();
-
-  function getDayData(day: number, month: number, year: number) {
-    const key = `${year}-${month}-${day}`;
-    return dayClassMap.get(key) || { class: 'day', isToday: false, isPast: false };
   }
 </script>
 
@@ -283,15 +255,15 @@
           {/each}
           
           {#each days as day (day)}
-            {@const data = getDayData(day, month, year)}
+            <!-- KEY FIX: Pass reactive values directly to ensure Svelte tracks changes -->
             <button
               type="button"
-              class={data.class}
-              class:today={data.isToday}
+              class={getDayClass(day, month, year, hoverRange, orderedRange, selectedStartDate, selectedEndDate)}
+              class:today={isToday(day, month, year)}
               on:click={() => selectDate(day, month, year)}
               on:mouseenter={() => { hoveredDate = new Date(year, month, day); }}
               on:mouseleave={() => { hoveredDate = null; }}
-              disabled={data.isPast}
+              disabled={isDateInPast(new Date(year, month, day))}
             >
               {day}
             </button>
